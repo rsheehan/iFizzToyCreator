@@ -16,3 +16,4 @@ nbproject
 .idea
 *.sublime-project
 *.sublime-workspace
+Rakefile
