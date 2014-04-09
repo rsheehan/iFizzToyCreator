@@ -27,6 +27,7 @@ class ToyCreatorViewController < UIViewController
   # Clears the view and resets to create a new toy.
   def start_new_toy
     @main_view.setup_for_new
+    @id = rand(2**60).to_s
   end
 
 
@@ -49,7 +50,8 @@ class ToyCreatorViewController < UIViewController
     #if toy hasn't been saved, save it
     saved = false
     @state.toys.each do |toy|
-      if toy.identifier == @id 
+      if toy.identifier == @id
+        #check if different to saved toy?
         saved = true
       end
     end
@@ -69,20 +71,42 @@ class ToyCreatorViewController < UIViewController
 
   # Called when a toy image is clicked on in the toy box view.
   def drop_toy(toy_button)
-    puts "should edit a toy"
+    centre = CGPointMake((@bounds.size.width-190)/2, @bounds.size.height/2)
+    #clear screen
+    @main_view.setup_for_new
+    #get toy
+    toy = @state.toys[toy_button]
+    #draw toy
+    toy.parts.each do |part|
+      case part
+        when CirclePart
+          @main_view.add_stroke(CircleStroke.new(((part.position/ToyTemplate::IMAGE_SCALE)+ centre), part.radius/ ToyTemplate::IMAGE_SCALE, part.colour, 1))
+        when PointsPart
+          points = part.points.map { |p| p/ToyTemplate::IMAGE_SCALE+centre }
+          
+          @main_view.add_stroke(LineStroke.new(points, part.colour, ToyTemplate::TOY_LINE_SIZE))
+        else
+      end
+    end
+    @main_view.setNeedsDisplay
+    #update id
+    @id = toy.identifier
+    #dismiss modal
+    dismissModalViewControllerAnimated(true, completion: nil)
   end
 
   def save_toy
     toy_parts = @main_view.gather_toy_info
 
     unless toy_parts.nil?
-      toy = ToyTemplate.new(toy_parts, @id) #, image)
+      toy = ToyTemplate.new(toy_parts, @id)
       @state.add_toy(toy)
     end
   end
 
   def clear
-    #clear screen here, makes a new id 
+    @main_view.setup_for_new
+    @id = rand(2**60).to_s
   end
 
 end
