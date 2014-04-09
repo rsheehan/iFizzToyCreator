@@ -2,8 +2,9 @@ class ToyCreatorViewController < UIViewController
 
   include CreatorViewControllerModule
 
-  MODES = [:toy]
+  MODES = [:toy, :save_toy, :clear]
 
+  
   def loadView # preferable to viewDidLoad because not using xib
     # Can call super this time as super is not UIViewController
     self.view = UIView.alloc.initWithFrame(@bounds)
@@ -19,6 +20,8 @@ class ToyCreatorViewController < UIViewController
     setup_mode_buttons(MODES)
     @tool_buttons[:squiggle].selected = true # the default
     setup_label(Language::TOY_MAKER)
+    #assign an id to the toy being made
+    @id = rand(2**60).to_s
   end
 
   # Clears the view and resets to create a new toy.
@@ -35,13 +38,23 @@ class ToyCreatorViewController < UIViewController
 
   # Show the toy box.
   def toy
-    toy_parts = @main_view.gather_toy_info
+    # toy_parts = @main_view.gather_toy_info
 
-    unless toy_parts.nil?
-      # get random identifier
-      id = rand(2**60).to_s
-      toy = ToyTemplate.new(toy_parts, id) #, image)
-      @state.add_toy(toy)
+    # unless toy_parts.nil?
+    #   # get random identifier
+    #   id = rand(2**60).to_s
+    #   toy = ToyTemplate.new(toy_parts, id) #, image)
+    #   @state.add_toy(toy)
+    # end
+    #if toy hasn't been saved, save it
+    saved = false
+    @state.toys.each do |toy|
+      if toy.identifier == @id 
+        saved = true
+      end
+    end
+    if saved == false
+      save_toy
     end
 
     toybox_view_controller = ToyBoxViewController.alloc.initWithNibName(nil, bundle: nil)
@@ -57,6 +70,19 @@ class ToyCreatorViewController < UIViewController
   # Called when a toy image is clicked on in the toy box view.
   def drop_toy(toy_button)
     puts "should edit a toy"
+  end
+
+  def save_toy
+    toy_parts = @main_view.gather_toy_info
+
+    unless toy_parts.nil?
+      toy = ToyTemplate.new(toy_parts, @id) #, image)
+      @state.add_toy(toy)
+    end
+  end
+
+  def clear
+    #clear screen here, makes a new id 
   end
 
 end
