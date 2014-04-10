@@ -11,12 +11,22 @@ class ToyBoxViewController < UIViewController
     self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, WIDTH]])
     view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
     setup_button(:new, [LITTLE_GAP, LITTLE_GAP])
-    collection_view = UICollectionView.alloc.initWithFrame([[@current_xpos, 0], [WIDTH - @current_xpos, WIDTH]], collectionViewLayout: UICollectionViewFlowLayout.alloc.init)
-    collection_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
-    collection_view.registerClass(ToyButton, forCellWithReuseIdentifier: TOYBUTTON)
-    collection_view.dataSource = self
-    collection_view.delegate = self
-    view.addSubview(collection_view)
+    @collection_view = UICollectionView.alloc.initWithFrame([[@current_xpos, 0], [WIDTH - @current_xpos, WIDTH]], collectionViewLayout: UICollectionViewFlowLayout.alloc.init)
+    @collection_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    @collection_view.registerClass(ToyButton, forCellWithReuseIdentifier: TOYBUTTON)
+    @collection_view.registerClass(DeleteToyButton, forCellWithReuseIdentifier: DELETETOYBUTTON)
+    @collection_view.dataSource = self
+    @collection_view.delegate = self
+    view.addSubview(@collection_view)
+    #setup delete button
+
+    @delete_mode = false
+    @del_button = UIButton.buttonWithType(UIButtonTypeCustom)
+    @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+    @del_button.sizeToFit
+    @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @del_button.frame.size]
+    @del_button.addTarget(self, action: :delete, forControlEvents: UIControlEventTouchUpInside)
+    view.addSubview(@del_button)
   end
 
   def setup_button(image_name, position)
@@ -58,9 +68,32 @@ class ToyBoxViewController < UIViewController
   #
   #end
 
+  #activate delete mode
+  def delete
+    if @delete_mode
+      @delete_mode = false
+      #set image
+      @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+    else
+      @delete_mode = true
+      #set image
+      @del_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
+    end
+
+    #update cells?
+    @collection_view.reloadData()
+
+  end
+
+  def delete_toy(index_path)
+      @state.toys.delete_at(index_path.row)
+      #remove item from collectionview
+      @collection_view.reloadData()
+  end
   # The methods to implement the UICollectionViewDataSource protocol.
 
   TOYBUTTON = "ToyButton"
+  DELETETOYBUTTON = "DeleteToyButton"
 
   def collectionView(cv, numberOfItemsInSection: section)
     @state.toys.length
@@ -68,9 +101,29 @@ class ToyBoxViewController < UIViewController
 
   def collectionView(cv, cellForItemAtIndexPath: index_path)
     item = index_path.row # ignore section as only one
-    toy_button = cv.dequeueReusableCellWithReuseIdentifier(TOYBUTTON, forIndexPath: index_path)
+    if @delete_mode
+      toy_button = cv.dequeueReusableCellWithReuseIdentifier(DELETETOYBUTTON, forIndexPath: index_path)
+    else
+      toy_button = cv.dequeueReusableCellWithReuseIdentifier(TOYBUTTON, forIndexPath: index_path)
+    end
+
+    #animateToyButton(toy_button,1)
+
     toy_button.toy = @state.toys[item]
     toy_button
+
+  end
+
+  def animateToyButton(button,red)
+    red -= 0.01
+    UIView.animateWithDuration(0.5,
+                               animations: lambda {
+                                 button.setBackgroundColor(UIColor.colorWithRed(red, green: 0.5, blue: 0.5, alpha: 1))
+                               },
+                               completion:lambda {|finished|
+                                 animateToyButton(button,red)
+                               }
+    )
   end
 
   # And the methods for the UICollectionViewDelegateFlowLayout protocol.
@@ -87,7 +140,11 @@ class ToyBoxViewController < UIViewController
   # And the methods for the UICollectionViewDelegate protocol.
   def collectionView(cv, didSelectItemAtIndexPath: index_path)
     item = index_path.row
-    @delegate.drop_toy(item)
+    if @delete_mode
+      delete_toy(index_path)
+    else
+      @delegate.drop_toy(item)
+    end
   end
 
 end
