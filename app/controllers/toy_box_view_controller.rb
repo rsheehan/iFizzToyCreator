@@ -80,15 +80,18 @@ class ToyBoxViewController < UIViewController
       @del_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
     end
 
-    #update cells?
+    #update cells
     @collection_view.reloadData()
 
   end
 
   def delete_toy(index_path)
-      @state.toys.delete_at(index_path.row)
-      #remove item from collectionview
-      @collection_view.reloadData()
+    @state.toys.delete_at(index_path.row)
+    #remove item from collectionview
+    @collection_view.deleteItemsAtIndexPaths([index_path])
+    #save state
+    @state.save
+
   end
   # The methods to implement the UICollectionViewDataSource protocol.
 
@@ -103,25 +106,42 @@ class ToyBoxViewController < UIViewController
     item = index_path.row # ignore section as only one
     if @delete_mode
       toy_button = cv.dequeueReusableCellWithReuseIdentifier(DELETETOYBUTTON, forIndexPath: index_path)
+      toy_button.layer.removeAllAnimations
+      animateToyButton(toy_button,0,false)
     else
       toy_button = cv.dequeueReusableCellWithReuseIdentifier(TOYBUTTON, forIndexPath: index_path)
     end
 
-    #animateToyButton(toy_button,1)
 
     toy_button.toy = @state.toys[item]
     toy_button
 
   end
 
-  def animateToyButton(button,red)
-    red -= 0.01
-    UIView.animateWithDuration(0.5,
+  def animateToyButton(button,rotation,decreasing)
+    if not(@delete_mode)
+      return
+    end
+    if decreasing
+      rotation -= 0.01
+      if rotation <= -3.14/128
+        decreasing = false
+      end
+    else
+      rotation += 0.01
+      if rotation >= 3.14/128
+        decreasing = true
+      end
+    end
+
+    UIView.animateWithDuration(0.00001,
+                               delay: 0,
+                               options: UIViewAnimationOptionAllowUserInteraction,
                                animations: lambda {
-                                 button.setBackgroundColor(UIColor.colorWithRed(red, green: 0.5, blue: 0.5, alpha: 1))
+                                 button.transform = CGAffineTransformMakeRotation(rotation)
                                },
                                completion:lambda {|finished|
-                                 animateToyButton(button,red)
+                                 animateToyButton(button,rotation,decreasing)
                                }
     )
   end
