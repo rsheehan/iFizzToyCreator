@@ -79,6 +79,32 @@ class ToyCreatorView < CreatorView
     CGContextStrokePath(context)
   end
 
+  # So we can start lines from off the edge of the view.
+  def touch_began_from_edge(point)
+    case @current_tool
+      when :squiggle, :line
+        @current_point = point
+        @points = [@current_point]
+        setNeedsDisplay
+    end
+  end
+
+  # So we can start lines from off the edge of the view.
+  def touch_ended_from_edge
+    case @current_tool
+      when :squiggle, :line
+        # should only do this if at least one of the points is on the screen
+        # it is possible that they are all "invisible"
+        invisible = true
+        @points.each do |point|
+          invisible = false if point.x > 0 and point.x < bounds.size.width
+        end
+        add_stroke(LineStroke.new(@points, @current_colour, @line_size)) unless invisible
+        @points = nil
+        setNeedsDisplay
+    end
+  end
+
   def drawRect(rect)
     super
     toy_parts = gather_toy_info
@@ -88,6 +114,22 @@ class ToyCreatorView < CreatorView
         hull = toy.convex_hull
         draw_convex_hull(hull) if hull.length > 2
       end
+    end
+  end
+
+  # So we can start lines from off the edge of the view.
+  def touch_moved_from_edge(point)
+    case @current_tool
+      when :squiggle
+        a = @points[-1]
+        b = point
+        if (b - a).magnitude > 10.0
+          @points << point
+          setNeedsDisplay
+        end
+      when :line
+        @points[1] = point
+        setNeedsDisplay
     end
   end
 
