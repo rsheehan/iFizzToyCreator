@@ -21,6 +21,19 @@ class Language
   REDO          = 'redo'
   TRASH         = 'trash'
 
+  # Event Names
+  COLLISION     = 'collision'
+  TIMER         = 'timer'     # Repeat?
+  HOLD          = 'hold'
+  SCORE         = 'score'
+
+  # Action Names
+  ROTATE        = 'rotate'
+  EXPLOSION     = 'explosion'
+  CREATE_NEW_TOY= 'create new toy'
+  TRANSITION    = 'transition'
+  SOUND         = 'sound'
+
   # Commands
   CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'
   TOUCH_FORCE         = 'Touch to show force direction and strength.'
