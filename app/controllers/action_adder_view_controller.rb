@@ -76,6 +76,13 @@ class ActionAdderViewController < UIViewController
       button = setup_button(button_name, position, button_view)
       buttons[button_name] = button
       position[1] += CGRectGetHeight(button.frame) + 10
+      label = UILabel.alloc.initWithFrame([[0, position[1]], [95, 14]])
+      label.font = UIFont.systemFontOfSize(12)
+      label.textColor = UIColor.whiteColor
+      label.text = name_for_label(button_name)
+      label.textAlignment = NSTextAlignmentCenter
+      button_view.addSubview(label)
+      position[1] += CGRectGetHeight(label.frame) + 5
     end
     view.addSubview(button_view)
     buttons
@@ -167,7 +174,7 @@ class ActionAdderViewController < UIViewController
     @play_view_controller.update_play_scene
   end
 
-  def name_for_action(name)
+  def name_for_label(name)
     case name
       when :touch
         Language::TOUCH
@@ -179,11 +186,6 @@ class ActionAdderViewController < UIViewController
         Language::HOLD
       when :score
         Language::SCORE
-    end
-  end
-
-  def name_for_effect(name)
-    case name
       when :apply_force
         Language::FORCE
       when :apply_rotation
