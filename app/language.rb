@@ -21,13 +21,15 @@ class Language
   REDO          = 'redo'
   TRASH         = 'trash'
 
-  # Event Names
+  # Action Names
+  TOUCH         = 'touch'
   COLLISION     = 'collision'
   TIMER         = 'timer'     # Repeat?
   HOLD          = 'hold'
   SCORE         = 'score'
 
-  # Action Names
+  # Effect Names
+  FORCE         = 'force'
   ROTATE        = 'rotate'
   EXPLOSION     = 'explosion'
   CREATE_NEW_TOY= 'create new toy'

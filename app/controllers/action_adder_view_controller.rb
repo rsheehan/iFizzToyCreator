@@ -6,7 +6,7 @@ class ActionAdderViewController < UIViewController
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
   ACTIONS = [:touch]
-  EFFECTS = [:apply_force]
+  EFFECTS = [:apply_force, :apply_rotation]
 
   FORCE_SCALE = 10
 
@@ -167,6 +167,38 @@ class ActionAdderViewController < UIViewController
     @play_view_controller.update_play_scene
   end
 
+  def name_for_action(name)
+    case name
+      when :touch
+        Language::TOUCH
+      when :collision
+        Language::COLLISION
+      when :timer
+        Language::TIMER
+      when :hold
+        Language::HOLD
+      when :score
+        Language::SCORE
+    end
+  end
+
+  def name_for_effect(name)
+    case name
+      when :apply_force
+        Language::FORCE
+      when :apply_rotation
+        Language::ROTATE
+      when :explosion
+        Language::EXPLOSION
+      when :create_new_toy
+        Language::CREATE_NEW_TOY
+      when :transition
+        Language::TRANSITION
+      when :sound
+        Language::SOUND
+    end
+  end
+
   #======================
   # Actions
   #======================
@@ -187,6 +219,18 @@ class ActionAdderViewController < UIViewController
 
   # Show the force to apply.
   def apply_force
+    drag_action_view_controller = DragActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    drag_action_view_controller.bounds_for_view = @bounds
+    #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+    drag_action_view_controller.selected = @selected_toy
+    #drag_action_view_controller.delegate = self
+    #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
+    drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+    presentViewController(drag_action_view_controller, animated: false, completion: nil)
+  end
+
+  def apply_rotation
     drag_action_view_controller = DragActionViewController.alloc.initWithNibName(nil, bundle: nil)
     drag_action_view_controller.bounds_for_view = @bounds
     #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
