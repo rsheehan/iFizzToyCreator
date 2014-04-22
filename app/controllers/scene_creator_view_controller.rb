@@ -82,5 +82,9 @@ class SceneCreatorViewController < UIViewController
     @play_view_controller.update_play_scene
   end
 
+  def refresh
+    @main_view.setNeedsDisplay
+  end
+
 
 end

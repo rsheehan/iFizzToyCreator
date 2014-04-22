@@ -1,9 +1,8 @@
 # A drag action is usually associated with an effect.
 # e.g. dragging a toy here probably means apply a force in the direction of the drag.
-class DragActionViewController < UIViewController
+class DragActionViewController < CenterToyViewController
 
-  attr_writer :scene_creator_view_controller #, :delegate
-  attr_writer :selected
+  #, :delegate
 
   def loadView # preferable to viewDidLoad because not using xib
     # Do not call super.
@@ -14,6 +13,7 @@ class DragActionViewController < UIViewController
     view.addSubview(@main_view)
     @main_view.change_label_text_to(Language::FORCE_ADDER)
     @main_view.selected = @selected
+
     command_label = UILabel.alloc.initWithFrame([[0, @bounds.size.height], [@bounds.size.width, 768 - @bounds.size.height]])
     command_label.backgroundColor = Constants::GOLD
     command_label.text = Language::TOUCH_FORCE
