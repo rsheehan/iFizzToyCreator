@@ -190,8 +190,8 @@ class ActionAdderViewController < UIViewController
         Language::TOUCH
       when :collision
         Language::COLLISION
-      when :timer
-        Language::TIMER
+      when :repeat
+        Language::REPEAT
       when :hold
         Language::HOLD
       when :score

@@ -24,7 +24,7 @@ class Language
   # Action Names
   TOUCH         = 'touch'
   COLLISION     = 'collision'
-  TIMER         = 'timer'     # Repeat?
+  REPEAT         = 'repeat'     # Repeat?
   HOLD          = 'hold'
   SCORE         = 'score'
 
