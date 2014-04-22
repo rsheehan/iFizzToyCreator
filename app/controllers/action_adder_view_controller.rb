@@ -5,7 +5,7 @@ class ActionAdderViewController < UIViewController
   # Actions are hashes with the following keys.
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
-  ACTIONS = [:touch]
+  ACTIONS = [:touch, :repeat]
   EFFECTS = [:apply_force, :apply_rotation]
 
   FORCE_SCALE = 10
@@ -115,6 +115,13 @@ class ActionAdderViewController < UIViewController
     @action_button_name = button_name
   end
 
+  # sets the time information for the repeat action.
+  def repeat_time(minutes, seconds)
+    @repeat_time_mins = minutes
+    @repeat_time_secs = seconds
+    puts('Time SET',minutes,seconds)
+  end
+
   def close_touch_view_controller
     dismissModalViewControllerAnimated(false, completion: nil)
     enable_action_buttons(false)
@@ -134,6 +141,9 @@ class ActionAdderViewController < UIViewController
     if @action_button_name
       action_type = :button
       action_param = @action_button_name
+    elsif @repeat_time_mins
+      action_type = :timer
+      action_param = [@repeat_time_mins,@repeat_time_secs]
     else
       action_type = :unknown
       action_param = :unknown
@@ -213,6 +223,16 @@ class ActionAdderViewController < UIViewController
     touch_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
     touch_action_view_controller.delegate = self
     presentViewController(touch_action_view_controller, animated: false, completion: nil)
+  end
+
+  # Adding a repeat event.
+  def repeat
+    #create a picker view controller pop up to define how long to repeat for
+    repeat_action_view_controller = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    repeat_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    repeat_action_view_controller.modalPresentationStyle = UIModalPresentationFormSheet
+    repeat_action_view_controller.delegate = self
+    presentViewController(repeat_action_view_controller, animated: false, completion: nil)
   end
 
   #======================

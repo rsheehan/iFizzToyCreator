@@ -47,6 +47,9 @@ class PlayViewController < UIViewController
           button = enable_button(action[:action_param])
         #add_action_to_button
           @button_actions[button] << action
+        when :timer
+          puts("Action",action)
+          NSTimer.scheduledTimerWithTimeInterval(action[:action_param][0]*60 + action[:action_param][1], target: self, selector: "perform_action:", userInfo: action, repeats: true)
       end
     end
 
@@ -115,6 +118,12 @@ class PlayViewController < UIViewController
     #puts "button: #{sender}"
     # pass the actions through to the scene for its update method to use
     @play_scene.add_actions_for_update(@button_actions[sender])
+  end
+
+  def perform_action(timer)
+    puts(timer)
+    puts(timer.userInfo)
+    @play_scene.add_actions_for_update([timer.userInfo])
   end
 
 end
