@@ -46,7 +46,7 @@ class RepeatActionViewController < UIViewController
     cancel_button.addTarget(self, action: 'cancel', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(cancel_button)
     @selected_mins = 0;
-    @selected_secs = 0;
+    @selected_secs = 1;
   end
 
   def setup_button(image_name, position)
