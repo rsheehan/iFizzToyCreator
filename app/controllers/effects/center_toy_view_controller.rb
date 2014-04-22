@@ -8,7 +8,8 @@ class CenterToyViewController < UIViewController
   def viewDidAppear(animated)
     #Refresh UIView for moved toy
     @toy_origin = @selected.position
-    center = @main_view.center
+    toy_center = CGPointMake(@selected.image.size.width/2, @selected.image.size.height/2)
+    center = @main_view.center - toy_center
     @selected.change_position(center)
 
     @scene_creator_view_controller.refresh
