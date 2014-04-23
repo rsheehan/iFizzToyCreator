@@ -200,7 +200,6 @@ class PlayScene < SKScene
   end
 
   def didBeginContact(contact)
-    puts 'BEGIN CONTACT'
     #check each collision action - if  the 2 colliding toys have the corresponding identifiers to a collision action, add it
     if @collision_actions
       @collision_actions.each do |action|
@@ -218,7 +217,6 @@ class PlayScene < SKScene
   end
 
   def didEndContact(contact)
-    puts 'END CONTACT'
   end
 
   def add_collision(action)
