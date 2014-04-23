@@ -133,4 +133,19 @@ class ToyCreatorView < CreatorView
     end
   end
 
+  def clear
+    undoManager.registerUndoWithTarget(self, selector: 'unclear:', object: @strokes)
+    @strokes = []
+    @points = nil
+    @selected = nil
+    @truly_selected = nil
+    setNeedsDisplay
+  end
+
+  def unclear(strokes)
+    strokes.each do |stroke|
+      add_stroke(stroke)
+    end
+  end
+
 end
