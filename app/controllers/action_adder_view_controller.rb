@@ -5,7 +5,7 @@ class ActionAdderViewController < UIViewController
   # Actions are hashes with the following keys.
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
-  ACTIONS = [:touch, :repeat]
+  ACTIONS = [:touch, :repeat, :collision]
   EFFECTS = [:apply_force, :apply_rotation]
 
   FORCE_SCALE = 10
@@ -135,6 +135,13 @@ class ActionAdderViewController < UIViewController
     #@view_mode = @selected_toy ? :toy_selected : :nothing_chosen
   end
 
+  def colliding_toy=(toy)
+    @colliding_toy = toy
+    dismissModalViewControllerAnimated(false, completion: nil)
+    enable_action_buttons(false)
+    enable_effect_buttons(true)
+  end
+
   # Gets the force information for the actions effect.
   # When this is received the action info is complete.
   def force=(force_vector)
@@ -144,6 +151,9 @@ class ActionAdderViewController < UIViewController
     elsif @repeat_time_mins
       action_type = :timer
       action_param = [@repeat_time_mins,@repeat_time_secs]
+    elsif @colliding_toy
+      action_type = :collision
+      action_param = @colliding_toy.template.identifier
     else
       action_type = :unknown
       action_param = :unknown
@@ -233,6 +243,17 @@ class ActionAdderViewController < UIViewController
     repeat_action_view_controller.modalPresentationStyle = UIModalPresentationFormSheet
     repeat_action_view_controller.delegate = self
     presentViewController(repeat_action_view_controller, animated: false, completion: nil)
+  end
+
+  #adding a collision event
+  def collision
+    #make a modal to select another toy - must disable selecting same toy?
+    collision_action_view_controller = CollisionActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    collision_action_view_controller.bounds_for_view = @bounds
+    collision_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+    collision_action_view_controller.other_toy = @selected_toy
+    collision_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+    presentViewController(collision_action_view_controller, animated: false, completion: nil)
   end
 
   #======================
