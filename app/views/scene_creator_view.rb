@@ -52,7 +52,7 @@ class SceneCreatorView < CreatorView
         setNeedsDisplay
       when :toy_selected
         @delegate.selected_toy = @selected
-      when :force
+      else
         @current_point = nil
       # @truly_selected has been set in ActionAdderViewController
     end
@@ -153,7 +153,6 @@ class SceneCreatorView < CreatorView
             touch_begin_toys_only
           when :scene
             touch_begin_scene
-          when :force
 
         end
     end
@@ -217,7 +216,7 @@ class SceneCreatorView < CreatorView
         case @mode
           when :toys_only, :scene, :toy_selected
             touch_move_scene(point)
-          when :force
+          else
             @current_point = point
         end
         setNeedsDisplay
@@ -269,6 +268,8 @@ class SceneCreatorView < CreatorView
             touch_end_scene
           when :force
             touch_end_force
+          when :rotate
+            touch_end_rotate
         end
       when :circle
         centre = @points[0]
@@ -302,6 +303,9 @@ class SceneCreatorView < CreatorView
     vector.y = -vector.y  # convert to SpriteKit coordinates
     @delegate.force = vector
     @delegate.close_modal_view
+  end
+
+  def touch_end_rotate
   end
 
   # Needed to allow both the pinch and rotate gesture recognizers to both work (individually).
@@ -377,9 +381,15 @@ class SceneCreatorView < CreatorView
       draw_partial_thing(context)
       CGContextEndTransparencyLayer(context)
     end
-    if @mode == :force && @current_point && @selected
-      draw_force_arrow(context, @selected.position, @current_point)
-
+    case @mode
+      when :force
+        if @current_point && @selected
+          draw_force_arrow(context, @selected.position, @current_point)
+        end
+      when :rotate
+        if @current_point && @selected
+           draw_force_arrow(context, @selected.position, @current_point)
+        end
     end
   end
 
