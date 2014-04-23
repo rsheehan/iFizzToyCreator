@@ -16,6 +16,7 @@ class PlayScene < SKScene
     #removeAllChildren
     #self.backgroundColor = SceneCreatorView::DEFAULT_SCENE_COLOUR # no longer necessary, see create_image
     self.scaleMode = SKSceneScaleModeAspectFill
+    self.physicsWorld.contactDelegate = self
     add_edges
     add_toys
   end
@@ -77,6 +78,7 @@ class PlayScene < SKScene
     # first I currently use a frame around the outside
     #walls = CGRectMake(*frame.origin, frame.size.width, frame.size.height - AppDelegate::TAB_HEIGHT)
     self.physicsBody = SKPhysicsBody.bodyWithEdgeLoopFromRect(frame)
+    self.physicsBody.contactTestBitMask = 1
     @edges.each do |edge|
       case edge
         when CirclePart
@@ -86,6 +88,7 @@ class PlayScene < SKScene
           current_pt = points[0]
           points[1..-1].each do |next_pt|
             body = SKPhysicsBody.bodyWithEdgeFromPoint(current_pt, toPoint: next_pt)
+            body.contactTestBitMask = 1
             node = SKNode.node
             node.hidden = true
             node.physicsBody = body
@@ -170,6 +173,7 @@ class PlayScene < SKScene
     CGPathMoveToPoint(path, nil, *physics_points[0])
     physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
     toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+    toy.physicsBody.contactTestBitMask = 1
 
     # now any wheels
     toy_in_scene.add_wheels_in_scene(self).each do |wheel|
@@ -179,6 +183,7 @@ class PlayScene < SKScene
       wheel_node.position = wheel.position
       # then the body
       body = SKPhysicsBody.bodyWithCircleOfRadius(wheel.radius)
+      body.contactTestBitMask = 1
       wheel_node.physicsBody = body
       addChild(wheel_node)
       # then the joint
@@ -192,6 +197,37 @@ class PlayScene < SKScene
     CGContextSetLineWidth(context, ToyTemplate::TOY_LINE_SIZE/4)
     CGContextSetLineCap(context, KCGLineCapRound)
     CGContextSetLineJoin(context, KCGLineJoinRound)
+  end
+
+  def didBeginContact(contact)
+    puts 'BEGIN CONTACT'
+    #check each collision action - if  the 2 colliding toys have the corresponding identifiers to a collision action, add it
+    if @collision_actions
+      @collision_actions.each do |action|
+        if contact.bodyA.node.name == action[:toy]
+          if contact.bodyB.node.name == action[:action_param]
+            add_actions_for_update([action])
+          end
+        elsif contact.bodyB.node.name == action[:toy]
+          if contact.bodyA.node.name == action[:action_param]
+            add_actions_for_update([action])
+          end
+        end
+      end
+    end
+  end
+
+  def didEndContact(contact)
+    puts 'END CONTACT'
+  end
+
+  def add_collision(action)
+    if @collision_actions
+      @collision_actions << action
+    else
+      @collision_actions = []
+      @collision_actions << action
+    end
   end
 
 end

@@ -52,9 +52,13 @@ class SceneCreatorView < CreatorView
         setNeedsDisplay
       when :toy_selected
         @delegate.selected_toy = @selected
+      # @truly_selected has been set in ActionAdderViewController
+      when :collision
+        @current_tool = :grab
+        @delegate.selected_toy = @selected
+        setNeedsDisplay
       else
         @current_point = nil
-      # @truly_selected has been set in ActionAdderViewController
     end
 
     @mode = mode
@@ -153,7 +157,8 @@ class SceneCreatorView < CreatorView
             touch_begin_toys_only
           when :scene
             touch_begin_scene
-
+          when :collision
+            touch_begin_collision
         end
     end
     setNeedsDisplay
@@ -182,6 +187,11 @@ class SceneCreatorView < CreatorView
     else
       self.mode = :toys_only
     end
+  end
+
+  # A touch in collision mode
+  def touch_begin_collision
+    @colliding_selected = close_toy(@current_point)
   end
 
   # So we can start lines from off the edge of the view.
@@ -270,6 +280,8 @@ class SceneCreatorView < CreatorView
             touch_end_force
           when :rotate
             touch_end_rotate
+          when :collision
+            touch_end_collision
         end
       when :circle
         centre = @points[0]
@@ -303,6 +315,18 @@ class SceneCreatorView < CreatorView
     vector.y = -vector.y  # convert to SpriteKit coordinates
     @delegate.force = vector
     @delegate.close_modal_view
+  end
+
+  # Called when the touch ends for a collision toy selection.
+  def touch_end_collision
+    if @colliding_selected
+      @delegate.colliding_toy = @colliding_selected
+      #@delegate.close_modal_view
+    end
+  end
+
+  def touchesCancelled(touches, withEvent: event)
+
   end
 
   def touch_end_rotate

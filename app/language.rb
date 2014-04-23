@@ -11,6 +11,7 @@ class Language
   SCENE_MAKER   = 'Scene Maker'
   ACTION_ADDER  = 'Action Adder'
   FORCE_ADDER   = 'Force Adder'
+  COLLISION_ADDER   = 'Collision Adder'
 
   # Creator button labels
   GRAB          = 'grab'
@@ -24,7 +25,7 @@ class Language
   # Action Names
   TOUCH         = 'touch'
   COLLISION     = 'collision'
-  REPEAT         = 'repeat'     # Repeat?
+  REPEAT        = 'repeat'     # Repeat?
   HOLD          = 'hold'
   SCORE         = 'score'
 
@@ -39,5 +40,6 @@ class Language
   # Commands
   CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'
   TOUCH_FORCE         = 'Touch to show force direction and strength.'
+  TOUCH_COLLISION         = 'Choose the toy that your toy will collide with.'
 
 end

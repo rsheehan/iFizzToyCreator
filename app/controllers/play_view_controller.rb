@@ -29,6 +29,7 @@ class PlayViewController < UIViewController
   def update_play_scene
     return unless @play_view # this is because of the orientation bug being worked around in app_delegate
     @play_scene = PlayScene.alloc.initWithSize(@play_view.frame.size)
+    @play_scene.physicsWorld.contactDelegate = @play_scene
 
     # this is purely for development only uses the first scene
 
@@ -50,6 +51,8 @@ class PlayViewController < UIViewController
         when :timer
           puts("Action",action)
           NSTimer.scheduledTimerWithTimeInterval(action[:action_param][0]*60 + action[:action_param][1], target: self, selector: "perform_action:", userInfo: action, repeats: true)
+        when :collision
+          @play_scene.add_collision(action)
       end
     end
 
