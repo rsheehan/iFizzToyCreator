@@ -226,7 +226,7 @@ class SceneCreatorView < CreatorView
         end
       when :grab
         case @mode
-          when :toys_only, :scene
+          when :toys_only, :scene, :toy_selected
             touch_move_scene(point)
           when :force
             @current_point = point
