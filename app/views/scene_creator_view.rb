@@ -215,7 +215,7 @@ class SceneCreatorView < CreatorView
         end
       when :grab
         case @mode
-          when :toys_only, :scene
+          when :toys_only, :scene, :toy_selected
             touch_move_scene(point)
           when :force
             @current_point = point
@@ -302,9 +302,6 @@ class SceneCreatorView < CreatorView
     vector.y = -vector.y  # convert to SpriteKit coordinates
     @delegate.force = vector
     @delegate.close_modal_view
-  end
-
-  def touchesCancelled(touches, withEvent: event)
   end
 
   # Needed to allow both the pinch and rotate gesture recognizers to both work (individually).
