@@ -23,6 +23,10 @@ class ActionAdderViewController < UIViewController
     action_over_view = UIView.alloc.init
     self.view = action_over_view
 
+    #create a show actions button
+    # Add the mode buttons
+
+
     location_of_action = [95, 0]
     size_of_action = [@bounds.size.width - 190, @bounds.size.height]
 
@@ -43,6 +47,9 @@ class ActionAdderViewController < UIViewController
     #@main_view.mode = :toys_only  # only toys can be selected
     #@main_view.state = @state
     view.addSubview(@main_view)
+
+    button = setup_button(:show_actions, [10,10], @main_view)
+    button.enabled = true
   end
 
   def bounds_for_view=(bounds)
@@ -98,6 +105,18 @@ class ActionAdderViewController < UIViewController
     button.enabled = false
     super_view.addSubview(button)
     button
+  end
+
+  def show_actions
+    puts 'SHOW ACTIONS'
+    # transition to toy selector view where selecting a toy brings up a table view with action info etc.
+    #make a modal to select another toy - must disable selecting same toy?
+    show_action_view_controller = ShowActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    show_action_view_controller.bounds_for_view = @bounds
+    show_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+    show_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+    show_action_view_controller.delegate = self
+    presentViewController(show_action_view_controller, animated: false, completion: nil)
   end
 
   def enable_action_buttons(enable)

@@ -7,7 +7,8 @@ class SceneCreatorView < CreatorView
 
 # @truly_selected is a stroke/toy which is currently being touched by the user
 # @selected is a stroke/toy which was touched and is now hilighted
-  attr_writer :selected
+  attr_writer :selected, :show_action_controller
+  attr_reader :actions
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
 
@@ -59,6 +60,8 @@ class SceneCreatorView < CreatorView
         @current_tool = :grab
         @delegate.selected_toy = @selected
         setNeedsDisplay
+      when :show_actions
+        @selected = nil
     end
 
     @mode = mode
@@ -161,9 +164,22 @@ class SceneCreatorView < CreatorView
 
           when :collision
             touch_begin_collision
+          when :show_actions
+            touch_begin_show_actions
         end
     end
     setNeedsDisplay
+  end
+
+  # A touch in show actions mode
+  def touch_begin_show_actions
+    # Check to see if the touch is near a toy
+    @truly_selected = close_toy(@current_point)
+
+    if @truly_selected
+      @selected = @truly_selected
+      @show_action_controller.show_action_list(@selected)
+    end
   end
 
   # A touch in scene mode
