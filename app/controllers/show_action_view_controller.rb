@@ -1,6 +1,6 @@
 class ShowActionViewController< UIViewController
 
-    attr_writer :delegate, :scene_creator_view_controller
+    attr_writer :delegate, :scene_creator_view_controller, :state
 
     def loadView # preferable to viewDidLoad because not using xib
       # Do not call super.
@@ -44,6 +44,7 @@ class ShowActionViewController< UIViewController
       action_list_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
       action_list_view_controller.modalPresentationStyle = UIModalPresentationFormSheet
       action_list_view_controller.delegate = self
+      action_list_view_controller.state = @state
       action_list_view_controller.scene_creator_view_controller = @scene_creator_view_controller
       action_list_view_controller.selected = toy
       presentViewController(action_list_view_controller, animated: false, completion: nil)

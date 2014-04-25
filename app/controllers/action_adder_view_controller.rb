@@ -116,6 +116,7 @@ class ActionAdderViewController < UIViewController
     show_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
     show_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
     show_action_view_controller.delegate = self
+    show_action_view_controller.state = @state
     presentViewController(show_action_view_controller, animated: false, completion: nil)
   end
 
@@ -180,6 +181,10 @@ class ActionAdderViewController < UIViewController
     effect_type = :applyForce
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    # reset action params
+    @action_button_name = nil
+    @repeat_time_mins = nil
+    @colliding_toy = nil
   end
 
   # This is where we create the action/effect.

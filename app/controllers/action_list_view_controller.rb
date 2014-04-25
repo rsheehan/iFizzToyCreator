@@ -4,7 +4,7 @@ class ActionListViewController < UIViewController
 
     LITTLE_GAP = 10
     BIG_GAP = 40
-    WIDTH = 768
+    WIDTH = 500
 
     def loadView
       # Do not call super.
@@ -14,8 +14,8 @@ class ActionListViewController < UIViewController
 
       #make array of actions that relate to the selected toy
       @toy_actions = []
-      @scene_creator_view_controller.main_view.actions.each do |action|
-        if action.toy == @selected
+      @state.scenes[0].actions.each do |action|
+        if action[:toy] == @selected.template.identifier
           @toy_actions << action
         end
       end
@@ -24,6 +24,7 @@ class ActionListViewController < UIViewController
       @table_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
       @table_view.dataSource = self
       @table_view.delegate = self
+      @table_view.rowHeight = 95
       view.addSubview(@table_view)
       #setup delete button
 
@@ -76,15 +77,6 @@ class ActionListViewController < UIViewController
       # @table_view.reloadData()
 
     end
-
-    def delete_toy(index_path)
-      @state.toys.delete_at(index_path.row)
-      #remove item from collectionview
-      @table_view.deleteItemsAtIndexPaths([index_path])
-      #save state
-      @state.save
-
-    end
     # The methods to implement the UICollectionViewDataSource protocol.
 
 
@@ -103,11 +95,38 @@ class ActionListViewController < UIViewController
       # end
 
       @reuseIdentifier ||= "cell"
-      toy_button = tableView.dequeueReusableCellWithIdentifier(@reuseIdentifier)
-      toy_button ||= ActionCell.alloc.initWithStyle(UITableViewCellStyleValue1, reuseIdentifier: @reuseIdentifier)
+      action_cell = @table_view.dequeueReusableCellWithIdentifier(@reuseIdentifier)
+      action_cell ||= ActionCell.alloc.initWithStyle(UITableViewCellStyleValue1, reuseIdentifier: @reuseIdentifier)
 
-      # toy_button.toy = @state.toys[item]
-      toy_button
+      action = @toy_actions[item]
+      #action image
+      case action[:action_type]
+        when :collision
+          action_cell.action_image = UIImage.imageNamed("collision.png")
+          #set object to be the toy image of the identifier in actionparam
+          @state.toys.each do |toy|
+            if toy.identifier == action[:action_param]
+              action_cell.object_image = toy.image
+              break
+            end
+          end
+
+        when :timer
+          action_cell.action_image = UIImage.imageNamed("repeat.png")
+          # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
+          #show how often in object view
+          # action_cell.object_image_view = UILabel.alloc.init
+          # action_cell.object_image_view.text = action[:action_param][0] + ':' + action[:action_param][1]
+        when :button
+          action_cell.action_image = UIImage.imageNamed("touch.png")
+          action_cell.object_image = UIImage.imageNamed(action[:action_param]+ ".png")
+          # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
+          # action_cell.object_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed(action[:action_param]+ ".png"))
+      end
+
+      #effect image
+
+      action_cell
 
     end
 
@@ -158,7 +177,10 @@ class ActionListViewController < UIViewController
       # else
       #   @delegate.drop_toy(item)
       # end
-      puts "Selected row " + item
+      puts "Selected row "
     end
 
+    def tableView(tableView, titleForHeaderInSection:section)
+      return "Action        Object        Effect"
+    end
 end
