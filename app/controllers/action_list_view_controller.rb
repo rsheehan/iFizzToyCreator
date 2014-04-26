@@ -20,7 +20,7 @@ class ActionListViewController < UIViewController
         end
       end
       #make table view filled with all actions that have selected as the toy
-      @table_view = UITableView.alloc.initWithFrame([[@current_xpos, 0], [WIDTH - @current_xpos, WIDTH]])
+      @table_view = UITableView.alloc.initWithFrame([[@current_xpos, 0], [WIDTH - @current_xpos, WIDTH+95]])
       @table_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
       @table_view.dataSource = self
       @table_view.delegate = self
@@ -84,15 +84,21 @@ class ActionListViewController < UIViewController
       @toy_actions.length
     end
 
+    def drawText(text, inImage:image)
+      font = UIFont.fontWithName('Courier New', size: 20)
+      UIGraphicsBeginImageContext(image.size)
+      image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+      rect = CGRectMake(image.size.width/9, image.size.height/2.75, image.size.width, image.size.height)
+      UIColor.blackColor.set
+      text.drawInRect(CGRectIntegral(rect), withFont:font)
+      newImage = UIGraphicsGetImageFromCurrentImageContext()
+      UIGraphicsEndImageContext()
+
+      newImage
+    end
+
     def tableView(tv, cellForRowAtIndexPath: index_path)
       item = index_path.row # ignore section as only one
-      # if @delete_mode
-      #   toy_button = cv.dequeueReusableCellWithReuseIdentifier(DELETETOYBUTTON, forIndexPath: index_path)
-      #   toy_button.layer.removeAllAnimations
-      #   animateToyButton(toy_button,0,false)
-      # else
-      #   toy_button = tv.dequeueReusableCellWithReuseIdentifier("ActionCell", forIndexPath: index_path)
-      # end
 
       @reuseIdentifier ||= "cell"
       action_cell = @table_view.dequeueReusableCellWithIdentifier(@reuseIdentifier)
@@ -115,13 +121,11 @@ class ActionListViewController < UIViewController
           action_cell.action_image = UIImage.imageNamed("repeat.png")
           # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
           #show how often in object view
-          # action_cell.object_image_view = UILabel.alloc.init
-          # action_cell.object_image_view.text = action[:action_param][0] + ':' + action[:action_param][1]
+          textImage = drawText(action[:action_param][0].to_s.rjust(2, "0") + ':' + action[:action_param][1].to_s.rjust(2, "0"), inImage:UIImage.imageNamed("empty.png") )
+          action_cell.object_image = textImage
         when :button
           action_cell.action_image = UIImage.imageNamed("touch.png")
           action_cell.object_image = UIImage.imageNamed(action[:action_param]+ ".png")
-          # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
-          # action_cell.object_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed(action[:action_param]+ ".png"))
       end
 
       #effect image
@@ -129,45 +133,6 @@ class ActionListViewController < UIViewController
       action_cell
 
     end
-
-    def animateToyButton(button,rotation,decreasing)
-      if not(@delete_mode)
-        return
-      end
-      if decreasing
-        rotation -= 0.01
-        if rotation <= -3.14/128
-          decreasing = false
-        end
-      else
-        rotation += 0.01
-        if rotation >= 3.14/128
-          decreasing = true
-        end
-      end
-
-      UIView.animateWithDuration(0.00001,
-                                 delay: 0,
-                                 options: UIViewAnimationOptionAllowUserInteraction,
-                                 animations: lambda {
-                                   button.transform = CGAffineTransformMakeRotation(rotation)
-                                 },
-                                 completion:lambda {|finished|
-                                   animateToyButton(button,rotation,decreasing)
-                                 }
-      )
-    end
-
-    # And the methods for the UICollectionViewDelegateFlowLayout protocol.
-    # Without this the size of the cells are the default.
-    # def collectionView(cv, layout: layout, sizeForItemAtIndexPath: index_path)
-    #   item = index_path.row
-    #   @state.toys[item].image.size
-    # end
-    #
-    # def collectionView(cv, layout: layout, insetForSectionAtIndex: section)
-    #   UIEdgeInsetsMake(5, 5, 5, 5)
-    # end
 
     # And the methods for the UICollectionViewDelegate protocol.
     def tableView(tv, didSelectRowAtIndexPath: index_path)
@@ -181,6 +146,9 @@ class ActionListViewController < UIViewController
     end
 
     def tableView(tableView, titleForHeaderInSection:section)
-      return "Action        Object        Effect"
+      return "   Action                        Object                          Effect"
     end
+
+
+
 end
