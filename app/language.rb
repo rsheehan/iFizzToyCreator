@@ -12,6 +12,7 @@ class Language
   ACTION_ADDER  = 'Action Adder'
   FORCE_ADDER   = 'Force Adder'
   COLLISION_ADDER   = 'Collision Adder'
+  VIEW_ACTIONS  = 'Show Actions'
 
   # Creator button labels
   GRAB          = 'grab'
@@ -40,6 +41,7 @@ class Language
   # Commands
   CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'
   TOUCH_FORCE         = 'Touch to show force direction and strength.'
-  TOUCH_COLLISION         = 'Choose the toy that your toy will collide with.'
+  TOUCH_COLLISION     = 'Choose the toy that your toy will collide with.'
+  SHOW_ACTIONS        = 'Tap a toy to view it\'s actions and effects.'
 
 end
