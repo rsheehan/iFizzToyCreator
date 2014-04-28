@@ -105,8 +105,10 @@ class ToyCreatorViewController < UIViewController
   end
 
   def clear
-    @main_view.setup_for_new
+    #@main_view.setup_for_new
     @id = rand(2**60).to_s
+    @main_view.clear
+
   end
 
 end
