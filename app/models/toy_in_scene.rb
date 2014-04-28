@@ -48,8 +48,29 @@ class ToyInScene
 
   # Called when a zoom in the UI is completed.
   def change_zoom(zoom)
-    @old_zoom = @zoom = zoom #* @old_zoom
+    width_new = @image.size.width / @old_zoom * zoom
+    height_new = @image.size.height / @old_zoom * zoom
+    frame_width = 824
+    frame_height = 700
+    size_min = 25
+    if(width_new > frame_width || height_new > frame_height)
+      dx = width_new / frame_width
+      dy = height_new / frame_height
+      if (dx > dy)
+        @zoom = frame_width / (@image.size.width / @old_zoom)
+      else
+        @zoom = frame_height / (@image.size.height / @old_zoom)
+      end
+
+    elsif(width_new < size_min || height_new < size_min )
+      if(width_new > height_new)
+        @zoom = size_min / (@image.size.height / @old_zoom)
+      else
+        @zoom = size_min / (@image.size.width / @old_zoom)
+      end
+    end
     @image = @template.create_image(@zoom)
+    @old_zoom = @zoom
   end
 
   Wheel = Struct.new(:position, :radius)
