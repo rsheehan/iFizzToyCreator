@@ -162,9 +162,7 @@ class ActionAdderViewController < UIViewController
     enable_effect_buttons(true)
   end
 
-  # Gets the force information for the actions effect.
-  # When this is received the action info is complete.
-  def force=(force_vector)
+  def get_action
     if @action_button_name
       action_type = :button
       action_param = @action_button_name
@@ -178,6 +176,13 @@ class ActionAdderViewController < UIViewController
       action_type = :unknown
       action_param = :unknown
     end
+    return action_type, action_param
+  end
+
+  # Gets the force information for the actions effect.
+  # When this is received the action info is complete.
+  def force=(force_vector)
+    action_type, action_param = get_action
     effect_type = :applyForce
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
