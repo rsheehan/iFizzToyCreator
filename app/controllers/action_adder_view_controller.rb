@@ -6,7 +6,7 @@ class ActionAdderViewController < UIViewController
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
   ACTIONS = [:touch, :repeat, :collision]
-  EFFECTS = [:apply_force, :apply_rotation]
+  EFFECTS = [:apply_force, :explosion]
 
   FORCE_SCALE = 10
 
@@ -176,6 +176,10 @@ class ActionAdderViewController < UIViewController
       action_type = :unknown
       action_param = :unknown
     end
+    # reset action params
+    @action_button_name = nil
+    @repeat_time_mins = nil
+    @colliding_toy = nil
     return action_type, action_param
   end
 
@@ -186,10 +190,14 @@ class ActionAdderViewController < UIViewController
     effect_type = :applyForce
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
-    # reset action params
-    @action_button_name = nil
-    @repeat_time_mins = nil
-    @colliding_toy = nil
+
+  end
+
+  def explosion=(force_vector)
+    action_type, action_param = get_action
+    effect_type = :explosion
+    effect_param = force_vector * FORCE_SCALE
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
   end
 
   # This is where we create the action/effect.
@@ -304,6 +312,18 @@ class ActionAdderViewController < UIViewController
 
   def apply_rotation
     drag_action_view_controller = DragActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    drag_action_view_controller.bounds_for_view = @bounds
+    #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+    drag_action_view_controller.selected = @selected_toy
+    #drag_action_view_controller.delegate = self
+    #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
+    drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+    presentViewController(drag_action_view_controller, animated: false, completion: nil)
+  end
+
+  def explosion
+    drag_action_view_controller = ExplosionActionViewController.alloc.initWithNibName(nil, bundle: nil)
     drag_action_view_controller.bounds_for_view = @bounds
     #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
     drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen

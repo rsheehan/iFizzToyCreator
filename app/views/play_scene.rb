@@ -32,16 +32,33 @@ class PlayScene < SKScene
     @actions_to_fire.each do |action|
       toy_id = action[:toy]
       toys = @toy_hash[toy_id] # all toys of the correct type
+      if toys.nil?     # If the toy gets deleted after an action is added
+        next
+      end
       toys.each do |toy| # toys here are SKSpriteNodes
         effect = action[:effect_type]
         param = action[:effect_param]
-        if effect == :applyForce
-          # make force relative to the toy
-          rotation = CGAffineTransformMakeRotation(toy.zRotation)
-          # TODO: need to take the scale of the node into consideration when applying forces
-          param = CGPointApplyAffineTransform(param, rotation)
+        send = false
+        case effect
+          when :applyForce
+            # make force relative to the toy
+            rotation = CGAffineTransformMakeRotation(toy.zRotation)
+            # TODO: need to take the scale of the node into consideration when applying forces
+            param = CGPointApplyAffineTransform(param, rotation)
+            send = true
+          when :explosion
+            remove = []
+            children.each do |child|
+              if child.name == toy_id
+                remove << child
+              end
+            end
+            removeChildrenInArray(remove)
+            toys.delete(toy)
         end
-        toy.physicsBody.send(effect, param)
+        if send
+          toy.physicsBody.send(effect, param)
+        end
       end
     end
     @actions_to_fire = []

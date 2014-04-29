@@ -296,6 +296,8 @@ class SceneCreatorView < CreatorView
             touch_end_force
           when :rotate
             touch_end_rotate
+          when :explosion
+            touch_end_explosion
           when :collision
             touch_end_collision
         end
@@ -330,6 +332,13 @@ class SceneCreatorView < CreatorView
     vector = @current_point - @selected.position
     vector.y = -vector.y  # convert to SpriteKit coordinates
     @delegate.force = vector
+    @delegate.close_modal_view
+  end
+
+  def touch_end_explosion
+    vector = @current_point - @selected.position
+    vector.y = -vector.y  # convert to SpriteKit coordinates
+    @delegate.explosion = vector
     @delegate.close_modal_view
   end
 
