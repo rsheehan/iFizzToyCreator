@@ -35,6 +35,16 @@ class PlayScene < SKScene
       if toys.nil?     # If the toy gets deleted after an action is added
         next
       end
+      #if collision - remove all toys that are same but not collided
+      if action[:action_type] == :collision
+        new_toys = []
+        toys.each do |toy|
+          if toy.userData == action[:action_param][1]
+            new_toys << toy
+          end
+        end
+        toys = new_toys
+      end
       toys.each do |toy| # toys here are SKSpriteNodes
         effect = action[:effect_type]
         param = action[:effect_param]
@@ -177,6 +187,7 @@ class PlayScene < SKScene
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)
     toy.zRotation = -toy_in_scene.angle
+    toy.userData = rand(2**60).to_s #add unique id to allow for single collision
     addChild(toy)
 
     # physics body stuff
@@ -193,6 +204,9 @@ class PlayScene < SKScene
       wheel_node = SKNode.node
       wheel_node.hidden = true
       wheel_node.position = wheel.position
+      #give the wheel the same name and id as the toy
+      wheel_node.name = toy_in_scene.template.identifier
+      wheel_node.userData = toy.userData
       # then the body
       body = SKPhysicsBody.bodyWithCircleOfRadius(wheel.radius)
       body.contactTestBitMask = 1
@@ -215,13 +229,30 @@ class PlayScene < SKScene
     #check each collision action - if  the 2 colliding toys have the corresponding identifiers to a collision action, add it
     if @collision_actions
       @collision_actions.each do |action|
+        if contact.bodyA.node.userData == contact.bodyB.node.userData
+          next
+        end
         if contact.bodyA.node.name == action[:toy]
           if contact.bodyB.node.name == action[:action_param]
-            add_actions_for_update([action])
+            #alter action param to include the specific toy that collided(unique id is stored as second param in action params array)
+            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData]; h }
+            add_actions_for_update([new_action])
+            #if identifiers are the same add another action for second toy
+            if action[:toy] == action[:action_param]
+              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData]; h }
+              add_actions_for_update([new_action])
+            end
           end
         elsif contact.bodyB.node.name == action[:toy]
           if contact.bodyA.node.name == action[:action_param]
-            add_actions_for_update([action])
+            #alter action param to include the specific toy that collided(unique id is stored as second param in action params array)
+            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData]; h }
+            add_actions_for_update([new_action])
+            #if identifiers are the same add another action for second toy
+            if action[:toy] == action[:action_param]
+              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData]; h }
+              add_actions_for_update([new_action])
+            end
           end
         end
       end
