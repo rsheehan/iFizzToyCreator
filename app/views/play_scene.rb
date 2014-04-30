@@ -45,6 +45,7 @@ class PlayScene < SKScene
         end
         toys = new_toys
       end
+
       toys.each do |toy| # toys here are SKSpriteNodes
         effect = action[:effect_type]
         param = action[:effect_param]
@@ -60,6 +61,7 @@ class PlayScene < SKScene
             remove = [toy]
             removeChildrenInArray(remove)
             toys.delete(toy)
+            break_toy(toy)
         end
         if send
           toy.physicsBody.send(effect, param)
@@ -67,6 +69,23 @@ class PlayScene < SKScene
       end
     end
     @actions_to_fire = []
+  end
+
+  def break_toy(toy)
+    toy_in_scene = @toys.select {|s| s.template.identifier == toy.name}
+    templates = []
+    new_name = rand(2**60).to_s # TODO: Make better
+    @toy_hash[new_name] = []
+    toy_in_scene.first.template.parts.each do |part|
+      templates << ToyTemplate.new([part], toy.name)
+      image = templates.last.create_image(1) # Change to toy ZOOM!
+      new_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(image))
+      new_toy.name = new_name
+      new_toy.position = view.convertPoint(toy.position, toScene: self)
+      addChild(new_toy)
+      puts toy.name
+      @toy_hash[new_name] << new_toy
+    end
   end
 
   ## Apply a force to the toy.
