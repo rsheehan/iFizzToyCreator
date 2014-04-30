@@ -82,14 +82,14 @@ class ActionAdderViewController < UIViewController
     button_names.each do |button_name|
       button = setup_button(button_name, position, button_view)
       buttons[button_name] = button
-      position[1] += CGRectGetHeight(button.frame) + 10
-      label = UILabel.alloc.initWithFrame([[0, position[1]], [95, 14]])
+      position[1] += CGRectGetHeight(button.frame) + 3
+      label = UILabel.alloc.initWithFrame([[0, position[1]], [95, 10]])
       label.font = UIFont.systemFontOfSize(12)
       label.textColor = UIColor.whiteColor
       label.text = name_for_label(button_name)
       label.textAlignment = NSTextAlignmentCenter
       button_view.addSubview(label)
-      position[1] += CGRectGetHeight(label.frame) + 5
+      position[1] += CGRectGetHeight(label.frame) + 8
     end
     view.addSubview(button_view)
     buttons
