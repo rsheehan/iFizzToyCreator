@@ -47,12 +47,7 @@ class PlayScene < SKScene
             param = CGPointApplyAffineTransform(param, rotation)
             send = true
           when :explosion
-            remove = []
-            children.each do |child|
-              if child.name == toy_id
-                remove << child
-              end
-            end
+            remove = [toy]
             removeChildrenInArray(remove)
             toys.delete(toy)
         end
