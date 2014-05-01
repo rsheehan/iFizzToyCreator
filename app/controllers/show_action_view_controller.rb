@@ -8,6 +8,7 @@ class ShowActionViewController< UIViewController
       self.view = action_over_view
       @main_view = @scene_creator_view_controller.main_view
       @main_view.mode = :show_actions
+      @main_view.selected = nil
       @main_view.show_action_controller = self
       view.addSubview(@main_view)
       @main_view.change_label_text_to(Language::VIEW_ACTIONS)

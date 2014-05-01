@@ -190,7 +190,9 @@ class ActionAdderViewController < UIViewController
     effect_type = :applyForce
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
-
+    #remove shadows from other colliding toy if collision action
+    @main_view.colliding_selected = nil
+    @main_view.setNeedsDisplay
   end
 
   def explosion=(force_vector)
