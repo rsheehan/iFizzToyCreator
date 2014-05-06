@@ -7,7 +7,7 @@ class SceneCreatorView < CreatorView
 
 # @truly_selected is a stroke/toy which is currently being touched by the user
 # @selected is a stroke/toy which was touched and is now hilighted
-  attr_writer :selected, :show_action_controller
+  attr_writer :selected, :colliding_selected, :show_action_controller
   attr_reader :actions
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
@@ -60,6 +60,7 @@ class SceneCreatorView < CreatorView
         setNeedsDisplay
       when :show_actions
         @selected = nil
+        setNeedsDisplay
       else
         @current_point = nil
     end
@@ -175,8 +176,7 @@ class SceneCreatorView < CreatorView
     @truly_selected = close_toy(@current_point)
 
     if @truly_selected
-      @selected = @truly_selected
-      @show_action_controller.show_action_list(@selected)
+      @show_action_controller.show_action_list(@truly_selected)
     end
   end
 
@@ -422,6 +422,12 @@ class SceneCreatorView < CreatorView
       CGContextBeginTransparencyLayer(context, nil)
       setup_context(context, true)
       @selected.draw(context)
+      CGContextEndTransparencyLayer(context)
+    end
+    if @colliding_selected
+      CGContextBeginTransparencyLayer(context, nil)
+      setup_context(context, true)
+      @colliding_selected.draw(context)
       CGContextEndTransparencyLayer(context)
     end
     if @points
