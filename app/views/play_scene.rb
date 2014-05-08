@@ -81,9 +81,8 @@ class PlayScene < SKScene
     partsArray.each do |part|
       #position = centre_part(part, toy.position)
       templates << ToyTemplate.new([part], new_name)
-      new_toy = ToyInScene.new(templates.last)
-      new_toy.change_zoom(toy_in_scene.zoom)
-      new_toy.change_position(toy.position)
+      new_toy = ToyInScene.new(templates.last, toy_in_scene.zoom)
+      new_toy.change_position(view.convertPoint(toy.position, fromScene: self))
       new_toy.centre_parts
       new_toy.change_angle(toy_in_scene.angle)
       new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(new_toy.image))
@@ -100,7 +99,7 @@ class PlayScene < SKScene
         wheel = new_toy.add_wheels_in_scene(self)[0]
         new_sprite_toy.hidden = false
         puts "Wheel Pos, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
-        new_sprite_toy.position = new_toy.position
+        new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
         body = SKPhysicsBody.bodyWithCircleOfRadius(wheel.radius)
         new_sprite_toy.physicsBody = body
       end

@@ -7,12 +7,12 @@ class ToyInScene
   attr_accessor :angle, :zoom
   attr_reader :image  # for the PlayScene
 
-  def initialize(toy_template)
+  def initialize(toy_template, zoom = 1.0)
     @template = toy_template
     @old_position = @position = CGPointMake((1024 - 190)/2, (768 - 56)/2)
     @old_angle = @angle = 0
     @image = @template.image
-    @old_zoom = @zoom = 1.0
+    @old_zoom = @zoom = zoom
   end
 
   # Turns the ToyInScene into json compatible data.
@@ -49,22 +49,27 @@ class ToyInScene
   def centre_parts
     left, right, top, bottom = @template.extreme_points
     centre_point = CGPointMake((right+left)/2, (bottom+top)/2)
-    @position -= centre_point
+    @position = @position + (centre_point * @zoom)
+    parts = []
     i = 0
     while i < @template.parts.length
       case @template.parts[i]
         when CirclePart
-          @template.parts[i] = CirclePart.new(@template.parts[i].position - centre_point, @template.parts[i].radius, @template.parts[i].colour)
+          parts << CirclePart.new(CGPointMake(0, 0), @template.parts[i].radius, @template.parts[i].colour)
           puts "CirclePart-  X: " + @template.parts[i].position.x.to_s + ", Y: " + @template.parts[i].position.y.to_s
         when PointsPart
+          points = []
           j = 0
           while j < @template.parts[i].points.length
-            @template.parts[i].points[j] = @template.parts[i].points[j] - centre_point
+            points << @template.parts[i].points[j] - centre_point
             j += 1
           end
+          parts << PointsPart.new(points, @template.parts[i].colour)
       end
       i += 1
     end
+    @template = ToyTemplate.new(parts, @template.identifier)
+    @image = @template.create_image(@zoom)
   end
 
   # Called when a zoom in the UI is completed.
@@ -84,7 +89,7 @@ class ToyInScene
       end
 
     elsif(width_new < size_min && height_new < size_min )
-      if(width_new > height_new)
+      if(width_new < height_new)
         @zoom = size_min / (@image.size.height / @old_zoom)
       else
         @zoom = size_min / (@image.size.width / @old_zoom)
