@@ -130,20 +130,20 @@ class ToyPhysicsBody
 # Uses Jarvis's algorithm - http://www.geeksforgeeks.org/convex-hull-set-1-jarviss-algorithm-or-wrapping/
 # Assumes path has at least 3 points.
   def convex_hull(path = @all_points)
+
+    # Turn Two points into Four
     if path.length == 2
-      dx = path[0].x - path[1].x
-      dy = path[0].y - path[1].y
+      dline = path[0] - path[1]
       new_points = []
       new_points[0] = path[0]
       new_points[3] = path[1]
 
-      len = Math.sqrt( dx ** 2 + dy ** 2)
+      len = Math.sqrt( dline.x ** 2 + dline.y ** 2)
 
-      dx = dx / (len/2)
-      dy = dy / (len/2)
+      dline = dline / (len/2)
 
-      new_points[1] = CGPointMake(path[0].x - dx, path[0].y + dy)
-      new_points[2] = CGPointMake(path[1].x - dx, path[1].y + dy)
+      new_points[1] = CGPointMake(path[0].x - dline.x, path[0].y + dline.y)
+      new_points[2] = CGPointMake(path[1].x - dline.x, path[1].y + dline.y)
 
       path = new_points
     end

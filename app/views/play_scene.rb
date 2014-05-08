@@ -61,6 +61,7 @@ class PlayScene < SKScene
             remove = [toy]
             removeChildrenInArray(remove)
             toys.delete(toy)
+            @toy_hash[toy_id].delete(toy)
             break_toy(toy)
         end
         if send
@@ -72,20 +73,102 @@ class PlayScene < SKScene
   end
 
   def break_toy(toy)
-    toy_in_scene = @toys.select {|s| s.template.identifier == toy.name}
+    toy_in_scene = @toys.select {|s| s.template.identifier == toy.name}.first
     templates = []
     new_name = rand(2**60).to_s # TODO: Make better
     @toy_hash[new_name] = []
-    toy_in_scene.first.template.parts.each do |part|
-      templates << ToyTemplate.new([part], toy.name)
-      image = templates.last.create_image(1) # Change to toy ZOOM!
-      new_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(image))
-      new_toy.name = new_name
-      new_toy.position = view.convertPoint(toy.position, toScene: self)
-      addChild(new_toy)
-      puts toy.name
-      @toy_hash[new_name] << new_toy
+    partsArray = check_parts(toy_in_scene.template.parts)
+    partsArray.each do |part|
+      #position = centre_part(part, toy.position)
+      templates << ToyTemplate.new([part], new_name)
+      new_toy = ToyInScene.new(templates.last)
+      new_toy.change_zoom(toy_in_scene.zoom)
+      new_toy.change_position(toy.position)
+      new_toy.centre_parts
+      new_toy.change_angle(toy_in_scene.angle)
+      new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(new_toy.image))
+      if part.is_a? PointsPart
+        new_sprite_toy.zRotation = -toy_in_scene.angle
+        new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
+        puts "Toy Position X: " + new_toy.position.x.to_s + " Y: " +  new_toy.position.y.to_s #+ " , " + new_toy.position.
+        physics_points = ToyPhysicsBody.new(new_toy.template.parts).convex_hull_for_physics(new_toy.zoom)
+        path = CGPathCreateMutable()
+        CGPathMoveToPoint(path, nil, *physics_points[0])
+        physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
+        new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+      elsif part.is_a? CirclePart
+        wheel = new_toy.add_wheels_in_scene(self)[0]
+        new_sprite_toy.hidden = false
+        puts "Wheel Pos, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+        new_sprite_toy.position = new_toy.position
+        body = SKPhysicsBody.bodyWithCircleOfRadius(wheel.radius)
+        new_sprite_toy.physicsBody = body
+      end
+      new_sprite_toy.name = new_name
+
+      addChild(new_sprite_toy)
+      @toy_hash[new_name] << new_sprite_toy
     end
+  end
+
+  # def centre_part(part, position)
+  #   left, right, top, bottom = part.extremes
+  #   centrepoint = CGPointMake(right - left, bottom - top)
+  #   puts "Centre, X: " + centrepoint.x.to_s + " Y: " + centrepoint.y.to_s
+  #   if part.is_a? PointsPart
+  #     i = 0
+  #     while i < part.points.length
+  #       puts "Before, X: " + part.points[i].x.to_s + " Y: " + part.points[i].y.to_s
+  #       part.points[i] = part.points[i] + centrepoint
+  #       puts "After, X: " + part.points[i].x.to_s + " Y: " + part.points[i].y.to_s
+  #       i += 1
+  #     end
+  #   end
+  #   # part.points.each do |point|
+  #   #   point = point - centrepoint
+  #   # end
+  #   position = position - centrepoint
+  #   puts "Position, X: " + position.x.to_s + " Y: " + position.y.to_s
+  #   position
+  # end
+
+  # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
+  def check_parts(parts)
+    circle_parts = parts.select {|x| x.is_a? (CirclePart) }
+    point_parts = parts.select {|x| x.is_a? (PointsPart) }
+    if point_parts.length == 0
+      return parts
+    end
+    point_parts.sort_by { |x| x.points.length * -1 }
+
+    point_parts.each do |part|
+      if point_parts.length + circle_parts.length > 4
+        return point_parts + circle_parts
+      end
+      new_points = []
+      if part.points.length == 2
+        average_point = (part.points[0] + part.points[1]) /2
+        new_points << [part.points[0], average_point]
+        new_points << [average_point, part.points[1]]
+      else
+        half = part.points.length / 2
+        new_points << part.points[0..half]
+        if part.points.length % 2 == 1
+          left_point = (part.points[half] + part.points[half+1]) /2
+          right_point = (part.points[half+1] + part.points[half+2]) /2
+          new_points << part.points[half..part.points.length]
+          new_points[0].push(left_point)
+          new_points[1].insert(0, right_point)
+        else
+          new_points << part.points[half+1..part.points.length]
+        end
+      end
+      point_parts << PointsPart.new(new_points[0], part.colour)
+      point_parts << PointsPart.new(new_points[1], part.colour)
+      point_parts.delete(part)
+    end
+
+    return parts
   end
 
   ## Apply a force to the toy.

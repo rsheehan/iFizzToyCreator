@@ -46,6 +46,27 @@ class ToyInScene
     @old_angle = @angle = angle
   end
 
+  def centre_parts
+    left, right, top, bottom = @template.extreme_points
+    centre_point = CGPointMake((right+left)/2, (bottom+top)/2)
+    @position -= centre_point
+    i = 0
+    while i < @template.parts.length
+      case @template.parts[i]
+        when CirclePart
+          @template.parts[i] = CirclePart.new(@template.parts[i].position - centre_point, @template.parts[i].radius, @template.parts[i].colour)
+          puts "CirclePart-  X: " + @template.parts[i].position.x.to_s + ", Y: " + @template.parts[i].position.y.to_s
+        when PointsPart
+          j = 0
+          while j < @template.parts[i].points.length
+            @template.parts[i].points[j] = @template.parts[i].points[j] - centre_point
+            j += 1
+          end
+      end
+      i += 1
+    end
+  end
+
   # Called when a zoom in the UI is completed.
   def change_zoom(zoom)
     width_new = @image.size.width / @old_zoom * zoom
@@ -62,7 +83,7 @@ class ToyInScene
         @zoom = frame_height / (@image.size.height / @old_zoom)
       end
 
-    elsif(width_new < size_min || height_new < size_min )
+    elsif(width_new < size_min && height_new < size_min )
       if(width_new > height_new)
         @zoom = size_min / (@image.size.height / @old_zoom)
       else
