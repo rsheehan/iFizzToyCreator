@@ -6,7 +6,7 @@ class ActionAdderViewController < UIViewController
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
   ACTIONS = [:touch, :repeat, :collision]
-  EFFECTS = [:apply_force, :explosion]
+  EFFECTS = [:apply_force, :explosion, :apply_torque]
 
   FORCE_SCALE = 10
 
@@ -195,11 +195,24 @@ class ActionAdderViewController < UIViewController
     @main_view.setNeedsDisplay
   end
 
-  def explosion=(force_vector)
+  def rotation=(force)
+    action_type, action_param = get_action
+    effect_type = :applyTorque
+    effect_param = force
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    #remove shadows from other colliding toy if collision action
+    @main_view.colliding_selected = nil
+    @main_view.setNeedsDisplay
+  end
+
+  def explosion=(force)
     action_type, action_param = get_action
     effect_type = :explosion
-    effect_param = force_vector * FORCE_SCALE
+    effect_param = force
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    #remove shadows from other colliding toy if collision action
+    @main_view.colliding_selected = nil
+    @main_view.setNeedsDisplay
   end
 
   # This is where we create the action/effect.
@@ -247,8 +260,8 @@ class ActionAdderViewController < UIViewController
         Language::SCORE
       when :apply_force
         Language::FORCE
-      when :apply_rotation
-        Language::ROTATE
+      when :apply_torque
+        Language::ROTATION
       when :explosion
         Language::EXPLOSION
       when :create_new_toy
@@ -312,8 +325,8 @@ class ActionAdderViewController < UIViewController
     presentViewController(drag_action_view_controller, animated: false, completion: nil)
   end
 
-  def apply_rotation
-    drag_action_view_controller = DragActionViewController.alloc.initWithNibName(nil, bundle: nil)
+  def apply_torque
+    drag_action_view_controller = RotationActionViewController.alloc.initWithNibName(nil, bundle: nil)
     drag_action_view_controller.bounds_for_view = @bounds
     #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
     drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen

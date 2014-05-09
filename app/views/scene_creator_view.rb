@@ -294,8 +294,8 @@ class SceneCreatorView < CreatorView
             touch_end_scene
           when :force
             touch_end_force
-          when :rotate
-            touch_end_rotate
+          when :rotation
+            touch_end_rotation
           when :explosion
             touch_end_explosion
           when :collision
@@ -337,8 +337,18 @@ class SceneCreatorView < CreatorView
 
   def touch_end_explosion
     vector = @current_point - @selected.position
-    vector.y = -vector.y  # convert to SpriteKit coordinates
-    @delegate.explosion = vector
+    magnitude = Math.sqrt(vector.x**2 + vector.y**2)
+    @delegate.explosion = magnitude
+    @delegate.close_modal_view
+  end
+
+  def touch_end_rotation # TODO: Change with GUI change
+    vector = @current_point - @selected.position
+    magnitude = Math.sqrt(vector.x**2 + vector.y**2)
+    if vector.x * vector.y < 0
+      magnitude *= -1
+    end
+    @delegate.rotation = magnitude
     @delegate.close_modal_view
   end
 
@@ -441,9 +451,15 @@ class SceneCreatorView < CreatorView
         if @current_point && @selected
           draw_force_arrow(context, @selected.position, @current_point)
         end
+      when :explosion
+        if @current_point && @selected
+          draw_force_arrow(context, @selected.position, @current_point)
+          # TODO: Draw Explosion Circle
+        end
       when :rotate
         if @current_point && @selected
            draw_force_arrow(context, @selected.position, @current_point)
+          # TODO: Appropriate rotation design
         end
     end
   end

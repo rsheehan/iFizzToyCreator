@@ -64,6 +64,8 @@ class PlayScene < SKScene
             @toy_hash[toy_id].delete(toy)
             explode_toy(toy, param)
             removeChildrenInArray(remove)
+          when :applyTorque
+            send = true
         end
         if send
           toy.physicsBody.send(effect, param)
@@ -88,7 +90,7 @@ class PlayScene < SKScene
       new_toy.change_angle(toy_in_scene.angle)
       new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(new_toy.image))
       if part.is_a? PointsPart
-        new_sprite_toy.zRotation = -toy_in_scene.angle
+        new_sprite_toy.zRotation = toy.zRotation
         new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
         #puts "Toy Position X: " + new_toy.position.x.to_s + " Y: " +  new_toy.position.y.to_s #+ " , " + new_toy.position.
         physics_points = ToyPhysicsBody.new(new_toy.template.parts).convex_hull_for_physics(new_toy.zoom)
@@ -110,10 +112,9 @@ class PlayScene < SKScene
       #puts "Velocity After: X: " + new_sprite_toy.physicsBody.velocity.dx.to_s + ",  Y: " + new_sprite_toy.physicsBody.velocity.dy.to_s
       new_sprite_toy.name = new_name
       addChild(new_sprite_toy)
-      magnitude = Math.sqrt(force.x**2 + force.y**2)
-      puts "Force X: " + force.x.to_s + ", Y: " + force.y.to_s + ", Mag: " + magnitude.to_s
-      puts "Displacement X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
-      new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(magnitude/displacement.x/20 , -magnitude/displacement.y/20))
+      #puts "Mag: " + force.to_s
+      puts "Force X: " + (force/displacement.x/20).to_s + ", Y: " + (-force/displacement.y/20).to_s
+      new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x/15 , force/displacement.y/15))
       @toy_hash[new_name] << new_sprite_toy
       new_name
     end

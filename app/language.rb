@@ -13,6 +13,8 @@ class Language
   FORCE_ADDER   = 'Force Adder'
   COLLISION_ADDER   = 'Collision Adder'
   VIEW_ACTIONS  = 'Show Actions'
+  EXPLOSION_ADDER = 'Explosion Adder'
+  ROTATION_ADDER = 'Rotation Adder'
 
   # Creator button labels
   GRAB          = 'grab'
@@ -32,7 +34,7 @@ class Language
 
   # Effect Names
   FORCE         = 'force'
-  ROTATE        = 'rotate'
+  ROTATION      = 'rotate'
   EXPLOSION     = 'explosion'
   CREATE_NEW_TOY= 'create new toy'
   TRANSITION    = 'transition'
@@ -43,5 +45,7 @@ class Language
   TOUCH_FORCE         = 'Touch to show force direction and strength.'
   TOUCH_COLLISION     = 'Choose the toy that your toy will collide with.'
   SHOW_ACTIONS        = 'Tap a toy to view it\'s actions and effects.'
+  TOUCH_EXPLOSION     = 'Touch to show force strength'
+  TOUCH_ROTATION      = 'Touch to show rotation strength'
 
 end
