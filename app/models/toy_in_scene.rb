@@ -56,7 +56,7 @@ class ToyInScene
       case @template.parts[i]
         when CirclePart
           parts << CirclePart.new(CGPointMake(0, 0), @template.parts[i].radius, @template.parts[i].colour)
-          puts "CirclePart-  X: " + @template.parts[i].position.x.to_s + ", Y: " + @template.parts[i].position.y.to_s
+          #puts "CirclePart-  X: " + @template.parts[i].position.x.to_s + ", Y: " + @template.parts[i].position.y.to_s
         when PointsPart
           points = []
           j = 0
@@ -70,6 +70,7 @@ class ToyInScene
     end
     @template = ToyTemplate.new(parts, @template.identifier)
     @image = @template.create_image(@zoom)
+    centre_point
   end
 
   # Called when a zoom in the UI is completed.
