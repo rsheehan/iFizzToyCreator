@@ -110,34 +110,20 @@ class PlayScene < SKScene
       #puts "Velocity After: X: " + new_sprite_toy.physicsBody.velocity.dx.to_s + ",  Y: " + new_sprite_toy.physicsBody.velocity.dy.to_s
       new_sprite_toy.name = new_name
       addChild(new_sprite_toy)
-      puts "Force X: " + force.x.to_s + ", Y: " + force.y.to_s
+      magnitude = Math.sqrt(force.x**2 + force.y**2)
+      puts "Force X: " + force.x.to_s + ", Y: " + force.y.to_s + ", Mag: " + magnitude.to_s
       puts "Displacement X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
-      new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force.x * -displacement.x/100, force.y * -displacement.y/100))
+      new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(magnitude/displacement.x/20 , -magnitude/displacement.y/20))
       @toy_hash[new_name] << new_sprite_toy
       new_name
     end
+    NSTimer.scheduledTimerWithTimeInterval(5, target: self, selector: "remove_exploded:", userInfo: new_name, repeats: false)
   end
 
-  # def centre_part(part, position)
-  #   left, right, top, bottom = part.extremes
-  #   centrepoint = CGPointMake(right - left, bottom - top)
-  #   puts "Centre, X: " + centrepoint.x.to_s + " Y: " + centrepoint.y.to_s
-  #   if part.is_a? PointsPart
-  #     i = 0
-  #     while i < part.points.length
-  #       puts "Before, X: " + part.points[i].x.to_s + " Y: " + part.points[i].y.to_s
-  #       part.points[i] = part.points[i] + centrepoint
-  #       puts "After, X: " + part.points[i].x.to_s + " Y: " + part.points[i].y.to_s
-  #       i += 1
-  #     end
-  #   end
-  #   # part.points.each do |point|
-  #   #   point = point - centrepoint
-  #   # end
-  #   position = position - centrepoint
-  #   puts "Position, X: " + position.x.to_s + " Y: " + position.y.to_s
-  #   position
-  # end
+  def remove_exploded(timer)
+    removeChildrenInArray(@toy_hash[timer.userInfo])
+    @toy_hash[timer.userInfo] = []
+  end
 
   # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
   def check_parts(parts)
@@ -177,11 +163,6 @@ class PlayScene < SKScene
 
     return parts
   end
-
-  ## Apply a force to the toy.
-  #def force(toy, force)
-  #  toy.physicsBody.applyForce(force)
-  #end
 
   def draw_sole_point(context, sole_point)
     sole_point = @points[-1]
