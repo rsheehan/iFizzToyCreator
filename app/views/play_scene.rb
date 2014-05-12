@@ -45,7 +45,6 @@ class PlayScene < SKScene
         end
         toys = new_toys
       end
-
       toys.each do |toy| # toys here are SKSpriteNodes
         effect = action[:effect_type]
         param = action[:effect_param]
@@ -60,8 +59,6 @@ class PlayScene < SKScene
           when :explosion
             remove = [toy]
             #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
-            toys.delete(toy)
-            @toy_hash[toy_id].delete(toy)
             explode_toy(toy, param)
             removeChildrenInArray(remove)
           when :applyTorque

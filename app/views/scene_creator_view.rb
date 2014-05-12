@@ -456,7 +456,7 @@ class SceneCreatorView < CreatorView
           draw_force_arrow(context, @selected.position, @current_point)
           # TODO: Draw Explosion Circle
         end
-      when :rotate
+      when :rotation
         if @current_point && @selected
            draw_force_arrow(context, @selected.position, @current_point)
           # TODO: Appropriate rotation design
