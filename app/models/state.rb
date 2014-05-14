@@ -21,6 +21,12 @@ class State
     save
   end
 
+  # Adds a scene and saves the updated state.
+  def add_scene(scene)
+    @scenes << scene
+    save
+  end
+
   def save
     paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
     documents_path = paths.objectAtIndex(0) # Get the docs directory
@@ -57,6 +63,8 @@ class State
     json_toys = @toys.map { |toy| toy.to_json_compatible }
     json_state[:toys] = json_toys
     # here we will eventually do the scenes as well
+    json_scenes = @scenes.map { |scene| scene.to_json_compatible }
+    json_state[:scenes] = json_scenes
 
     json_state
   end
@@ -97,6 +105,16 @@ class State
     end
     # then we can do the scenes as well
     @toys = toys
+
+    json_scenes = json_object[:scenes]
+    scenes = []
+    if json_scenes
+      json_scenes.each do |json_scene|
+        puts 'processing scene'
+      end
+    end
+    @scenes = scenes
+
   end
 
 end

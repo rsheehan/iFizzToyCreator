@@ -19,7 +19,7 @@ class ToyInScene
   def to_json_compatible
     json_toy_in_scene = {}
     json_toy_in_scene[:toy_id] = @template.identifier
-    json_toy_in_scene[:position] = { x: int_x(@position.x), y: int_x(@position.y) }
+    json_toy_in_scene[:position] = { x: @position.x, y: @position.y }
     json_toy_in_scene[:angle] = @angle
     json_toy_in_scene[:zoom] = @zoom
     json_toy_in_scene

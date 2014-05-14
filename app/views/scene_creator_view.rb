@@ -464,4 +464,27 @@ class SceneCreatorView < CreatorView
     end
   end
 
+  def clear
+    undoManager.registerUndoWithTarget(self, selector: 'unclear:', object: [@toys_in_scene, @strokes])
+
+    @strokes = []
+    @toys_in_scene = []
+    @actions = []
+    @points = nil
+    @selected = nil
+    @truly_selected = nil
+    setNeedsDisplay
+  end
+
+  def unclear(object)
+    toys = object[0]
+    toys.each do |toy|
+      add_toy(toy)
+    end
+    strokes = object[1]
+    strokes.each do |stroke|
+      add_stroke(stroke)
+    end
+  end
+
 end

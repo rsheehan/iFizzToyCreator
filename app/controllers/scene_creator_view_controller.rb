@@ -2,7 +2,7 @@ class SceneCreatorViewController < UIViewController
 
   include CreatorViewControllerModule
 
-  MODES = [:scene, :toy]
+  MODES = [:scene, :toy, :save_scene, :clear]
 
   attr_writer :toybox, :play_view_controller
   attr_reader :main_view
@@ -25,6 +25,8 @@ class SceneCreatorViewController < UIViewController
     setup_mode_buttons(MODES)
     @tool_buttons[:grab].selected = true # the default, was :line
     setup_label(Language::SCENE_MAKER)
+    #assign an id to the toy being made
+    @id = rand(2**60).to_s
   end
 
   def viewDidAppear(animated)
@@ -48,6 +50,24 @@ class SceneCreatorViewController < UIViewController
   # Show the scene box.
   def scene
     puts "Show the scene box"
+    #if scene hasn't been saved, save it
+    saved = false
+    @state.scenes.each do |scene|
+      if scene.identifier == @id
+        #check if different to saved toy?
+        saved = true
+      end
+    end
+    if saved == false
+      save_scene
+    end
+
+    scenebox_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
+    scenebox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    scenebox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
+    scenebox_view_controller.delegate = self
+    scenebox_view_controller.state = @state
+    presentViewController(scenebox_view_controller, animated: true, completion: nil)
   end
 
   # Closes the toy box.
@@ -74,6 +94,16 @@ class SceneCreatorViewController < UIViewController
     grab
   end
 
+  #called when a scene imae is chosen in the scene box view
+  def drop_scene(scene_index)
+    #do something here to load scene
+    scene = @state.scenes[scene_index]
+    #update id
+    @id = scene.identifier
+    close_toybox
+    grab
+  end
+
   # Called when the view disappears.
   def viewWillDisappear(animated)
     super
@@ -86,5 +116,16 @@ class SceneCreatorViewController < UIViewController
     @main_view.setNeedsDisplay
   end
 
+  def save_scene
+    scene = @main_view.gather_scene_info
+    @state.add_scene(scene)
+  end
+
+  def clear
+    #@main_view.setup_for_new
+    @id = rand(2**60).to_s
+    @main_view.clear
+
+  end
 
 end
