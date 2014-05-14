@@ -50,18 +50,6 @@ class SceneCreatorViewController < UIViewController
   # Show the scene box.
   def scene
     puts "Show the scene box"
-    #if scene hasn't been saved, save it
-    saved = false
-    @state.scenes.each do |scene|
-      if scene.identifier == @id
-        #check if different to saved toy?
-        saved = true
-      end
-    end
-    if saved == false
-      save_scene
-    end
-
     scenebox_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
     scenebox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
     scenebox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
@@ -98,6 +86,21 @@ class SceneCreatorViewController < UIViewController
   def drop_scene(scene_index)
     #do something here to load scene
     scene = @state.scenes[scene_index]
+    @main_view.clear
+    scene.edges.each do |edge|
+      # draw edge
+      case edge
+        when CirclePart
+          @main_view.add_stroke(CircleStroke.new(((edge.position)), edge.radius, edge.colour, 1))
+        when PointsPart
+          points = edge.points
+          @main_view.add_stroke(LineStroke.new(points, edge.colour, ToyTemplate::TOY_LINE_SIZE*ToyTemplate::IMAGE_SCALE))
+        else
+      end
+    end
+    scene.toys.each do |toy|
+      @main_view.add_toy(toy)
+    end
     #update id
     @id = scene.identifier
     close_toybox
@@ -108,7 +111,7 @@ class SceneCreatorViewController < UIViewController
   def viewWillDisappear(animated)
     super
     # collect the scene information to pass on to the play view controller
-    @state.scenes = [@main_view.gather_scene_info] # only one scene while developing
+    #@state.scenes = [@main_view.gather_scene_info] # only one scene while developing
     @play_view_controller.update_play_scene
   end
 
@@ -119,7 +122,10 @@ class SceneCreatorViewController < UIViewController
   def save_scene
     scene = @main_view.gather_scene_info
     scene.identifier = @id
-    @state.add_scene(scene)
+    @id = rand(2**60).to_s
+    unless scene.edges.empty? and scene.toys.empty?
+      @state.add_scene(scene)
+    end
   end
 
   def clear

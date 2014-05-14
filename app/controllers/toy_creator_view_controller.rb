@@ -33,32 +33,11 @@ class ToyCreatorViewController < UIViewController
 
   # Sets up to start a new toy and closes the toy box.
   def close_toybox
-    start_new_toy
     dismissModalViewControllerAnimated(true, completion: nil)
   end
 
   # Show the toy box.
   def toy
-    # toy_parts = @main_view.gather_toy_info
-
-    # unless toy_parts.nil?
-    #   # get random identifier
-    #   id = rand(2**60).to_s
-    #   toy = ToyTemplate.new(toy_parts, id) #, image)
-    #   @state.add_toy(toy)
-    # end
-    #if toy hasn't been saved, save it
-    saved = false
-    @state.toys.each do |toy|
-      if toy.identifier == @id
-        #check if different to saved toy?
-        saved = true
-      end
-    end
-    if saved == false
-      save_toy
-    end
-
     toybox_view_controller = ToyBoxViewController.alloc.initWithNibName(nil, bundle: nil)
     toybox_view_controller.state = @state
 

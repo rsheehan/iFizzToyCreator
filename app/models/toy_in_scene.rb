@@ -3,8 +3,8 @@ class ToyInScene
   # The information we need to save is:
   # position, angle and zoom - along with the template stuff of course
 
-  attr_reader :old_position, :position, :old_angle, :old_zoom, :template
-  attr_accessor :angle, :zoom
+  attr_reader :old_position, :old_angle, :old_zoom, :template
+  attr_accessor :angle, :zoom, :position
   attr_reader :image  # for the PlayScene
 
   def initialize(toy_template, zoom = 1.0)

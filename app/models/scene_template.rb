@@ -5,7 +5,7 @@
 class SceneTemplate
 
   attr_reader :toys, :edges, :actions, :identifier, :image
-  attr_writer :identifier
+  attr_writer :identifier, :bounds
 
   WIDTH = 834
   HEIGHT = 712
@@ -40,6 +40,9 @@ class SceneTemplate
       json_edges << edge_part.to_json_compatible
     end
     json_scene[:edges] = json_edges
+
+    #actions will go here
+
     json_scene
   end
 
@@ -47,9 +50,9 @@ class SceneTemplate
   def create_image(scale)
     # find the image size
     left = 0
-    right = @bounds.size.width
+    right = WIDTH
     top = 0
-    bottom = @bounds.size.height
+    bottom = HEIGHT
 
     extra = TOY_LINE_SIZE * IMAGE_SCALE
     size = CGSizeMake((right - left + extra) * scale, (bottom - top + extra) * scale)
