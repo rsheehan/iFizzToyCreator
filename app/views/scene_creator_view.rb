@@ -86,7 +86,7 @@ class SceneCreatorView < CreatorView
   # Similar to gathering the toy info in ToyCreatorView but the scale is 1.
   def gather_scene_info
     id = rand(2**60).to_s
-    SceneTemplate.new(@toys_in_scene, edges, @actions, id)
+    SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds)
   end
 
   # Turns the strokes making up the edges (including circles) into Parts.

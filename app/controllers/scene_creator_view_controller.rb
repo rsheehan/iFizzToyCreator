@@ -118,6 +118,7 @@ class SceneCreatorViewController < UIViewController
 
   def save_scene
     scene = @main_view.gather_scene_info
+    scene.identifier = @id
     @state.add_scene(scene)
   end
 
