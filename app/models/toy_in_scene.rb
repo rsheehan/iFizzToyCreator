@@ -3,8 +3,8 @@ class ToyInScene
   # The information we need to save is:
   # position, angle and zoom - along with the template stuff of course
 
-  attr_reader :old_position, :position, :old_angle, :old_zoom, :template
-  attr_accessor :angle, :zoom
+  attr_reader :old_position, :old_angle, :old_zoom, :template
+  attr_accessor :angle, :zoom, :position
   attr_reader :image  # for the PlayScene
 
   def initialize(toy_template, zoom = 1.0)
@@ -19,7 +19,7 @@ class ToyInScene
   def to_json_compatible
     json_toy_in_scene = {}
     json_toy_in_scene[:toy_id] = @template.identifier
-    json_toy_in_scene[:position] = { x: int_x(@position.x), y: int_x(@position.y) }
+    json_toy_in_scene[:position] = { x: @position.x, y: @position.y }
     json_toy_in_scene[:angle] = @angle
     json_toy_in_scene[:zoom] = @zoom
     json_toy_in_scene
