@@ -57,10 +57,12 @@ class PlayScene < SKScene
             param = CGPointApplyAffineTransform(param, rotation)
             send = true
           when :explosion
-            remove = [toy]
             #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
-            explode_toy(toy, param)
-            removeChildrenInArray(remove)
+            if toy.physicsBody != nil
+              explode_toy(toy, param)
+              removeChildrenInArray([toy])
+              toy.physicsBody = nil
+            end
           when :applyTorque
             send = true
         end
