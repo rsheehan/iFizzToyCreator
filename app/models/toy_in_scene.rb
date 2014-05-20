@@ -11,8 +11,13 @@ class ToyInScene
     @template = toy_template
     @old_position = @position = CGPointMake((1024 - 190)/2, (768 - 56)/2)
     @old_angle = @angle = 0
-    @image = @template.image
     @old_zoom = @zoom = zoom
+    if @zoom == 1.0
+      @image = @template.create_image(@zoom)
+    else
+      @image = @template.image
+    end
+
   end
 
   # Turns the ToyInScene into json compatible data.
