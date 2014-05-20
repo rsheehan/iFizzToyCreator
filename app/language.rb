@@ -24,6 +24,7 @@ class Language
   UNDO          = 'undo'
   REDO          = 'redo'
   TRASH         = 'trash'
+  CLEAR         = 'clear'
 
   # Action Names
   TOUCH         = 'touch'

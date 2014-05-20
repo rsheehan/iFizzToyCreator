@@ -1,12 +1,13 @@
 class State
 
-  attr_accessor :toys, :scenes, :games # don't do the scenes and games yet
+  attr_accessor :toys, :scenes, :games, :currentscene # don't do the scenes and games yet
   # just starting to do the scenes - one anyway
 
   def initialize
     @toys = []
     # scenes include the actions at the moment
     @scenes = []
+    @currentscene = 0
     load
     #@toys = []
     # check to see if any state is saved?
@@ -24,6 +25,7 @@ class State
   # Adds a scene and saves the updated state.
   def add_scene(scene)
     @scenes << scene
+    @currentscene = @scenes.length - 1
     save
   end
 
@@ -90,7 +92,7 @@ class State
       end
     end
     @scenes = scenes
-
+    @currentscene = scenes.length - 1
   end
 
   def jsonToPart(json_part)

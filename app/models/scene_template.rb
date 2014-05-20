@@ -22,7 +22,7 @@ class SceneTemplate
     @bounds = bounds
     p actions
     # possibly create an image of the scene for the scene box view
-    @image = create_image(0.1)
+    @image = create_image(0.35)
   end
 
   # Turns the SceneTemplate into json compatible data.
@@ -49,13 +49,7 @@ class SceneTemplate
   # Creates the image from the part data.
   def create_image(scale)
     # find the image size
-    left = 0
-    right = WIDTH
-    top = 0
-    bottom = HEIGHT
-
-    extra = TOY_LINE_SIZE * IMAGE_SCALE
-    size = CGSizeMake((right - left + extra) * scale, (bottom - top + extra) * scale)
+    size = CGSizeMake(WIDTH * scale, HEIGHT * scale)
     # make the image bitmap and draw all of the parts
     image_bitmap(size, scale)
   end

@@ -2,7 +2,7 @@ class SceneCreatorViewController < UIViewController
 
   include CreatorViewControllerModule
 
-  MODES = [:scene, :toy, :save_scene, :clear]
+  MODES = [:scene, :toy, :save_scene]
 
   attr_writer :toybox, :play_view_controller
   attr_reader :main_view
@@ -93,8 +93,7 @@ class SceneCreatorViewController < UIViewController
         when CirclePart
           @main_view.add_stroke(CircleStroke.new(((edge.position)), edge.radius, edge.colour, 1))
         when PointsPart
-          points = edge.points
-          @main_view.add_stroke(LineStroke.new(points, edge.colour, ToyTemplate::TOY_LINE_SIZE*ToyTemplate::IMAGE_SCALE))
+          @main_view.add_stroke(LineStroke.new(Array.new(edge.points), edge.colour, ToyTemplate::TOY_LINE_SIZE*ToyTemplate::IMAGE_SCALE))
         else
       end
     end
@@ -103,6 +102,7 @@ class SceneCreatorViewController < UIViewController
     end
     #update id
     @id = scene.identifier
+    @state.currentscene = scene_index
     close_toybox
     grab
   end
@@ -111,7 +111,7 @@ class SceneCreatorViewController < UIViewController
   def viewWillDisappear(animated)
     super
     # collect the scene information to pass on to the play view controller
-    #@state.scenes = [@main_view.gather_scene_info] # only one scene while developing
+    save_scene
     @play_view_controller.update_play_scene
   end
 
