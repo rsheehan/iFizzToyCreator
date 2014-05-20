@@ -342,12 +342,18 @@ class SceneCreatorView < CreatorView
     @delegate.close_modal_view
   end
 
-  def touch_end_rotation # TODO: Change with GUI change
+  def touch_end_rotation
     vector = @current_point - @selected.position
-    magnitude = Math.sqrt(vector.x**2 + vector.y**2)
-    if vector.x * vector.y < 0
-      magnitude *= -1
+    radians = (Math::PI - (Math.atan2(vector.y,vector.x)*-1))
+
+    if radians > Math::PI
+      radians = (Math::PI*2 - radians)
+    else
+      radians *= -1
     end
+
+    magnitude = radians * 300
+
     @delegate.rotation = magnitude
     @delegate.close_modal_view
   end
@@ -362,9 +368,6 @@ class SceneCreatorView < CreatorView
 
   def touchesCancelled(touches, withEvent: event)
 
-  end
-
-  def touch_end_rotate
   end
 
   # Needed to allow both the pinch and rotate gesture recognizers to both work (individually).
@@ -422,6 +425,50 @@ class SceneCreatorView < CreatorView
     CGContextDrawPath(context, KCGPathFill)
   end
 
+  def draw_force_circle(context, center, radius)
+    rectangle = CGRectMake(center.x - radius, center.y - radius, radius*2, radius*2)
+    CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
+    CGContextAddEllipseInRect(context, rectangle)
+    CGContextStrokePath(context)
+  end
+
+  def draw_rotate_circle(context, center, point)
+    radius = 200
+
+    dpoint = point - center
+
+    radians = (Math::PI - (Math.atan2(dpoint.y,dpoint.x)*-1))
+
+    puts "Degrees: " + (radians*180/Math::PI).to_s
+
+    CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
+    if(radians > 0 and radians < Math::PI)
+      CGContextAddArc(context, center.x, center.y, radius, Math::PI, radians+Math::PI, 0)
+    else
+      CGContextAddArc(context, center.x, center.y, radius, Math::PI, radians+Math::PI, 1)
+    end
+    CGContextStrokePath(context);
+
+  end
+
+  def draw_static_rotate_circle(context, center)
+    radius = 200
+    width = 20
+
+    CGContextSetFillColorWithColor(context,UIColor.redColor.CGColor)
+    rectangle = CGRectMake(center.x-radius,center.y-width/2,radius,width)
+    CGContextAddRect(context, rectangle)
+    CGContextFillPath(context)
+
+    rectangle = CGRectMake(center.x - radius-width/2, center.y-width/2, width, width)
+    CGContextFillEllipseInRect(context, rectangle)
+    CGContextStrokePath(context)
+
+    rectangle = CGRectMake(center.x-width/2, center.y-width/2, width, width)
+    CGContextFillEllipseInRect(context, rectangle)
+    CGContextStrokePath(context)
+  end
+
   def drawRect(rect)
     #super
     context = UIGraphicsGetCurrentContext()
@@ -454,12 +501,13 @@ class SceneCreatorView < CreatorView
       when :explosion
         if @current_point && @selected
           draw_force_arrow(context, @selected.position, @current_point)
-          # TODO: Draw Explosion Circle
+          length = Math.hypot(@selected.position.x - @current_point.x, @selected.position.y - @current_point.y)
+          draw_force_circle(context, @selected.position, length)
         end
       when :rotation
+        draw_static_rotate_circle(context, @selected.position)
         if @current_point && @selected
-           draw_force_arrow(context, @selected.position, @current_point)
-          # TODO: Appropriate rotation design
+           draw_rotate_circle(context, @selected.position, @current_point)
         end
     end
   end
