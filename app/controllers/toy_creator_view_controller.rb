@@ -2,7 +2,7 @@ class ToyCreatorViewController < UIViewController
 
   include CreatorViewControllerModule
 
-  MODES = [:toy, :save_toy, :clear]
+  MODES = [:toy, :save_toy]
 
   
   def loadView # preferable to viewDidLoad because not using xib
