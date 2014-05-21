@@ -10,7 +10,7 @@ class ToyBoxViewController < UIViewController
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, WIDTH]])
     view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
-    setup_button(:new, [LITTLE_GAP, LITTLE_GAP])
+    setup_button(:back, [LITTLE_GAP, LITTLE_GAP])
     @collection_view = UICollectionView.alloc.initWithFrame([[@current_xpos, 0], [WIDTH - @current_xpos, WIDTH]], collectionViewLayout: UICollectionViewFlowLayout.alloc.init)
     @collection_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
     @collection_view.registerClass(ToyButton, forCellWithReuseIdentifier: TOYBUTTON)
@@ -59,7 +59,7 @@ class ToyBoxViewController < UIViewController
   #end
 
   # Back to the ToyCreator to make a new one.
-  def new
+  def back
     @delegate.close_toybox
   end
 

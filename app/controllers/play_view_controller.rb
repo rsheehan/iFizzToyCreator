@@ -34,14 +34,14 @@ class PlayViewController < UIViewController
     # this is purely for development only uses the first scene
 
     # add the toys to the scene
-    @play_scene.toys = @state.scenes[0].toys
+    @play_scene.toys = @state.scenes[@state.currentscene].toys
     # add the edges to the scene
-    @play_scene.edges = @state.scenes[0].edges
+    @play_scene.edges = @state.scenes[@state.currentscene].edges
     # also go through the actions checking for button actions and enabling the buttons
     @button_actions.each_key do |button|
       @button_actions[button] = []
     end
-    actions = @state.scenes[0].actions
+    actions = @state.scenes[@state.currentscene].actions
     actions.each do |action|
       case action[:action_type]
         when :button

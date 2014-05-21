@@ -5,7 +5,7 @@ module CreatorViewControllerModule
 
   #puts "loaded"
 
-  TOOLS = [:grab, :squiggle, :line, :circle, :undo, :redo, :trash]
+  TOOLS = [:grab, :squiggle, :line, :circle, :undo, :redo, :trash,:clear]
   #COLOURS = ['black', 'blue', 'brown', 'cyan', 'green', 'magenta', 'orange', 'purple', 'red', 'yellow', 'white']
 
   attr_writer :state
@@ -86,15 +86,26 @@ module CreatorViewControllerModule
         Language::REDO
       when :trash
         Language::TRASH
+      when :clear
+        Language::CLEAR
     end
   end
 
   # Add the tool control buttons.
   def setup_tool_buttons
-    tool_view = EdgeView.alloc.initWithFrame(
-        CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height))
+    tool_view = EdgeView.alloc.init
     tool_view.creator_view = @main_view
     tool_view.backgroundColor = UIColor.darkGrayColor
+
+    def tool_view.sizeThatFits(size)
+      width, height = 0, 0
+      subviews.each do |subview|
+        sub_width, sub_height = subview.frame.size.width, subview.frame.size.height
+        width = sub_width if width < sub_width
+        height += 5.0 + sub_height
+      end
+      CGSizeMake(width, height)
+    end
     # The :trash button should only be available when :grab is the mode.
     # The :undo and :redo buttons should only be available at appropriate times.
     # All other buttons should act like radio buttons - only one of :grab, :squiggle, :line and :circle at a time.
@@ -118,7 +129,12 @@ module CreatorViewControllerModule
     @tool_buttons[:redo].enabled = false
     @tool_buttons[:trash].enabled = false # need to turn on when something is selected
     @main_view.trash_button = @tool_buttons[:trash]
-    view.addSubview(tool_view)
+    tool_view.sizeToFit
+    tool_scrollview = UIScrollView.alloc.initWithFrame(CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height))
+    tool_scrollview.backgroundColor = UIColor.darkGrayColor
+    tool_scrollview.setContentSize(tool_view.bounds.size)
+    tool_scrollview.addSubview(tool_view)
+    view.addSubview(tool_scrollview)
   end
 
   # Add the mode buttons
@@ -178,6 +194,11 @@ module CreatorViewControllerModule
   # Trash any selected stroke.
   def trash
     @main_view.remove_selected
+  end
+
+  def clear
+    @id = rand(2**60).to_s
+    @main_view.clear
   end
 
   # Called when undo state might change.

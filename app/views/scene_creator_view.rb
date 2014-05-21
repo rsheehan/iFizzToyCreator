@@ -86,7 +86,7 @@ class SceneCreatorView < CreatorView
   # Similar to gathering the toy info in ToyCreatorView but the scale is 1.
   def gather_scene_info
     id = rand(2**60).to_s
-    SceneTemplate.new(@toys_in_scene, edges, @actions, id)
+    SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds)
   end
 
   # Turns the strokes making up the edges (including circles) into Parts.
@@ -509,6 +509,29 @@ class SceneCreatorView < CreatorView
         if @current_point && @selected
            draw_rotate_circle(context, @selected.position, @current_point)
         end
+    end
+  end
+
+  def clear
+    undoManager.registerUndoWithTarget(self, selector: 'unclear:', object: [@toys_in_scene, @strokes])
+
+    @strokes = []
+    @toys_in_scene = []
+    @actions = []
+    @points = nil
+    @selected = nil
+    @truly_selected = nil
+    setNeedsDisplay
+  end
+
+  def unclear(object)
+    toys = object[0]
+    toys.each do |toy|
+      add_toy(toy)
+    end
+    strokes = object[1]
+    strokes.each do |stroke|
+      add_stroke(stroke)
     end
   end
 
