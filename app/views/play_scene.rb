@@ -115,15 +115,14 @@ class PlayScene < SKScene
       puts "Force X: " + (force/displacement.x/20).to_s + ", Y: " + (-force/displacement.y/20).to_s
       new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x/15 , force/displacement.y/15))
       @toy_hash[new_name] << new_sprite_toy
-      new_name
+      fadeOut = SKAction.fadeOutWithDuration(5.0)
+      remove = SKAction.removeFromParent()
+      seq = SKAction.sequence([fadeOut, remove])
+      new_sprite_toy.runAction(seq)
     end
-    NSTimer.scheduledTimerWithTimeInterval(5, target: self, selector: "remove_exploded:", userInfo: new_name, repeats: false)
+    new_name
   end
 
-  def remove_exploded(timer)
-    removeChildrenInArray(@toy_hash[timer.userInfo])
-    @toy_hash[timer.userInfo] = []
-  end
 
   # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
   def check_parts(parts)
