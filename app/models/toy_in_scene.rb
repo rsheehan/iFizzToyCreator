@@ -12,7 +12,7 @@ class ToyInScene
     @old_position = @position = CGPointMake((1024 - 190)/2, (768 - 56)/2)
     @old_angle = @angle = 0
     @old_zoom = @zoom = zoom
-    if @zoom == 1.0
+    if @zoom != 1.0
       @image = @template.create_image(@zoom)
     else
       @image = @template.image
