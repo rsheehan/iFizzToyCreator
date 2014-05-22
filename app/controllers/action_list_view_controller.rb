@@ -10,11 +10,11 @@ class ActionListViewController < UIViewController
       # Do not call super.
       self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, WIDTH]])
       view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
-      setup_button(:new, [LITTLE_GAP, LITTLE_GAP])
+      setup_button(:back, [LITTLE_GAP, LITTLE_GAP])
 
       #make array of actions that relate to the selected toy
       @toy_actions = []
-      @state.scenes[0].actions.each do |action|
+      @state.scenes[@state.currentscene].actions.each do |action|
         if action[:toy] == @selected.template.identifier
           @toy_actions << action
         end
@@ -56,29 +56,36 @@ class ActionListViewController < UIViewController
     end
 
     # Back to the Select toy screen.
-    def new
+    def back
       @delegate.close_modal_view
     end
 
 
     #activate delete mode
     def delete
-      # if @delete_mode
-      #   @delete_mode = false
-      #   #set image
-      #   @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
-      # else
-      #   @delete_mode = true
-      #   #set image
-      #   @del_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
-      # end
-      #
-      # #update cells
-      # @table_view.reloadData()
+      if @table_view.isEditing
+        @table_view.setEditing(false, animated: true)
+        @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+      else
+        @table_view.setEditing(true, animated: true)
+        @del_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
+      end
 
     end
     # The methods to implement the UICollectionViewDataSource protocol.
 
+    def tableView(tv, commitEditingStyle: style, forRowAtIndexPath: index_path)
+      tv.beginUpdates
+      tv.deleteRowsAtIndexPaths([index_path], withRowAnimation: UITableViewRowAnimationAutomatic)
+      #delete action
+      item = index_path.row
+      @state.scenes[@state.currentscene].actions.delete_if { |action|
+        action == @toy_actions.at(item)
+      }
+      @toy_actions.delete_at(item)
+      tv.endUpdates
+
+    end
 
     def tableView(tv, numberOfRowsInSection: section)
       @toy_actions.length
