@@ -2,7 +2,7 @@ class SceneCreatorViewController < UIViewController
 
   include CreatorViewControllerModule
 
-  MODES = [:scene, :toy, :save_scene]
+  MODES = [:scene, :toy, :save_scene, :new]
 
   attr_writer :toybox, :play_view_controller
   attr_reader :main_view
@@ -129,6 +129,10 @@ class SceneCreatorViewController < UIViewController
 
   end
 
+  def new
+    clear
+  end
+  
   def clear
     #@main_view.setup_for_new
     @id = rand(2**60).to_s

@@ -18,7 +18,19 @@ class State
 
   # Adds a toy and saves the updated state.
   def add_toy(toy)
-    @toys << toy
+    replaced = nil
+    @toys.each_with_index do |element, index|
+      if (element.identifier == toy.identifier)
+        replaced = index
+      end
+    end
+
+    if replaced.nil?
+      @toys << toy
+    else
+      @toys[replaced] = toy
+    end
+
     save
   end
 

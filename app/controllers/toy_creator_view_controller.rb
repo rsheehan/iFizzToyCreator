@@ -2,7 +2,7 @@ class ToyCreatorViewController < UIViewController
 
   include CreatorViewControllerModule
 
-  MODES = [:toy, :save_toy]
+  MODES = [:toy, :save_toy, :new]
 
   
   def loadView # preferable to viewDidLoad because not using xib
@@ -30,6 +30,9 @@ class ToyCreatorViewController < UIViewController
     @id = rand(2**60).to_s
   end
 
+  def new
+    start_new_toy
+  end
 
   # Sets up to start a new toy and closes the toy box.
   def close_toybox
