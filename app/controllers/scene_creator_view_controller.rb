@@ -112,6 +112,7 @@ class SceneCreatorViewController < UIViewController
     super
     # collect the scene information to pass on to the play view controller
     save_scene
+
     @play_view_controller.update_play_scene
   end
 
@@ -122,10 +123,10 @@ class SceneCreatorViewController < UIViewController
   def save_scene
     scene = @main_view.gather_scene_info
     scene.identifier = @id
-    @id = rand(2**60).to_s
     unless scene.edges.empty? and scene.toys.empty?
       @state.add_scene(scene)
     end
+
   end
 
   def clear

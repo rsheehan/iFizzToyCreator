@@ -24,8 +24,21 @@ class State
 
   # Adds a scene and saves the updated state.
   def add_scene(scene)
-    @scenes << scene
-    @currentscene = @scenes.length - 1
+    replaced = nil
+    @scenes.each_with_index do |element, index|
+      if (element.identifier == scene.identifier)
+        replaced = index
+      end
+    end
+
+    if replaced.nil?
+      @scenes << scene
+      @currentscene = @scenes.length - 1
+    else
+      @scenes[replaced] = scene
+      @currentscene = replaced
+    end
+
     save
   end
 

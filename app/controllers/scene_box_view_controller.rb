@@ -111,8 +111,8 @@ class SceneBoxViewController < UIViewController
       else
         scene_button = cv.dequeueReusableCellWithReuseIdentifier(SCENEBUTTON, forIndexPath: index_path)
       end
-
-
+      # make sure scene image is up to date
+      @state.scenes[item].update_image
       scene_button.toy = @state.scenes[item]
       scene_button
 
