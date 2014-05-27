@@ -439,6 +439,8 @@ class SceneCreatorView < CreatorView
 
     radians = (Math::PI - (Math.atan2(dpoint.y,dpoint.x)*-1))
 
+    clockwise = true
+
     puts "Degrees: " + (radians*180/Math::PI).to_s
 
     CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
@@ -446,27 +448,54 @@ class SceneCreatorView < CreatorView
       CGContextAddArc(context, center.x, center.y, radius, Math::PI, radians+Math::PI, 0)
     else
       CGContextAddArc(context, center.x, center.y, radius, Math::PI, radians+Math::PI, 1)
+      clockwise = false
     end
-    CGContextStrokePath(context);
+    CGContextSetLineWidth(context, 10)
+    CGContextStrokePath(context)
 
+    draw_rotate_circle_arrow(context, center, radius, radians-Math::PI, clockwise)
+  end
+
+  def draw_rotate_circle_arrow(context,center, length, angle, clockwise)
+
+    arrow_points = []
+    if not clockwise
+      arrow_points << CGPointMake(- 40, 0) << CGPointMake(0, -50)
+      arrow_points << CGPointMake(40, 0)
+    else
+      arrow_points << CGPointMake(- 40, 0) << CGPointMake(0, 50)
+      arrow_points << CGPointMake(40, 0)
+    end
+
+    arrow_transform_pointer = Pointer.new(CGAffineTransform.type)
+    arrow_transform_pointer[0] = CGAffineTransformMakeTranslation( center.x, center.y)
+    arrow_transform_pointer[0] = CGAffineTransformRotate(arrow_transform_pointer[0], angle)
+    arrow_transform_pointer[0] = CGAffineTransformTranslate(arrow_transform_pointer[0],length, 0)
+
+    path = CGPathCreateMutable()
+    CGPathMoveToPoint(path, arrow_transform_pointer, length, 0)
+
+    arrow_points.each do |point|
+      CGPathAddLineToPoint(path, arrow_transform_pointer, point.x, point.y)
+    end
+    CGContextAddPath(context, path)
+    CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
+    CGContextDrawPath(context, KCGPathFill)
   end
 
   def draw_static_rotate_circle(context, center)
     radius = 200
-    width = 20
+    upper_angle = Math::PI + Math::PI/8
+    lower_angle = Math::PI - Math::PI/8
 
-    CGContextSetFillColorWithColor(context,UIColor.redColor.CGColor)
-    rectangle = CGRectMake(center.x-radius,center.y-width/2,radius,width)
-    CGContextAddRect(context, rectangle)
-    CGContextFillPath(context)
-
-    rectangle = CGRectMake(center.x - radius-width/2, center.y-width/2, width, width)
-    CGContextFillEllipseInRect(context, rectangle)
+    CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
+    CGContextAddArc(context, center.x, center.y, radius, lower_angle, upper_angle, 0)
+    CGContextSetLineWidth(context, 10)
     CGContextStrokePath(context)
 
-    rectangle = CGRectMake(center.x-width/2, center.y-width/2, width, width)
-    CGContextFillEllipseInRect(context, rectangle)
-    CGContextStrokePath(context)
+    draw_rotate_circle_arrow(context, center, radius, upper_angle, true)
+    draw_rotate_circle_arrow(context, center, radius, lower_angle, false)
+
   end
 
   def drawRect(rect)
@@ -505,9 +534,11 @@ class SceneCreatorView < CreatorView
           draw_force_circle(context, @selected.position, length)
         end
       when :rotation
-        draw_static_rotate_circle(context, @selected.position)
+
         if @current_point && @selected
            draw_rotate_circle(context, @selected.position, @current_point)
+        else
+          draw_static_rotate_circle(context, @selected.position)
         end
     end
   end
