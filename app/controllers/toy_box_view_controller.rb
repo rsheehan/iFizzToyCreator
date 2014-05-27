@@ -112,6 +112,8 @@ class ToyBoxViewController < UIViewController
       toy_button = cv.dequeueReusableCellWithReuseIdentifier(TOYBUTTON, forIndexPath: index_path)
     end
 
+    #make sure toy image is up to date
+    @state.toys[item].update_image
 
     toy_button.toy = @state.toys[item]
     toy_button

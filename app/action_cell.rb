@@ -6,6 +6,8 @@ class ActionCell < UITableViewCell
     super
     size = self.contentView.frame.size
     self.contentView.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    self.backgroundView = UIView.alloc.init
+    self.backgroundView.backgroundColor = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
     @action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
     @object_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("toy.png"))
     @effect_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("apply_force.png"))

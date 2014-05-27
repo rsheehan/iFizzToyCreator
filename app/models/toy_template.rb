@@ -18,6 +18,10 @@ class ToyTemplate
     #save
   end
 
+  def update_image
+    @image = create_image(1)
+  end
+
   # Turns the ToyTemplate into json compatible data.
   def to_json_compatible
     json_toy = {}

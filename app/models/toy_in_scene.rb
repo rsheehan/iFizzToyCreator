@@ -20,6 +20,15 @@ class ToyInScene
 
   end
 
+  def update_image
+    @template.update_image
+    if @zoom != 1.0
+      @image = @template.create_image(@zoom)
+    else
+      @image = @template.image
+    end
+  end
+
   # Turns the ToyInScene into json compatible data.
   def to_json_compatible
     json_toy_in_scene = {}

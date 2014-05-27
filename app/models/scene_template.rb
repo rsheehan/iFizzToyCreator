@@ -54,6 +54,10 @@ class SceneTemplate
     image_bitmap(size, scale)
   end
 
+  def update_image
+    @image = create_image(0.35)
+  end
+
   def image_bitmap(size, scale)
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     context = UIGraphicsGetCurrentContext()
