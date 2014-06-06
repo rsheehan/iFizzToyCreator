@@ -9,6 +9,7 @@ class ActionAdderViewController < UIViewController
   EFFECTS = [:apply_force, :explosion, :apply_torque]
 
   FORCE_SCALE = 10
+  EXPLODE_SCALE = 100
 
   attr_writer :state, :scene_creator_view_controller, :play_view_controller
   #attr_reader :selected_toy
@@ -208,7 +209,7 @@ class ActionAdderViewController < UIViewController
   def explosion=(force)
     action_type, action_param = get_action
     effect_type = :explosion
-    effect_param = force
+    effect_param = force * EXPLODE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
     @main_view.colliding_selected = nil
