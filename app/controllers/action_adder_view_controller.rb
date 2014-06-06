@@ -5,7 +5,7 @@ class ActionAdderViewController < UIViewController
   # Actions are hashes with the following keys.
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
-  ACTIONS = [:touch, :repeat, :collision]
+  ACTIONS = [:touch, :timer, :collision]
   EFFECTS = [:apply_force, :explosion, :apply_torque]
 
   FORCE_SCALE = 10
@@ -253,7 +253,7 @@ class ActionAdderViewController < UIViewController
         Language::TOUCH
       when :collision
         Language::COLLISION
-      when :repeat
+      when :timer
         Language::REPEAT
       when :hold
         Language::HOLD
@@ -289,7 +289,7 @@ class ActionAdderViewController < UIViewController
   end
 
   # Adding a repeat event.
-  def repeat
+  def timer
     #create a picker view controller pop up to define how long to repeat for
     repeat_action_view_controller = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
     repeat_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
