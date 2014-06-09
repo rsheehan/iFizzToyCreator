@@ -169,8 +169,10 @@ class State
       parts << jsonToPart(json_part)
     end
     toy = ToyTemplate.new(parts, id)
-    toy.stuck = json_toy[:stuck]
-    toy.can_rotate = json_toy[:can_rotate]
+    toy.stuck = (json_toy[:stuck] == nil) ? false : json_toy[:stuck]
+    toy.can_rotate = (json_toy[:can_rotate] == nil) ? true : json_toy[:can_rotate]
+    toy.front = (json_toy[:front] == nil) ? Constants::Front::Right : json_toy[:front]
+    toy.can_travel_backward = (json_toy[:can_travel_backward] == nil) ? true : json_toy[:can_travel_backward]
 
     toy
   end

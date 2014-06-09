@@ -193,8 +193,14 @@ class PlayScene < SKScene
     @edges.each do |edge|
       case edge
         when CirclePart
-          puts "PlayScene - don't add circles yet"
-          #TODO
+          body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
+          body.dynamic = false
+          body.contactTestBitMask = 1
+          node = SKNode.node
+          node.position = CGPointMake(edge.position[0], size.height - edge.position[1])
+          node.hidden = true
+          node.physicsBody = body
+          addChild(node)
         when PointsPart
           points = edge.points_for_scene_background(size)
           current_pt = points[0]
