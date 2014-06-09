@@ -153,7 +153,7 @@ class ActionListViewController < UIViewController
     end
 
     def tableView(tableView, titleForHeaderInSection:section)
-      return "   Action                        Object                          Effect"
+      return "   Trigger                        Object                          Effect"
     end
 
 
