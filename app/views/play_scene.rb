@@ -194,6 +194,7 @@ class PlayScene < SKScene
       case edge
         when CirclePart
           puts "PlayScene - don't add circles yet"
+          #TODO
         when PointsPart
           points = edge.points_for_scene_background(size)
           current_pt = points[0]
@@ -286,6 +287,10 @@ class PlayScene < SKScene
     physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
     toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
     toy.physicsBody.contactTestBitMask = 1
+
+    #properties
+    toy.physicsBody.allowsRotation = toy_in_scene.template.can_rotate;
+    toy.physicsBody.dynamic = !(toy_in_scene.template.stuck)
 
     # now any wheels
     toy_in_scene.add_wheels_in_scene(self).each do |wheel|

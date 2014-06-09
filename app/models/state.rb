@@ -169,6 +169,9 @@ class State
       parts << jsonToPart(json_part)
     end
     toy = ToyTemplate.new(parts, id)
+    toy.stuck = json_toy[:stuck]
+    toy.can_rotate = json_toy[:can_rotate]
+
     toy
   end
 
