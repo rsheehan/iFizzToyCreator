@@ -7,10 +7,12 @@ class ActionAdderViewController < UIViewController
 
   ACTIONS = [:touch, :timer, :collision]
   EFFECTS = [:apply_force, :explosion, :apply_torque]
+  MODES = [:show_actions,:show_properties]
 
   FORCE_SCALE = 100
   EXPLODE_SCALE = 80
   ROTATION_SCALE = 300
+
 
   attr_writer :state, :scene_creator_view_controller, :play_view_controller
   #attr_reader :selected_toy
@@ -39,19 +41,18 @@ class ActionAdderViewController < UIViewController
     @effect_button_view = button_view(effect_bounds)
     @effect_buttons = buttons(EFFECTS, @effect_button_view)
     @action_button_name = nil
-    #setup_label(Language::ACTION_ADDER)
-    #@main_view.change_label_text_to(Language::ACTION_ADDER)
-    #@main_view = ActionCreatorView.alloc.initWithFrame([location_of_action, size_of_action])
+
     @main_view = @scene_creator_view_controller.main_view
     @main_view.add_delegate(self)
     @main_view.mode = :toys_only # only toys can be selected
 
-    #@main_view.mode = :toys_only  # only toys can be selected
-    #@main_view.state = @state
-    view.addSubview(@main_view)
+    #setup mode buttons - show actions and properties
+    position = [10, 10]
+    @show_actions_btn = setup_button(:show_actions, position, @main_view)
+    position[0] += CGRectGetWidth(@show_actions_btn.frame) + 10
+    @show_properties_btn = setup_button(:show_properties, position, @main_view)
 
-    button = setup_button(:show_actions, [10,10], @main_view)
-    button.enabled = true
+    view.addSubview(@main_view)
   end
 
   def bounds_for_view=(bounds)
@@ -111,20 +112,43 @@ class ActionAdderViewController < UIViewController
 
   def show_actions
     puts 'SHOW ACTIONS'
-    # transition to toy selector view where selecting a toy brings up a table view with action info etc.
-    #make a modal to select another toy - must disable selecting same toy?
-    show_action_view_controller = ShowActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    show_action_view_controller.bounds_for_view = @bounds
-    show_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
-    show_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
-    show_action_view_controller.delegate = self
-    show_action_view_controller.state = @state
-    presentViewController(show_action_view_controller, animated: false, completion: nil)
+    if(@selected_toy)
+      #show modal with view of all associated actions and effects
+      action_list_view_controller = ActionListViewController.alloc.initWithNibName(nil, bundle: nil)
+      action_list_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+      action_list_view_controller.modalPresentationStyle = UIModalPresentationFormSheet
+      action_list_view_controller.delegate = self
+      action_list_view_controller.state = @state
+      action_list_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+      action_list_view_controller.selected = @selected_toy
+      presentViewController(action_list_view_controller, animated: false, completion: nil)
+    end
+  end
+
+  def show_properties
+    puts 'Show properties'
+    if(@selected_toy)
+      prop_list_view_controller = PropertyListViewController.alloc.initWithNibName(nil, bundle: nil)
+      prop_list_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+      prop_list_view_controller.modalPresentationStyle = UIModalPresentationFormSheet
+      prop_list_view_controller.delegate = self
+      prop_list_view_controller.state = @state
+      prop_list_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+      prop_list_view_controller.selected = @selected_toy
+      presentViewController(prop_list_view_controller, animated: false, completion: nil)
+    end
   end
 
   def enable_action_buttons(enable)
     @action_button_view.backgroundColor = enable ? Constants::GOLD : UIColor::darkGrayColor
     @action_buttons.each { |name, button| button.enabled = enable }
+  end
+
+  def enable_show_mode_buttons(enable)
+    if @show_properties_btn
+      @show_actions_btn.enabled = enable;
+      @show_properties_btn.enabled = enable;
+    end
   end
 
   def enable_effect_buttons(enable)
@@ -147,12 +171,14 @@ class ActionAdderViewController < UIViewController
   def close_touch_view_controller
     dismissModalViewControllerAnimated(false, completion: nil)
     enable_action_buttons(false)
+    enable_show_mode_buttons(false)
     enable_effect_buttons(true)
   end
 
   def selected_toy=(toy)
     @selected_toy = toy
     enable_action_buttons(@selected_toy)
+    enable_show_mode_buttons(@selected_toy)
     enable_effect_buttons(false)
     #@view_mode = @selected_toy ? :toy_selected : :nothing_chosen
   end
@@ -161,6 +187,7 @@ class ActionAdderViewController < UIViewController
     @colliding_toy = toy
     dismissModalViewControllerAnimated(false, completion: nil)
     enable_action_buttons(false)
+    enable_show_mode_buttons(false)
     enable_effect_buttons(true)
   end
 
