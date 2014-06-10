@@ -67,6 +67,8 @@ class PlayScene < SKScene
             delete = true
           when :applyTorque
             send = true
+          when :create_new_toy
+
         end
         if send
           param = scale_force_mass(param, toy.physicsBody.mass)
@@ -90,7 +92,7 @@ class PlayScene < SKScene
   def explode_toy(toy, force)
     toy_in_scene = @toys.select {|s| s.template.identifier == toy.name}.first
     templates = []
-    new_name = rand(2**60).to_s # TODO: Make better
+    new_name = toy.userData
     @toy_hash[new_name] = []
     partsArray = check_parts(toy_in_scene.template.parts)
     force = scale_force_mass(force, toy.physicsBody.mass)
