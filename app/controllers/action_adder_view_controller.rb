@@ -6,7 +6,7 @@ class ActionAdderViewController < UIViewController
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
   ACTIONS = [:touch, :timer, :collision]
-  EFFECTS = [:apply_force, :explosion, :apply_torque]
+  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy]
   MODES = [:show_actions,:show_properties]
 
   FORCE_SCALE = 100
@@ -121,7 +121,7 @@ class ActionAdderViewController < UIViewController
       action_list_view_controller.state = @state
       action_list_view_controller.scene_creator_view_controller = @scene_creator_view_controller
       action_list_view_controller.selected = @selected_toy
-      presentViewController(action_list_view_controller, animated: false, completion: nil)
+      presentViewController(action_list_view_controller, animated: true, completion: nil)
     end
   end
 
@@ -135,7 +135,7 @@ class ActionAdderViewController < UIViewController
       prop_list_view_controller.state = @state
       prop_list_view_controller.scene_creator_view_controller = @scene_creator_view_controller
       prop_list_view_controller.selected = @selected_toy
-      presentViewController(prop_list_view_controller, animated: false, completion: nil)
+      presentViewController(prop_list_view_controller, animated: true, completion: nil)
     end
   end
 
@@ -220,7 +220,7 @@ class ActionAdderViewController < UIViewController
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
-    @main_view.colliding_selected = nil
+    @main_view.secondary_selected = nil
     @main_view.setNeedsDisplay
   end
 
@@ -230,7 +230,7 @@ class ActionAdderViewController < UIViewController
     effect_param = force * ROTATION_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
-    @main_view.colliding_selected = nil
+    @main_view.secondary_selected = nil
     @main_view.setNeedsDisplay
   end
 
@@ -240,7 +240,16 @@ class ActionAdderViewController < UIViewController
     effect_param = force * EXPLODE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
-    @main_view.colliding_selected = nil
+    @main_view.secondary_selected = nil
+    @main_view.setNeedsDisplay
+  end
+
+  def create_new_toy=(args)
+    action_type, action_param = get_action
+    effect_type = :create_new_toy
+    effect_param = args
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    @main_view.secondary_selected = nil
     @main_view.setNeedsDisplay
   end
 
@@ -263,8 +272,8 @@ class ActionAdderViewController < UIViewController
   end
 
   # Closes any modal view.
-  def close_modal_view
-    dismissModalViewControllerAnimated(false, completion: nil)
+  def close_modal_view (animation = false)
+    dismissModalViewControllerAnimated(animation, completion: nil)
   end
 
   # Called when the view disappears.
@@ -300,6 +309,37 @@ class ActionAdderViewController < UIViewController
       when :sound
         Language::SOUND
     end
+  end
+
+  def drop_toy(toy)
+    drag_action_view_controller = CreateActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    drag_action_view_controller.bounds_for_view = @bounds
+    #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+    drag_action_view_controller.selected = @selected_toy
+    drag_action_view_controller.new_toy = ToyInScene.new(@state.toys[toy])
+    #drag_action_view_controller.delegate = self
+    #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
+    drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+
+    dismissViewControllerAnimated(true, completion: lambda { presentViewController(drag_action_view_controller, animated: false, completion: nil)})
+  end
+
+  def close_toybox
+    dismissModalViewControllerAnimated(true, completion: nil)
+  end
+
+  def create_toy_action_viewer (toy)
+    drag_action_view_controller = CreateActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    drag_action_view_controller.bounds_for_view = @bounds
+    #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+    drag_action_view_controller.selected = @selected_toy
+    drag_action_view_controller.new_toy = toy
+    #drag_action_view_controller.delegate = self
+    #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
+    drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+    presentViewController(drag_action_view_controller, animated: false, completion: nil)
   end
 
   #======================
@@ -376,6 +416,15 @@ class ActionAdderViewController < UIViewController
     #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
     drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
     presentViewController(drag_action_view_controller, animated: false, completion: nil)
+  end
+
+  def create_new_toy
+    toybox_view_controller = ToyBoxViewController.alloc.initWithNibName(nil, bundle: nil)
+    toybox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    toybox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
+    toybox_view_controller.delegate = self
+    toybox_view_controller.state = @state
+    presentViewController(toybox_view_controller, animated: true, completion: nil)
   end
 
 end

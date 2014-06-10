@@ -7,7 +7,7 @@ class SceneCreatorView < CreatorView
 
 # @truly_selected is a stroke/toy which is currently being touched by the user
 # @selected is a stroke/toy which was touched and is now hilighted
-  attr_writer :selected, :colliding_selected, :show_action_controller
+  attr_writer :selected, :secondary_selected, :show_action_controller
   attr_reader :actions
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
@@ -207,7 +207,7 @@ class SceneCreatorView < CreatorView
 
   # A touch in collision mode
   def touch_begin_collision
-    @colliding_selected = close_toy(@current_point)
+    @secondary_selected = close_toy(@current_point)
   end
 
   # So we can start lines from off the edge of the view.
@@ -300,6 +300,8 @@ class SceneCreatorView < CreatorView
             touch_end_explosion
           when :collision
             touch_end_collision
+          when :create_new_toy
+            touch_end_create_toy
         end
       when :circle
         centre = @points[0]
@@ -358,10 +360,23 @@ class SceneCreatorView < CreatorView
     @delegate.close_modal_view
   end
 
+  # [ID, Displacement.x, displacement.y, zoom, angle]
+  def touch_end_create_toy
+    @delegate.close_modal_view
+    results = []
+    results << @secondary_selected.template.identifier
+    disp = @secondary_selected.position - @selected.position
+    results << disp.x
+    results << disp.y * -1
+    results << @secondary_selected.zoom
+    results << @secondary_selected.angle
+    @delegate.create_new_toy = results
+  end
+
   # Called when the touch ends for a collision toy selection.
   def touch_end_collision
-    if @colliding_selected
-      @delegate.colliding_toy = @colliding_selected
+    if @secondary_selected
+      @delegate.colliding_toy = @secondary_selected
       #@delegate.close_modal_view
     end
   end
@@ -522,10 +537,10 @@ class SceneCreatorView < CreatorView
       @selected.draw(context)
       CGContextEndTransparencyLayer(context)
     end
-    if @colliding_selected
+    if @secondary_selected
       CGContextBeginTransparencyLayer(context, nil)
       setup_context(context, true)
-      @colliding_selected.draw(context)
+      @secondary_selected.draw(context)
       CGContextEndTransparencyLayer(context)
     end
     if @points
@@ -551,6 +566,13 @@ class SceneCreatorView < CreatorView
            draw_rotate_circle(context, @selected.position, @current_point)
         else
           draw_static_rotate_circle(context, @selected.position)
+        end
+      when :create_new_toy
+        if @secondary_selected != nil
+          if @current_point
+            @secondary_selected.position = @current_point
+          end
+
         end
     end
   end
