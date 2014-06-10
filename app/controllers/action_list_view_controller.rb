@@ -30,7 +30,7 @@ class ActionListViewController < UIViewController
 
       @delete_mode = false
       @del_button = UIButton.buttonWithType(UIButtonTypeCustom)
-      @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+      @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       @del_button.sizeToFit
       @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @del_button.frame.size]
       @del_button.addTarget(self, action: :delete, forControlEvents: UIControlEventTouchUpInside)
@@ -57,15 +57,23 @@ class ActionListViewController < UIViewController
 
     # Back to the Select toy screen.
     def back
+      self.view.window.removeGestureRecognizer(@recognizer)
       @delegate.close_modal_view(true)
     end
 
+    def viewDidAppear(animated)
+      #add gesture recognizer to close window on tap outside
+      @recognizer = UITapGestureRecognizer.alloc.initWithTarget(self, action: 'handleTapOutside:')
+      @recognizer.cancelsTouchesInView = false
+      @recognizer.numberOfTapsRequired = 1
+      view.window.addGestureRecognizer(@recognizer)
+    end
 
     #activate delete mode
     def delete
       if @table_view.isEditing
         @table_view.setEditing(false, animated: true)
-        @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+        @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       else
         @table_view.setEditing(true, animated: true)
         @del_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
@@ -156,6 +164,16 @@ class ActionListViewController < UIViewController
       return "   Trigger                        Object                          Effect"
     end
 
-
+    def handleTapOutside(sender)
+      if (sender.state == UIGestureRecognizerStateEnded)
+        location = sender.locationInView(nil) #Passing nil gives us coordinates in the window
+        #Then we convert the tap's location into the local view's coordinate system, and test to see if it's in or outside. If outside, dismiss the view.
+        if (!self.view.pointInside(self.view.convertPoint(location, fromView:self.view.window), withEvent:nil))
+          # Remove the recognizer first so it's view.window is valid.
+          self.view.window.removeGestureRecognizer(sender)
+          self.dismissModalViewControllerAnimated(true)
+        end
+      end
+    end
 
 end

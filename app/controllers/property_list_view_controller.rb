@@ -12,10 +12,23 @@ class PropertyListViewController < UIViewController
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, WIDTH]])
     view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
-    setup_button(:back, [LITTLE_GAP, LITTLE_GAP])
+    # add toy view at top
+
+    @selected.update_image
+    toy_image = UIImageView.alloc.initWithImage(@selected.image)
+    toy_image.frame = CGRectMake(WIDTH-200-75,LITTLE_GAP,200,100)
+    toy_image.sizeToFit
+    view.addSubview(toy_image)
+
+    label = UILabel.alloc.initWithFrame([[toy_image.frame.origin.x-150, LITTLE_GAP],[150,95]])
+    label.text = 'Properties of '
+    label.textAlignment = UITextAlignmentRight
+    view.addSubview(label)
+
+    setup_button(:back, [LITTLE_GAP, LITTLE_GAP+100])
 
     #make table view filled with all actions that have selected as the toy
-    @table_view = UITableView.alloc.initWithFrame([[@current_xpos, 0], [WIDTH - @current_xpos, WIDTH+95]])
+    @table_view = UITableView.alloc.initWithFrame([[@current_xpos, 120], [WIDTH - @current_xpos, WIDTH]])
     @table_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
     @table_view.dataSource = self
     @table_view.delegate = self
@@ -25,6 +38,15 @@ class PropertyListViewController < UIViewController
     @rotate_switch = nil
     @stuck_switch = nil
 
+
+  end
+
+  def viewDidAppear(animated)
+    #add gesture recognizer to close window on tap outside
+    @recognizer = UITapGestureRecognizer.alloc.initWithTarget(self, action: 'handleTapOutside:')
+    @recognizer.cancelsTouchesInView = false
+    @recognizer.numberOfTapsRequired = 1
+    view.window.addGestureRecognizer(@recognizer)
   end
 
   def setup_button(image_name, position)
@@ -47,6 +69,7 @@ class PropertyListViewController < UIViewController
 
   # Back to the Select toy screen.
   def back
+    self.view.window.removeGestureRecognizer(@recognizer)
     @delegate.close_modal_view(true)
   end
 
@@ -98,4 +121,15 @@ class PropertyListViewController < UIViewController
     @selected.template.can_rotate = @rotate_switch.on?
   end
 
+  def handleTapOutside(sender)
+    if (sender.state == UIGestureRecognizerStateEnded)
+      location = sender.locationInView(nil) #Passing nil gives us coordinates in the window
+      #Then we convert the tap's location into the local view's coordinate system, and test to see if it's in or outside. If outside, dismiss the view.
+      if (!self.view.pointInside(self.view.convertPoint(location, fromView:self.view.window), withEvent:nil))
+        # Remove the recognizer first so it's view.window is valid.
+        self.view.window.removeGestureRecognizer(sender)
+        self.dismissModalViewControllerAnimated(true)
+      end
+    end
+  end
 end

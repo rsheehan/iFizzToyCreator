@@ -83,7 +83,10 @@ class SceneTemplate
     end
     @toys.each do |toy|
       #draw toy image at position and scale and rotation
-      draw_toy(context,toy,scale)
+      if toy
+        draw_toy(context,toy,scale)
+      end
+
     end
     image = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
