@@ -41,6 +41,7 @@ class PlayViewController < UIViewController
     @button_actions.each_key do |button|
       @button_actions[button] = []
     end
+    disableButtons
     actions = @state.scenes[@state.currentscene].actions
     actions.each do |action|
       case action[:action_type]
@@ -93,6 +94,15 @@ class PlayViewController < UIViewController
     button.enabled = false
     panel.addSubview(button)
     button
+  end
+
+  def disableButtons
+    @left_bottom_button.enabled = false
+    @left_middle_button.enabled = false
+    @left_top_button.enabled = false
+    @right_bottom_button.enabled = false
+    @right_middle_button.enabled = false
+    @right_top_button.enabled = false
   end
 
   # Makes the button work
