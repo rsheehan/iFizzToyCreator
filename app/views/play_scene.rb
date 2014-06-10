@@ -45,9 +45,10 @@ class PlayScene < SKScene
         end
         toys = new_toys
       end
-      toys.each do |toy| # toys here are SKSpriteNodes
+      toys.delete_if do |toy| # toys here are SKSpriteNodes
         effect = action[:effect_type]
         param = action[:effect_param]
+        delete = false
         send = false
         case effect
           when :applyForce
@@ -58,20 +59,30 @@ class PlayScene < SKScene
             send = true
           when :explosion
             #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
-            if toy.physicsBody != nil
-              explode_toy(toy, param)
-              removeChildrenInArray([toy])
-              toy.physicsBody = nil
-            end
+            explode_toy(toy, param)
+            removeChildrenInArray([toy])
+            toy.physicsBody = nil
+            delete = true
           when :applyTorque
             send = true
         end
         if send
+          param = scale_force_mass(param, toy.physicsBody.mass)
           toy.physicsBody.send(effect, param)
         end
+        delete
       end
     end
     @actions_to_fire = []
+  end
+
+  def scale_force_mass(param, mass)
+    #puts "Mass: " + mass.to_s
+    scale = mass
+
+    param = param * scale
+
+    param
   end
 
   def explode_toy(toy, force)
@@ -80,6 +91,7 @@ class PlayScene < SKScene
     new_name = rand(2**60).to_s # TODO: Make better
     @toy_hash[new_name] = []
     partsArray = check_parts(toy_in_scene.template.parts)
+    force = scale_force_mass(force, toy.physicsBody.mass)
     partsArray.each do |part|
       #position = centre_part(part, toy.position)
       templates << ToyTemplate.new([part], new_name)
@@ -112,8 +124,9 @@ class PlayScene < SKScene
       new_sprite_toy.name = new_name
       addChild(new_sprite_toy)
       #puts "Mag: " + force.to_s
-      puts "Force X: " + (force/displacement.x/20).to_s + ", Y: " + (-force/displacement.y/20).to_s
-      new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x/15 , force/displacement.y/15))
+      #puts "Force X: " + (force/displacement.x/20).to_s + ", Y: " + (-force/displacement.y/20).to_s
+
+      new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
       @toy_hash[new_name] << new_sprite_toy
       fadeOut = SKAction.fadeOutWithDuration(5.0)
       remove = SKAction.removeFromParent()
