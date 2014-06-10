@@ -42,7 +42,6 @@ class PropertyListViewController < UIViewController
   end
 
   def viewDidAppear(animated)
-
     #add gesture recognizer to close window on tap outside
     @recognizer = UITapGestureRecognizer.alloc.initWithTarget(self, action: 'handleTapOutside:')
     @recognizer.cancelsTouchesInView = false

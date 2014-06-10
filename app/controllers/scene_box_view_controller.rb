@@ -47,6 +47,14 @@ class SceneBoxViewController < UIViewController
       @state = state
     end
 
+    def viewDidAppear(animated)
+      #add gesture recognizer to close window on tap outside
+      @recognizer = UITapGestureRecognizer.alloc.initWithTarget(self, action: 'handleTapOutside:')
+      @recognizer.cancelsTouchesInView = false
+      @recognizer.numberOfTapsRequired = 1
+      view.window.addGestureRecognizer(@recognizer)
+    end
+
     #def process_row_of_buttons(row_of_buttons)
     #  row_of_buttons.each do |row_button|
     #    size = row_button.frame.size
@@ -60,6 +68,7 @@ class SceneBoxViewController < UIViewController
 
     # Back to the previous screen.
     def back
+      self.view.window.removeGestureRecognizer(@recognizer)
       @delegate.close_toybox
     end
 
@@ -163,8 +172,20 @@ class SceneBoxViewController < UIViewController
       if @delete_mode
         delete_scene(index_path)
       else
+        self.view.window.removeGestureRecognizer(@recognizer)
         @delegate.drop_scene(item)
       end
     end
 
+    def handleTapOutside(sender)
+      if (sender.state == UIGestureRecognizerStateEnded)
+        location = sender.locationInView(nil) #Passing nil gives us coordinates in the window
+        #Then we convert the tap's location into the local view's coordinate system, and test to see if it's in or outside. If outside, dismiss the view.
+        if (!self.view.pointInside(self.view.convertPoint(location, fromView:self.view.window), withEvent:nil))
+          # Remove the recognizer first so it's view.window is valid.
+          self.view.window.removeGestureRecognizer(sender)
+          self.dismissModalViewControllerAnimated(true)
+        end
+      end
+    end
 end
