@@ -455,6 +455,7 @@ class SceneCreatorView < CreatorView
   def draw_force_circle(context, center, radius)
     rectangle = CGRectMake(center.x - radius, center.y - radius, radius*2, radius*2)
     CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
+    CGContextSetLineWidth(context, 5)
     CGContextAddEllipseInRect(context, rectangle)
     CGContextStrokePath(context)
   end
@@ -556,7 +557,7 @@ class SceneCreatorView < CreatorView
         end
       when :explosion
         if @current_point && @selected
-          draw_force_arrow(context, @selected.position, @current_point)
+          #draw_force_arrow(context, @selected.position, @current_point)
           length = Math.hypot(@selected.position.x - @current_point.x, @selected.position.y - @current_point.y)
           draw_force_circle(context, @selected.position, length)
         end
