@@ -59,9 +59,11 @@ class PlayScene < SKScene
             send = true
           when :explosion
             #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
-            explode_toy(toy, param)
-            removeChildrenInArray([toy])
-            toy.physicsBody = nil
+            if toy.physicsBody != nil
+              explode_toy(toy, param)
+              removeChildrenInArray([toy])
+              toy.physicsBody = nil
+            end
             delete = true
           when :applyTorque
             send = true
