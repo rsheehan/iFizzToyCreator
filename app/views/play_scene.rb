@@ -29,6 +29,43 @@ class PlayScene < SKScene
   # This is called once per frame.
   # Most screen logic goes here.
   def update(current_time)
+    @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
+      toyArray.each do |toy|
+        # go through toys and flip if traveling in opposite direction to front??
+        vel = toy.physicsBody.velocity
+        puts "velocity = %f, %f" % [vel.dx, vel.dy]
+        if toy.userData[:front]
+          case toy.userData[:front]
+            when Constants::Front::Right
+              if vel.dx > 0.5
+                toy.xScale = 1.0
+                puts 'scale = -1'
+              elsif vel.dx < -0.5
+                toy.xScale = -1.0;
+              end
+            when Constants::Front::Left
+              if vel.dx > 0.5
+                toy.xScale = -1.0
+              elsif vel.dx < -0.5
+                toy.xScale = 1.0
+              end
+            when Constants::Front::Up
+              if vel.dy > 0
+                toy.xScale = -1.0
+              else
+                toy.xScale = 1.0
+              end
+            when Constants::Front::Bottom
+              if vel.dy > 0
+                toy.xScale = 1.0
+              else
+                toy.xScale = -1.0
+              end
+          end
+        end
+      end
+    end
+
     @actions_to_fire.each do |action|
       toy_id = action[:toy]
       toys = @toy_hash[toy_id] # all toys of the correct type
@@ -39,7 +76,7 @@ class PlayScene < SKScene
       if action[:action_type] == :collision
         new_toys = []
         toys.each do |toy|
-          if toy.userData == action[:action_param][1]
+          if toy.userData[:uniqueID] == action[:action_param][1]
             new_toys << toy
           end
         end
@@ -49,6 +86,36 @@ class PlayScene < SKScene
         effect = action[:effect_type]
         param = action[:effect_param]
         send = false
+        # go through toys and flip if traveling in opposite direction to front??
+        vel = toy.physicsBody.velocity
+        #TODO - check each time if traveling in right dir?
+        case toy.userData[:front]
+          when Constants::Front::Right
+            if vel.dx > 0
+              toy.xScale = toy.xScale* 1.0;
+            else
+              toy.xScale = toy.xScale* -1.0;
+            end
+          when Constants::Front::Left
+            if vel.dx > 0
+              toy.xScale = toy.xScale* -1.0;
+            else
+              toy.xScale = toy.xScale* 1.0;
+            end
+          when Constants::Front::Up
+            if vel.dy > 0
+              toy.yScale = toy.yScale* -1.0;
+            else
+              toy.yScale = toy.yScale* 1.0;
+            end
+          when Constants::Front::Bottom
+            if vel.dy > 0
+              toy.yScale = toy.yScale* 1.0;
+            else
+              toy.yScale = toy.yScale* -1.0;
+            end
+        end
+
         case effect
           when :applyForce
             # make force relative to the toy
@@ -283,7 +350,11 @@ class PlayScene < SKScene
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)
     toy.zRotation = -toy_in_scene.angle
-    toy.userData = rand(2**60).to_s #add unique id to allow for single collision
+    toy.userData = {score: 0, uniqueID: rand(2**60).to_s} #add unique id to allow for single collision
+    if toy_in_scene.template.always_travels_forward
+      toy.userData[:front] = toy_in_scene.template.front
+    end
+
     addChild(toy)
 
     # physics body stuff
@@ -329,28 +400,28 @@ class PlayScene < SKScene
     #check each collision action - if  the 2 colliding toys have the corresponding identifiers to a collision action, add it
     if @collision_actions
       @collision_actions.each do |action|
-        if contact.bodyA.node.userData == contact.bodyB.node.userData
+        if contact.bodyA.node.userData[:uniqueID] == contact.bodyB.node.userData[:uniqueID]
           next
         end
         if contact.bodyA.node.name == action[:toy]
           if contact.bodyB.node.name == action[:action_param]
             #alter action param to include the specific toy that collided(unique id is stored as second param in action params array)
-            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData]; h }
+            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData[:uniqueID]]; h }
             add_actions_for_update([new_action])
             #if identifiers are the same add another action for second toy
             if action[:toy] == action[:action_param]
-              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData]; h }
+              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData[:uniqueID]]; h }
               add_actions_for_update([new_action])
             end
           end
         elsif contact.bodyB.node.name == action[:toy]
           if contact.bodyA.node.name == action[:action_param]
             #alter action param to include the specific toy that collided(unique id is stored as second param in action params array)
-            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData]; h }
+            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData[:uniqueID]]; h }
             add_actions_for_update([new_action])
             #if identifiers are the same add another action for second toy
             if action[:toy] == action[:action_param]
-              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData]; h }
+              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData[:uniqueID]]; h }
               add_actions_for_update([new_action])
             end
           end

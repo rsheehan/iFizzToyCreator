@@ -2,7 +2,7 @@ class PropertyListViewController < UIViewController
 
   attr_writer :delegate, :selected, :scene_creator_view_controller
 
-  PROPERTIES = {Can_Rotate: 'boolean', Stuck: 'boolean', Can_Travel_Backward:'boolean', Front: 'other'}
+  PROPERTIES = {Can_Rotate: 'boolean', Stuck: 'boolean', Always_Travels_Forward:'boolean', Front: 'other'}
 
   LITTLE_GAP = 10
   BIG_GAP = 40
@@ -103,9 +103,9 @@ class PropertyListViewController < UIViewController
             switch.on = @selected.template.stuck
             @stuck_switch = switch
             @stuck_switch.addTarget(self,action:'stuck_switch_changed', forControlEvents:UIControlEventValueChanged)
-          when :Can_Travel_Backward
+          when :Always_Travels_Forward
             cell.text = 'Always travels forward'
-            switch.on = @selected.template.can_travel_backward
+            switch.on = @selected.template.always_travels_forward
             @travel_switch = switch
             @travel_switch.addTarget(self,action:'travel_switch_changed', forControlEvents:UIControlEventValueChanged)
 
@@ -153,7 +153,7 @@ class PropertyListViewController < UIViewController
   end
 
   def travel_switch_changed
-    @selected.template.can_travel_backward = @travel_switch.on?
+    @selected.template.always_travels_forward = @travel_switch.on?
   end
 
   def handleTapOutside(sender)
