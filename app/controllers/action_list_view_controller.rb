@@ -57,7 +57,7 @@ class ActionListViewController < UIViewController
 
     # Back to the Select toy screen.
     def back
-      @delegate.close_modal_view
+      @delegate.close_modal_view(true)
     end
 
 
