@@ -22,7 +22,7 @@ class SceneBoxViewController < UIViewController
 
       @delete_mode = false
       @del_button = UIButton.buttonWithType(UIButtonTypeCustom)
-      @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+      @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       @del_button.sizeToFit
       @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @del_button.frame.size]
       @del_button.addTarget(self, action: :delete, forControlEvents: UIControlEventTouchUpInside)
@@ -82,7 +82,7 @@ class SceneBoxViewController < UIViewController
       if @delete_mode
         @delete_mode = false
         #set image
-        @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+        @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       else
         @delete_mode = true
         #set image

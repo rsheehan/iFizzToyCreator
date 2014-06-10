@@ -30,7 +30,7 @@ class ActionListViewController < UIViewController
 
       @delete_mode = false
       @del_button = UIButton.buttonWithType(UIButtonTypeCustom)
-      @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+      @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       @del_button.sizeToFit
       @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @del_button.frame.size]
       @del_button.addTarget(self, action: :delete, forControlEvents: UIControlEventTouchUpInside)
@@ -73,7 +73,7 @@ class ActionListViewController < UIViewController
     def delete
       if @table_view.isEditing
         @table_view.setEditing(false, animated: true)
-        @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+        @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       else
         @table_view.setEditing(true, animated: true)
         @del_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
