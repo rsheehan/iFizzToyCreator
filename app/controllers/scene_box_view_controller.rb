@@ -135,12 +135,12 @@ class SceneBoxViewController < UIViewController
         return
       end
       if decreasing
-        rotation -= 0.01
+        rotation -= 0.005
         if rotation <= -3.14/128
           decreasing = false
         end
       else
-        rotation += 0.01
+        rotation += 0.005
         if rotation >= 3.14/128
           decreasing = true
         end

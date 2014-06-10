@@ -9,7 +9,7 @@ class DeleteToyButton < UICollectionViewCell
       @cross_button = UIButton.alloc.initWithFrame(CGRectMake(-5,-5,20,20))
 
       @del_toy_button = UIButton.buttonWithType(UIButtonTypeCustom)
-      @del_toy_button.setImage(UIImage.imageNamed(:cross), forState: UIControlStateNormal)
+      @del_toy_button.setImage(UIImage.imageNamed(:cross2), forState: UIControlStateNormal)
       @del_toy_button.sizeToFit
       @del_toy_button.frame = [ [-5, -5], @del_toy_button.frame.size]
 
