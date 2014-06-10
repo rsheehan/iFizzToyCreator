@@ -1,6 +1,6 @@
 # A drag action is usually associated with an effect.
 # e.g. dragging a toy here probably means apply a force in the direction of the drag.
-class CreateActionViewController < CenterToyViewController
+class CreateActionViewController < UIViewController
 
   #, :delegate
   attr_writer :toybox, :new_toy
