@@ -152,12 +152,18 @@ class State
       end
     end
 
+    if not template
+      template = jsonToToy(json_toy[:template])
+    end
+
     if template
     #zoom,angle,postiton
       toy = ToyInScene.new(template, json_toy[:zoom])
       toy.position = CGPointMake(json_toy[:position][:x],json_toy[:position][:y] )
       toy.angle = json_toy[:angle]
       toy
+    else
+      puts 'Template was nil'
     end
   end
 

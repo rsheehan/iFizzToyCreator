@@ -94,7 +94,8 @@ class SceneBoxViewController < UIViewController
 
     end
 
-    def delete_scene(index_path)
+    def delete_scene(sender)
+      index_path = @collection_view.indexPathForCell(sender.superview);
       @state.scenes.delete_at(index_path.row)
       #remove item from collectionview
       @collection_view.deleteItemsAtIndexPaths([index_path])
@@ -102,6 +103,7 @@ class SceneBoxViewController < UIViewController
       @state.save
 
     end
+
     # The methods to implement the UICollectionViewDataSource protocol.
 
     SCENEBUTTON = "ToyButton"
@@ -117,6 +119,7 @@ class SceneBoxViewController < UIViewController
         scene_button = cv.dequeueReusableCellWithReuseIdentifier(DELETESCENEBUTTON, forIndexPath: index_path)
         scene_button.layer.removeAllAnimations
         animateToyButton(scene_button,0,false)
+        scene_button.del_toy_button.addTarget(self, action: 'delete_scene:', forControlEvents: UIControlEventTouchUpInside)
       else
         scene_button = cv.dequeueReusableCellWithReuseIdentifier(SCENEBUTTON, forIndexPath: index_path)
       end
@@ -169,9 +172,7 @@ class SceneBoxViewController < UIViewController
     # And the methods for the UICollectionViewDelegate protocol.
     def collectionView(cv, didSelectItemAtIndexPath: index_path)
       item = index_path.row
-      if @delete_mode
-        delete_scene(index_path)
-      else
+      if not @delete_mode
         self.view.window.removeGestureRecognizer(@recognizer)
         @delegate.drop_scene(item)
       end

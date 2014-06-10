@@ -94,14 +94,15 @@ class ToyBoxViewController < UIViewController
 
   end
 
-  def delete_toy(index_path)
+  def delete_toy(sender)
+    index_path = @collection_view.indexPathForCell(sender.superview);
     @state.toys.delete_at(index_path.row)
     #remove item from collectionview
     @collection_view.deleteItemsAtIndexPaths([index_path])
     #save state
     @state.save
-
   end
+
   # The methods to implement the UICollectionViewDataSource protocol.
 
   TOYBUTTON = "ToyButton"
@@ -117,6 +118,7 @@ class ToyBoxViewController < UIViewController
       toy_button = cv.dequeueReusableCellWithReuseIdentifier(DELETETOYBUTTON, forIndexPath: index_path)
       toy_button.layer.removeAllAnimations
       animateToyButton(toy_button,0,false)
+      toy_button.del_toy_button.addTarget(self, action: 'delete_toy:', forControlEvents: UIControlEventTouchUpInside)
     else
       toy_button = cv.dequeueReusableCellWithReuseIdentifier(TOYBUTTON, forIndexPath: index_path)
     end
@@ -125,6 +127,7 @@ class ToyBoxViewController < UIViewController
     @state.toys[item].update_image
 
     toy_button.toy = @state.toys[item]
+
     toy_button
 
   end
@@ -171,9 +174,7 @@ class ToyBoxViewController < UIViewController
   # And the methods for the UICollectionViewDelegate protocol.
   def collectionView(cv, didSelectItemAtIndexPath: index_path)
     item = index_path.row
-    if @delete_mode
-      delete_toy(index_path)
-    else
+    if not @delete_mode
       self.view.window.removeGestureRecognizer(@recognizer)
       @delegate.drop_toy(item)
     end
