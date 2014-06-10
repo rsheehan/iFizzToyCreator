@@ -18,7 +18,6 @@ class PlayScene < SKScene
     self.scaleMode = SKSceneScaleModeAspectFill
     self.physicsWorld.contactDelegate = self
     add_edges
-    add_toys
   end
 
   # Actions are added here to be fired at the update
@@ -271,6 +270,11 @@ class PlayScene < SKScene
     addChild(background)
   end
 
+  def toys= (addedToys)
+    @toys = addedToys
+    add_toys
+  end
+
   def add_toys
     @toy_hash = {}
     @toys.each do |toy_in_scene|
@@ -328,6 +332,23 @@ class PlayScene < SKScene
       physicsWorld.addJoint(axle)
     end
     toy
+  end
+
+  # Called from Play View Controller in able to preprocess exploded
+  def add_explode_ref(explode_id)
+    @toy_hash[explode_id].each do |toy|
+      create_explode_toy(toy)
+    end
+  end
+
+  # Places exploded parts at toy.userData in @toy_hash
+  def create_explode_toy(toy)
+
+  end
+
+  # Called from Play View Controller in able to preprocess create new toys
+  def add_create_toy_ref(toy)
+    
   end
 
   def setup_context(context)

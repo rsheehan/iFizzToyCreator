@@ -55,6 +55,12 @@ class PlayViewController < UIViewController
         when :collision
           @play_scene.add_collision(action)
       end
+      case action[:effect_type]
+        when :explosion
+
+        when :create_new_toy
+
+      end
     end
 
     # end of development code
