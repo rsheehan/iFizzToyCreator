@@ -57,9 +57,9 @@ class PlayViewController < UIViewController
       end
       case action[:effect_type]
         when :explosion
-
+          @play_scene.add_explode_ref(action[:toy])
         when :create_new_toy
-
+          @play_scene.add_create_toy_ref(action[:effect_param])
       end
     end
 

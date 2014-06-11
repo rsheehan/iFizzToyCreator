@@ -141,6 +141,7 @@ class PlayScene < SKScene
 
 
   # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
+  # TODO: Check for overlap!!
   def check_parts(parts)
     circle_parts = parts.select {|x| x.is_a? (CirclePart) }
     point_parts = parts.select {|x| x.is_a? (PointsPart) }
@@ -337,18 +338,52 @@ class PlayScene < SKScene
   # Called from Play View Controller in able to preprocess exploded
   def add_explode_ref(explode_id)
     @toy_hash[explode_id].each do |toy|
-      create_explode_toy(toy)
+      #create_explode_toy(toy)
     end
   end
 
   # Places exploded parts at toy.userData in @toy_hash
   def create_explode_toy(toy)
+    toy_in_scene = @toys.select {|s| s.template.identifier == toy.name}.first
+    templates = []
+    new_name = toy.userData
+    @toy_hash[new_name] = []
+    partsArray = check_parts(toy_in_scene.template.parts)
 
+    partsArray.each do |part|
+      #position = centre_part(part, toy.position)
+      templates << ToyTemplate.new([part], new_name)
+      new_toy = ToyInScene.new(templates.last, toy_in_scene.zoom)
+      new_toy.change_position(view.convertPoint(toy.position, fromScene: self))
+      displacement = new_toy.centre_parts
+      new_toy.change_angle(toy_in_scene.angle)
+      new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(new_toy.image))
+      if part.is_a? PointsPart
+        new_sprite_toy.zRotation = toy.zRotation
+        new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
+        #puts "Toy Position X: " + new_toy.position.x.to_s + " Y: " +  new_toy.position.y.to_s #+ " , " + new_toy.position.
+        physics_points = ToyPhysicsBody.new(new_toy.template.parts).convex_hull_for_physics(new_toy.zoom)
+        path = CGPathCreateMutable()
+        CGPathMoveToPoint(path, nil, *physics_points[0])
+        physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
+        new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+      elsif part.is_a? CirclePart
+        wheel = new_toy.add_wheels_in_scene(self)[0]
+        new_sprite_toy.hidden = false
+        #puts "Wheel Pos, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+        new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
+        body = SKPhysicsBody.bodyWithCircleOfRadius(wheel.radius)
+        new_sprite_toy.physicsBody = body
+      end
+      new_sprite_toy.name = new_name
+
+      @toy_hash[new_name] << new_sprite_toy
+    end
   end
 
   # Called from Play View Controller in able to preprocess create new toys
-  def add_create_toy_ref(toy)
-    
+  def add_create_toy_ref(toy_args)
+
   end
 
   def setup_context(context)
