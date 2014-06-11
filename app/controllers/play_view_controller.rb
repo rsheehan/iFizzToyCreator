@@ -55,6 +55,13 @@ class PlayViewController < UIViewController
         when :collision
           @play_scene.add_collision(action)
       end
+    end
+
+    # end of development code
+
+    @play_view.presentScene(@play_scene)
+    puts "I Am Now Printing!!!!"
+    actions.each do |action|
       case action[:effect_type]
         when :explosion
           @play_scene.add_explode_ref(action[:toy])
@@ -62,10 +69,6 @@ class PlayViewController < UIViewController
           @play_scene.add_create_toy_ref(action[:effect_param])
       end
     end
-
-    # end of development code
-
-    @play_view.presentScene(@play_scene)
   end
 
   def bounds_for_view=(bounds)

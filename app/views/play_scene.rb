@@ -18,6 +18,7 @@ class PlayScene < SKScene
     self.scaleMode = SKSceneScaleModeAspectFill
     self.physicsWorld.contactDelegate = self
     add_edges
+    add_toys
   end
 
   # Actions are added here to be fired at the update
@@ -38,7 +39,7 @@ class PlayScene < SKScene
       if action[:action_type] == :collision
         new_toys = []
         toys.each do |toy|
-          if toy.userData == action[:action_param][1]
+          if toy.userData[:uniqueID] == action[:action_param][1]
             new_toys << toy
           end
         end
@@ -89,9 +90,9 @@ class PlayScene < SKScene
   end
 
   def explode_toy(toy, force)
-    toy_in_scene = @toys.select {|s| s.template.identifier == toy.name}.first
+    toy_in_scene = @toys.select {|s| s.template.identifier == toy.name and s.uid == toy.userData[:uniqueID]}.first
     templates = []
-    new_name = toy.userData
+    new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
     partsArray = check_parts(toy_in_scene.template.parts)
     force = scale_force_mass(force, toy.physicsBody.mass)
@@ -271,11 +272,6 @@ class PlayScene < SKScene
     addChild(background)
   end
 
-  def toys= (addedToys)
-    @toys = addedToys
-    add_toys
-  end
-
   def add_toys
     @toy_hash = {}
     @toys.each do |toy_in_scene|
@@ -299,7 +295,7 @@ class PlayScene < SKScene
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)
     toy.zRotation = -toy_in_scene.angle
-    toy.userData = rand(2**60).to_s #add unique id to allow for single collision
+    toy.userData = {uniqueID: toy_in_scene.uid}
     addChild(toy)
 
     # physics body stuff
@@ -337,16 +333,16 @@ class PlayScene < SKScene
 
   # Called from Play View Controller in able to preprocess exploded
   def add_explode_ref(explode_id)
-    @toy_hash[explode_id].each do |toy|
+    #@toy_hash[explode_id].each do |toy|
       #create_explode_toy(toy)
-    end
+    #end
   end
 
   # Places exploded parts at toy.userData in @toy_hash
   def create_explode_toy(toy)
-    toy_in_scene = @toys.select {|s| s.template.identifier == toy.name}.first
+    toy_in_scene = @toys.select {|s| s.template.identifier == toy.name and s.uid == toy.userData[:uniqueID]}.first
     templates = []
-    new_name = toy.userData
+    new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
     partsArray = check_parts(toy_in_scene.template.parts)
 
@@ -402,22 +398,22 @@ class PlayScene < SKScene
         if contact.bodyA.node.name == action[:toy]
           if contact.bodyB.node.name == action[:action_param]
             #alter action param to include the specific toy that collided(unique id is stored as second param in action params array)
-            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData]; h }
+            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData[:uniqueID]]; h }
             add_actions_for_update([new_action])
             #if identifiers are the same add another action for second toy
             if action[:toy] == action[:action_param]
-              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData]; h }
+              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData[:uniqueID]]; h }
               add_actions_for_update([new_action])
             end
           end
         elsif contact.bodyB.node.name == action[:toy]
           if contact.bodyA.node.name == action[:action_param]
             #alter action param to include the specific toy that collided(unique id is stored as second param in action params array)
-            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData]; h }
+            new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyB.node.userData[:uniqueID]]; h }
             add_actions_for_update([new_action])
             #if identifiers are the same add another action for second toy
             if action[:toy] == action[:action_param]
-              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData]; h }
+              new_action = action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [v,contact.bodyA.node.userData[:uniqueID]]; h }
               add_actions_for_update([new_action])
             end
           end
