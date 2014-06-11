@@ -60,13 +60,13 @@ class PlayViewController < UIViewController
     # end of development code
 
     @play_view.presentScene(@play_scene)
-    puts "I Am Now Printing!!!!"
     actions.each do |action|
       case action[:effect_type]
         when :explosion
           @play_scene.add_explode_ref(action[:toy])
         when :create_new_toy
-          @play_scene.add_create_toy_ref(action[:effect_param])
+          uid = @play_scene.add_create_toy_ref(action[:effect_param], @state.toys.select {|s| s.identifier == action[:effect_param][:id]}.first)
+          action[:uid] = uid
       end
     end
   end
