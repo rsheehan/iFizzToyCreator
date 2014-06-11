@@ -130,8 +130,10 @@ class ToyPhysicsBody
 # Uses Jarvis's algorithm - http://www.geeksforgeeks.org/convex-hull-set-1-jarviss-algorithm-or-wrapping/
 # Assumes path has at least 3 points.
   def convex_hull(path = @all_points)
-
     # Turn Two points into Four
+    if path.length < 2
+      return []
+    end
     if path.length == 2
       dline = path[0] - path[1]
       new_points = []

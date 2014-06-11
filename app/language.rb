@@ -28,9 +28,9 @@ class Language
   CLEAR         = 'clear'
 
   # Action Names
-  TOUCH         = 'touch'
+  TOUCH         = 'tap'
   COLLISION     = 'collision'
-  REPEAT        = 'repeat'     # Repeat?
+  REPEAT        = 'timer'     # Repeat?
   HOLD          = 'hold'
   SCORE         = 'score'
 

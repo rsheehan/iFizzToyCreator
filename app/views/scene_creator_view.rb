@@ -363,13 +363,13 @@ class SceneCreatorView < CreatorView
   # [ID, Displacement.x, displacement.y, zoom, angle]
   def touch_end_create_toy
     @delegate.close_modal_view
-    results = []
-    results << @secondary_selected.template.identifier
+    results = {}
+    results[:id] = @secondary_selected.template.identifier
     disp = @secondary_selected.position - @selected.position
-    results << disp.x
-    results << disp.y * -1
-    results << @secondary_selected.zoom
-    results << @secondary_selected.angle
+    results[:x] = disp.x
+    results[:y] = disp.y * -1
+    results[:zoom] = @secondary_selected.zoom
+    results[:angle] = @secondary_selected.angle
     @delegate.create_new_toy = results
   end
 

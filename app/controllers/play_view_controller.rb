@@ -41,6 +41,7 @@ class PlayViewController < UIViewController
     @button_actions.each_key do |button|
       @button_actions[button] = []
     end
+    disableButtons
     actions = @state.scenes[@state.currentscene].actions
     actions.each do |action|
       case action[:action_type]
@@ -59,6 +60,15 @@ class PlayViewController < UIViewController
     # end of development code
 
     @play_view.presentScene(@play_scene)
+    actions.each do |action|
+      case action[:effect_type]
+        when :explosion
+          @play_scene.add_explode_ref(action[:toy])
+        when :create_new_toy
+          uid = @play_scene.add_create_toy_ref(action[:effect_param], @state.toys.select {|s| s.identifier == action[:effect_param][:id]}.first)
+          action[:uid] = uid
+      end
+    end
   end
 
   def bounds_for_view=(bounds)
@@ -93,6 +103,15 @@ class PlayViewController < UIViewController
     button.enabled = false
     panel.addSubview(button)
     button
+  end
+
+  def disableButtons
+    @left_bottom_button.enabled = false
+    @left_middle_button.enabled = false
+    @left_top_button.enabled = false
+    @right_bottom_button.enabled = false
+    @right_middle_button.enabled = false
+    @right_top_button.enabled = false
   end
 
   # Makes the button work
