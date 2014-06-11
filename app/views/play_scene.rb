@@ -3,6 +3,7 @@ class PlayScene < SKScene
 
   attr_accessor :toys # ToyInScene objects
   attr_accessor :edges # ToyParts - either CirclePart or PointsPart
+  attr_reader :loaded_toys # ToyInScene not put into play straight away
 
   def didMoveToView(view)
     @actions_to_fire = []
@@ -68,7 +69,10 @@ class PlayScene < SKScene
           when :applyTorque
             send = true
           when :create_new_toy
-
+            toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
+            toy = new_toy(toy_in_scene)
+            toy.userData[:id] = rand(2**60).to_s
+            @toy_hash[action[:effect_param][:id]] << toy
         end
         if send
           param = scale_force_mass(param, toy.physicsBody.mass)
@@ -297,7 +301,6 @@ class PlayScene < SKScene
     toy.zRotation = -toy_in_scene.angle
     toy.userData = {uniqueID: toy_in_scene.uid}
     addChild(toy)
-
     # physics body stuff
     physics_points = ToyPhysicsBody.new(toy_in_scene.template.parts).convex_hull_for_physics(toy_in_scene.zoom)
     path = CGPathCreateMutable()
@@ -387,8 +390,27 @@ class PlayScene < SKScene
   end
 
   # Called from Play View Controller in able to preprocess create new toys
-  def add_create_toy_ref(toy_args)
+  # [ID, Displacement.x, displacement.y, zoom, angle]
+  def add_create_toy_ref(toy_args, toy_template)
+    puts toy_args.to_s
+    puts toy_template.identifier
+    if @toy_hash[toy_template.identifier].nil?
+      @toy_hash[toy_template.identifier]= []
+    end
+    toy_in_scene = ToyInScene.new(toy_template, toy_args[:zoom])
+    toy_in_scene.change_angle(toy_args[:angle])
+    toy_in_scene.change_position(CGPointMake(toy_args[:x], toy_args[:y]))
 
+    if @loaded_toys.nil?
+      @loaded_toys = {}
+    end
+
+    if @loaded_toys[toy_template.identifier].nil?
+      @loaded_toys[toy_template.identifier] = []
+    end
+
+    @loaded_toys[toy_template.identifier] << toy_in_scene
+    toy_in_scene.uid
   end
 
   def setup_context(context)

@@ -3,7 +3,7 @@
 class CreateActionViewController < UIViewController
 
   #, :delegate
-  attr_writer :toybox, :new_toy
+  attr_writer :toybox, :new_toy, :selected, :scene_creator_view_controller
 
   def loadView # preferable to viewDidLoad because not using xib
     # Do not call super.
