@@ -429,10 +429,15 @@ class PlayScene < SKScene
         new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
 
         physics_points = ToyPhysicsBody.new(new_toy.template.parts).convex_hull_for_physics(new_toy.zoom)
-        path = CGPathCreateMutable()
-        CGPathMoveToPoint(path, nil, *physics_points[0])
-        physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
-        new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+        if physics_points.length == 0
+          new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
+        else
+          path = CGPathCreateMutable()
+          CGPathMoveToPoint(path, nil, *physics_points[0])
+          physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
+          new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+        end
+
       elsif part.is_a? CirclePart
         wheel = new_toy.add_wheels_in_scene(self)[0]
         new_sprite_toy.hidden = false
