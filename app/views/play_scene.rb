@@ -405,7 +405,7 @@ class PlayScene < SKScene
   # Called from Play View Controller in able to preprocess exploded
   def add_explode_ref(explode_id)
     @toy_hash[explode_id].each do |toy|
-      create_explode_toy(toy)
+      #create_explode_toy(toy)
     end
   end
 
