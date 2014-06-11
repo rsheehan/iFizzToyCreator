@@ -77,7 +77,8 @@ class PlayScene < SKScene
             puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
             new_toy.position = toy.position + toy_in_scene.position
             puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
-            new_toy.userData[:id] = rand(2**60).to_s
+            new_toy.userData[:templateID] = toy_in_scene.uid
+            new_toy.userData[:uniqueID] = rand(2**60).to_s
             @toy_hash[action[:effect_param][:id]] << new_toy
         end
         if send
@@ -101,6 +102,9 @@ class PlayScene < SKScene
 
   def explode_toy(toy, force)
     toy_in_scene = @toys.select {|s| s.template.identifier == toy.name and s.uid == toy.userData[:uniqueID]}.first
+    if toy_in_scene.nil?
+      toy_in_scene = loaded_toys[toy.name].select {|s| s.uid == toy.userData[:templateID]}.first
+    end
     templates = []
     new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
@@ -337,7 +341,12 @@ class PlayScene < SKScene
 
   def add_toys
     @toy_hash = {}
+    @loaded_toys = {}
     @toys.each do |toy_in_scene|
+      if loaded_toys[toy_in_scene.template.identifier].nil?
+        loaded_toys[toy_in_scene.template.identifier] = []
+      end
+      loaded_toys[toy_in_scene.template.identifier] << toy_in_scene
       toy = new_toy(toy_in_scene)
       id = toy_in_scene.template.identifier
       @toy_hash[id] = [] unless @toy_hash[id]
