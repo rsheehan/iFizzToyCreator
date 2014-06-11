@@ -60,7 +60,6 @@ class PlayViewController < UIViewController
     # end of development code
 
     @play_view.presentScene(@play_scene)
-    puts "I Am Now Printing!!!!"
     actions.each do |action|
       case action[:effect_type]
         when :explosion

@@ -333,9 +333,9 @@ class PlayScene < SKScene
 
   # Called from Play View Controller in able to preprocess exploded
   def add_explode_ref(explode_id)
-    #@toy_hash[explode_id].each do |toy|
-      #create_explode_toy(toy)
-    #end
+    @toy_hash[explode_id].each do |toy|
+      create_explode_toy(toy)
+    end
   end
 
   # Places exploded parts at toy.userData in @toy_hash
@@ -345,19 +345,19 @@ class PlayScene < SKScene
     new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
     partsArray = check_parts(toy_in_scene.template.parts)
-
+    #force = scale_force_mass(force, toy.physicsBody.mass)
     partsArray.each do |part|
       #position = centre_part(part, toy.position)
       templates << ToyTemplate.new([part], new_name)
       new_toy = ToyInScene.new(templates.last, toy_in_scene.zoom)
-      new_toy.change_position(view.convertPoint(toy.position, fromScene: self))
-      displacement = new_toy.centre_parts
-      new_toy.change_angle(toy_in_scene.angle)
+      #new_toy.change_position(view.convertPoint(toy.position, fromScene: self))
+      #displacement = new_toy.centre_parts
+      #new_toy.change_angle(toy_in_scene.angle)
       new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(new_toy.image))
       if part.is_a? PointsPart
-        new_sprite_toy.zRotation = toy.zRotation
+        #new_sprite_toy.zRotation = toy.zRotation
         new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
-        #puts "Toy Position X: " + new_toy.position.x.to_s + " Y: " +  new_toy.position.y.to_s #+ " , " + new_toy.position.
+
         physics_points = ToyPhysicsBody.new(new_toy.template.parts).convex_hull_for_physics(new_toy.zoom)
         path = CGPathCreateMutable()
         CGPathMoveToPoint(path, nil, *physics_points[0])
@@ -366,14 +366,23 @@ class PlayScene < SKScene
       elsif part.is_a? CirclePart
         wheel = new_toy.add_wheels_in_scene(self)[0]
         new_sprite_toy.hidden = false
-        #puts "Wheel Pos, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+
         new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
         body = SKPhysicsBody.bodyWithCircleOfRadius(wheel.radius)
         new_sprite_toy.physicsBody = body
       end
-      new_sprite_toy.name = new_name
 
+      # new_sprite_toy.physicsBody.velocity = toy.physicsBody.velocity
+
+      new_sprite_toy.name = new_name
+      # addChild(new_sprite_toy)
+
+      # new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
       @toy_hash[new_name] << new_sprite_toy
+      # fadeOut = SKAction.fadeOutWithDuration(5.0)
+      # remove = SKAction.removeFromParent()
+      # seq = SKAction.sequence([fadeOut, remove])
+      # new_sprite_toy.runAction(seq)
     end
   end
 
