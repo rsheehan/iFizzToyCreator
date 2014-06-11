@@ -13,8 +13,8 @@ class CreateActionViewController < UIViewController
     @main_view.mode = :create_new_toy
     view.addSubview(@main_view)
     @main_view.change_label_text_to(Language::CREATE_ADDER)
-    @main_view.selected = @selected
-    @main_view.secondary_selected = @new_toy
+    @main_view.secondary_selected = @selected
+    @main_view.selected = @new_toy
 
     command_label = UILabel.alloc.initWithFrame([[0, @bounds.size.height], [@bounds.size.width, 768 - @bounds.size.height]])
     command_label.backgroundColor = Constants::GOLD
