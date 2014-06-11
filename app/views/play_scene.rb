@@ -70,9 +70,13 @@ class PlayScene < SKScene
             send = true
           when :create_new_toy
             toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
-            toy = new_toy(toy_in_scene)
-            toy.userData[:id] = rand(2**60).to_s
-            @toy_hash[action[:effect_param][:id]] << toy
+            new_toy = new_toy(toy_in_scene)
+            puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
+            puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
+            new_toy.position = toy.position + toy_in_scene.position
+            puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+            new_toy.userData[:id] = rand(2**60).to_s
+            @toy_hash[action[:effect_param][:id]] << new_toy
         end
         if send
           param = scale_force_mass(param, toy.physicsBody.mass)
@@ -392,8 +396,8 @@ class PlayScene < SKScene
   # Called from Play View Controller in able to preprocess create new toys
   # [ID, Displacement.x, displacement.y, zoom, angle]
   def add_create_toy_ref(toy_args, toy_template)
-    puts toy_args.to_s
-    puts toy_template.identifier
+    # puts toy_args.to_s
+    # puts toy_template.identifier
     if @toy_hash[toy_template.identifier].nil?
       @toy_hash[toy_template.identifier]= []
     end

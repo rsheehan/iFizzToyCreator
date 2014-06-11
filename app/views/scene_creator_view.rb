@@ -364,12 +364,15 @@ class SceneCreatorView < CreatorView
   def touch_end_create_toy
     @delegate.close_modal_view
     results = {}
-    results[:id] = @secondary_selected.template.identifier
-    disp = @secondary_selected.position - @selected.position
+    results[:id] = @selected.template.identifier
+    disp = @selected.position - @secondary_selected.position
     results[:x] = disp.x
     results[:y] = disp.y * -1
-    results[:zoom] = @secondary_selected.zoom
-    results[:angle] = @secondary_selected.angle
+    results[:zoom] = @selected.zoom
+    results[:angle] = @selected.angle
+    @selected = @secondary_selected
+    @secondary_selected = nil
+    @delegate.selected_toy = @selected
     @delegate.create_new_toy = results
   end
 
@@ -569,11 +572,8 @@ class SceneCreatorView < CreatorView
           draw_static_rotate_circle(context, @selected.position)
         end
       when :create_new_toy
-        if @secondary_selected != nil
-          if @current_point
-            @secondary_selected.position = @current_point
-          end
-
+        if @current_point
+          @selected.position = @current_point
         end
     end
   end
