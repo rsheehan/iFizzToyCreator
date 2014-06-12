@@ -9,7 +9,7 @@ class ActionAdderViewController < UIViewController
   EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy]
   MODES = [:show_actions,:show_properties]
 
-  FORCE_SCALE = 100
+  FORCE_SCALE = 250
   EXPLODE_SCALE = 80
   ROTATION_SCALE = 300
 
