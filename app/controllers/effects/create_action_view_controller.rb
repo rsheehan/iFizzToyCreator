@@ -26,7 +26,7 @@ class CreateActionViewController < UIViewController
 
   def setup_done
     @mode_view = UIView.alloc.initWithFrame(
-        CGRectMake(95, 0, 95, 95)) # @bounds.size.width - 95 - 85, @bounds.size.height - 95, 190, 95))
+        CGRectMake(@bounds.size.width-190, 0, 95, 95)) # @bounds.size.width - 95 - 85, @bounds.size.height - 95, 190, 95))
     position = [10, 10]
 
     button = setup_button(:done, position, @mode_view)
