@@ -54,7 +54,7 @@ class PlayScene < SKScene
         delete = false
         send = false
         case effect
-          when :applyForce
+          when :apply_force
             # make force relative to the toy
             rotation = CGAffineTransformMakeRotation(toy.zRotation)
             # TODO: need to take the scale of the node into consideration when applying forces
@@ -68,7 +68,7 @@ class PlayScene < SKScene
               toy.physicsBody = nil
             end
             delete = true
-          when :applyTorque
+          when :apply_torque
             send = true
           when :create_new_toy # TODO Adjust to angle of toy
             toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
@@ -167,7 +167,7 @@ class PlayScene < SKScene
       addChild(new_sprite_toy)
       #puts "Mag: " + force.to_s
       #puts "Force X: " + (force/displacement.x/20).to_s + ", Y: " + (-force/displacement.y/20).to_s
-      new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
+      new_sprite_toy.physicsBody.send(:apply_force, CGPointMake(force/displacement.x , force/displacement.y))
       @toy_hash[new_name] << new_sprite_toy
       fadeOut = SKAction.fadeOutWithDuration(5.0)
       remove = SKAction.removeFromParent()
@@ -460,7 +460,7 @@ class PlayScene < SKScene
       new_sprite_toy.name = new_name
       # addChild(new_sprite_toy)
 
-      # new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
+      # new_sprite_toy.physicsBody.send(:apply_force, CGPointMake(force/displacement.x , force/displacement.y))
       @toy_hash[new_name] << new_sprite_toy
       # fadeOut = SKAction.fadeOutWithDuration(5.0)
       # remove = SKAction.removeFromParent()

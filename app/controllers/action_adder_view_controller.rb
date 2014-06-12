@@ -216,7 +216,7 @@ class ActionAdderViewController < UIViewController
   # When this is received the action info is complete.
   def force=(force_vector)
     action_type, action_param = get_action
-    effect_type = :applyForce
+    effect_type = :apply_force
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
@@ -226,7 +226,7 @@ class ActionAdderViewController < UIViewController
 
   def rotation=(force)
     action_type, action_param = get_action
-    effect_type = :applyTorque
+    effect_type = :apply_torque
     effect_param = force * ROTATION_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action

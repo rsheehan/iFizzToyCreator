@@ -133,7 +133,7 @@ class ActionListViewController < UIViewController
           end
 
         when :timer
-          action_cell.action_image = UIImage.imageNamed("repeat.png")
+          action_cell.action_image = UIImage.imageNamed("timer.png")
           # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
           #show how often in object view
           textImage = drawText(action[:action_param][0].to_s.rjust(2, "0") + ':' + action[:action_param][1].to_s.rjust(2, "0"), inImage:UIImage.imageNamed("empty.png") )
@@ -142,6 +142,8 @@ class ActionListViewController < UIViewController
           action_cell.action_image = UIImage.imageNamed("touch.png")
           action_cell.object_image = UIImage.imageNamed(action[:action_param]+ ".png")
       end
+
+      action_cell.effect_image = UIImage.imageNamed(action[:effect_type]+".png")
 
       #effect image
 
