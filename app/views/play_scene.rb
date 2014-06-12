@@ -1,9 +1,12 @@
 # The scene where it all works.
+#require 'thread'
+
 class PlayScene < SKScene
 
   attr_accessor :toys # ToyInScene objects
   attr_accessor :edges # ToyParts - either CirclePart or PointsPart
   attr_reader :loaded_toys # ToyInScene not put into play straight away
+  attr_reader :mutex
 
   DEBUG_EXPLOSIONS = false
 
@@ -21,6 +24,7 @@ class PlayScene < SKScene
     self.scaleMode = SKSceneScaleModeAspectFill
     self.physicsWorld.contactDelegate = self
     @paused = true
+    @mutex = Mutex.new
     add_edges
     add_toys
   end
@@ -50,43 +54,49 @@ class PlayScene < SKScene
         toys = new_toys
       end
       toys.delete_if do |toy| # toys here are SKSpriteNodes
-        effect = action[:effect_type]
-        param = action[:effect_param]
-        delete = false
-        send = false
-        case effect
-          when :applyForce
-            # make force relative to the toy
-            rotation = CGAffineTransformMakeRotation(toy.zRotation)
-            param = CGPointApplyAffineTransform(param, rotation)
-            send = true
-          when :explosion
-            #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
-            if toy.physicsBody != nil
-              explode_toy(toy, param)
-              removeChildrenInArray([toy])
-              toy.physicsBody = nil
-            end
-            delete = true
-          when :applyTorque
-            param *= toy.size.width/2
-            send = true
-          when :create_new_toy # TODO Adjust to angle of toy
-            toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
-            toy_in_scene.position = CGPointMake(action[:effect_param][:x], action[:effect_param][:y]) + view.convertPoint(toy.position, fromScene: self)
-            new_toy = new_toy(toy_in_scene)
-            #new_toy.position = CGPointApplyAffineTransform(new_toy.position,)
-            #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
-            #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
-            #new_toy.position = toy.position + toy_in_scene.position
-            #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
-            new_toy.userData[:templateID] = toy_in_scene.uid
-            new_toy.userData[:uniqueID] = rand(2**60).to_s
-            @toy_hash[action[:effect_param][:id]] << new_toy
-        end
-        if send
-          param = scale_force_mass(param, toy.physicsBody.mass)
-          toy.physicsBody.send(effect, param)
+        if toy.physicsBody == nil
+          delete = true
+        else
+          effect = action[:effect_type]
+          param = action[:effect_param]
+          delete = false
+          send = false
+          case effect
+            when :applyForce
+              # make force relative to the toy
+              rotation = CGAffineTransformMakeRotation(toy.zRotation)
+              param = CGPointApplyAffineTransform(param, rotation)
+              send = true
+            when :explosion
+              #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
+              @mutex.synchronize do
+                if toy.physicsBody != nil
+                  explode_toy(toy, param)
+                  removeChildrenInArray([toy])
+                  toy.physicsBody = nil
+                end
+              end
+              delete = true
+            when :applyTorque
+              param *= toy.size.width/2
+              send = true
+            when :create_new_toy # TODO Adjust to angle of toy
+              toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
+              toy_in_scene.position = CGPointMake(action[:effect_param][:x], action[:effect_param][:y]) + view.convertPoint(toy.position, fromScene: self)
+              new_toy = new_toy(toy_in_scene)
+              #new_toy.position = CGPointApplyAffineTransform(new_toy.position,)
+              #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
+              #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
+              #new_toy.position = toy.position + toy_in_scene.position
+              #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+              new_toy.userData[:templateID] = toy_in_scene.uid
+              new_toy.userData[:uniqueID] = rand(2**60).to_s
+              @toy_hash[action[:effect_param][:id]] << new_toy
+          end
+          if send
+            param = scale_force_mass(param, toy.physicsBody.mass)
+            toy.physicsBody.send(effect, param)
+          end
         end
         delete
       end
