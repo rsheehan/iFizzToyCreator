@@ -70,13 +70,14 @@ class PlayScene < SKScene
             delete = true
           when :applyTorque
             send = true
-          when :create_new_toy
+          when :create_new_toy # TODO Adjust to angle of toy
             toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
             new_toy = new_toy(toy_in_scene)
-            puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
-            puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
+            #new_toy.position = CGPointApplyAffineTransform(new_toy.position,)
+            #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
+            #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
             new_toy.position = toy.position + toy_in_scene.position
-            puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+            #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
             new_toy.userData[:templateID] = toy_in_scene.uid
             new_toy.userData[:uniqueID] = rand(2**60).to_s
             @toy_hash[action[:effect_param][:id]] << new_toy
@@ -124,7 +125,7 @@ class PlayScene < SKScene
       end
 
       new_toy.change_angle(toy_in_scene.angle)
-      new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(new_toy.image))
+      new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(get_image(new_toy)))
       if part.is_a? PointsPart
         new_sprite_toy.zRotation = toy.zRotation
         new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
@@ -180,7 +181,7 @@ class PlayScene < SKScene
 
 
   # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
-  # TODO: Check for overlap!!
+
   def check_parts(parts,center)
     circle_parts = parts.select {|x| x.is_a? (CirclePart) }
     point_parts = parts.select {|x| x.is_a? (PointsPart) }
@@ -412,7 +413,7 @@ class PlayScene < SKScene
   # Called from Play View Controller in able to preprocess exploded
   def add_explode_ref(explode_id)
     @toy_hash[explode_id].each do |toy|
-      create_explode_toy(toy)
+      #create_explode_toy(toy)
     end
   end
 
