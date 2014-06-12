@@ -364,6 +364,9 @@ class ActionAdderViewController < UIViewController
     @action_button_name = nil
     @repeat_time_mins = nil
     @colliding_toy = nil
+    #disable buttons when showing modal screen
+    enable_show_mode_buttons(false)
+
     #create a picker view controller pop up to define how long to repeat for
     repeat_action_view_controller = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
     repeat_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -377,6 +380,9 @@ class ActionAdderViewController < UIViewController
     @action_button_name = nil
     @repeat_time_mins = nil
     @colliding_toy = nil
+    #disable buttons when showing modal screen
+    enable_show_mode_buttons(false)
+
     #make a modal to select another toy - must disable selecting same toy?
     collision_action_view_controller = CollisionActionViewController.alloc.initWithNibName(nil, bundle: nil)
     collision_action_view_controller.bounds_for_view = @bounds
