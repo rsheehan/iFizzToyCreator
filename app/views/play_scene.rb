@@ -20,6 +20,7 @@ class PlayScene < SKScene
     #self.backgroundColor = SceneCreatorView::DEFAULT_SCENE_COLOUR # no longer necessary, see create_image
     self.scaleMode = SKSceneScaleModeAspectFill
     self.physicsWorld.contactDelegate = self
+    @paused = true
     add_edges
     add_toys
   end
@@ -57,7 +58,6 @@ class PlayScene < SKScene
           when :applyForce
             # make force relative to the toy
             rotation = CGAffineTransformMakeRotation(toy.zRotation)
-            # TODO: need to take the scale of the node into consideration when applying forces
             param = CGPointApplyAffineTransform(param, rotation)
             send = true
           when :explosion
@@ -69,6 +69,7 @@ class PlayScene < SKScene
             end
             delete = true
           when :applyTorque
+            param *= toy.size.width/2
             send = true
           when :create_new_toy # TODO Adjust to angle of toy
             toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
@@ -544,6 +545,10 @@ class PlayScene < SKScene
       @collision_actions = []
       @collision_actions << action
     end
+  end
+
+  def paused= (value)
+    @paused = value
   end
 
 end
