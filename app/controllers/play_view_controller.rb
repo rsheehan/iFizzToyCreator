@@ -24,6 +24,7 @@ class PlayViewController < UIViewController
     @button_actions = {} # keys = buttons, values = list of actions for that button
     setup_sides
     @timers = []
+    setup_reset(view)
   end
 
   def viewDidDisappear(animated)
@@ -81,6 +82,23 @@ class PlayViewController < UIViewController
 
   def bounds_for_view=(bounds)
     @bounds = bounds
+  end
+
+  def setup_reset(view)
+    image_name = "reset"
+    position = [@bounds.size.width/2-37.5, 10]
+    button = UIButton.buttonWithType(UIButtonTypeCustom)
+    button.setImage(UIImage.imageNamed(image_name), forState: UIControlStateNormal)
+    button.setImage(UIImage.imageNamed(image_name + '_selected'), forState: UIControlStateSelected) rescue puts 'rescued'
+    button.sizeToFit
+    button.frame = [position, button.frame.size]
+    button.addTarget(self, action: image_name, forControlEvents: UIControlEventTouchUpInside)
+    view.addSubview(button)
+    button
+  end
+
+  def reset
+    update_play_scene
   end
 
   # The sides are left for user interactions to the running scenes
