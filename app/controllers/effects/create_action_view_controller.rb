@@ -21,6 +21,34 @@ class CreateActionViewController < UIViewController
     command_label.text = Language::DRAG_CREATE_TOY
     command_label.textAlignment = NSTextAlignmentCenter
     view.addSubview(command_label)
+    setup_done
+  end
+
+  def setup_done
+    @mode_view = UIView.alloc.initWithFrame(
+        CGRectMake(95, 0, 95, 95)) # @bounds.size.width - 95 - 85, @bounds.size.height - 95, 190, 95))
+    position = [10, 10]
+
+    button = setup_button(:done, position, @mode_view)
+    position[0] += CGRectGetWidth(button.frame) + 10
+
+    view.addSubview(@mode_view)
+  end
+
+  def setup_button(image_name, position, super_view)
+    button = UIButton.buttonWithType(UIButtonTypeCustom)
+    button.setImage(UIImage.imageNamed(image_name), forState: UIControlStateNormal)
+    button.setImage(UIImage.imageNamed(image_name + '_selected'), forState: UIControlStateSelected) rescue puts 'rescued'
+    button.sizeToFit
+    button.frame = [position, button.frame.size]
+    button.addTarget(self, action: image_name, forControlEvents: UIControlEventTouchUpInside)
+    super_view.addSubview(button)
+    button
+  end
+
+
+  def done
+    @main_view.end_create_toy
   end
 
   def bounds_for_view=(bounds)

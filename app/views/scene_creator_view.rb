@@ -300,8 +300,6 @@ class SceneCreatorView < CreatorView
             touch_end_explosion
           when :collision
             touch_end_collision
-          when :create_new_toy
-            touch_end_create_toy
         end
       when :circle
         centre = @points[0]
@@ -361,7 +359,7 @@ class SceneCreatorView < CreatorView
   end
 
   # [ID, Displacement.x, displacement.y, zoom, angle]
-  def touch_end_create_toy
+  def end_create_toy
     @delegate.close_modal_view
     results = {}
     results[:id] = @selected.template.identifier
