@@ -66,6 +66,7 @@ class PlayViewController < UIViewController
     # end of development code
 
     @play_view.presentScene(@play_scene)
+    @play_scene.paused = true
     actions.each do |action|
       case action[:effect_type]
         when :explosion
@@ -75,6 +76,7 @@ class PlayViewController < UIViewController
           action[:uid] = uid
       end
     end
+    @play_scene.paused = false
   end
 
   def bounds_for_view=(bounds)

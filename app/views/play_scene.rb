@@ -20,6 +20,7 @@ class PlayScene < SKScene
     #self.backgroundColor = SceneCreatorView::DEFAULT_SCENE_COLOUR # no longer necessary, see create_image
     self.scaleMode = SKSceneScaleModeAspectFill
     self.physicsWorld.contactDelegate = self
+    @paused = true
     add_edges
     add_toys
   end
@@ -57,7 +58,6 @@ class PlayScene < SKScene
           when :apply_force
             # make force relative to the toy
             rotation = CGAffineTransformMakeRotation(toy.zRotation)
-            # TODO: need to take the scale of the node into consideration when applying forces
             param = CGPointApplyAffineTransform(param, rotation)
             send = true
           when :explosion
@@ -69,14 +69,16 @@ class PlayScene < SKScene
             end
             delete = true
           when :apply_torque
+            param *= toy.size.width/2
             send = true
           when :create_new_toy # TODO Adjust to angle of toy
             toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
+            toy_in_scene.position = CGPointMake(action[:effect_param][:x], action[:effect_param][:y]) + view.convertPoint(toy.position, fromScene: self)
             new_toy = new_toy(toy_in_scene)
             #new_toy.position = CGPointApplyAffineTransform(new_toy.position,)
             #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
             #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
-            new_toy.position = toy.position + toy_in_scene.position
+            #new_toy.position = toy.position + toy_in_scene.position
             #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
             new_toy.userData[:templateID] = toy_in_scene.uid
             new_toy.userData[:uniqueID] = rand(2**60).to_s
@@ -543,6 +545,10 @@ class PlayScene < SKScene
       @collision_actions = []
       @collision_actions << action
     end
+  end
+
+  def paused= (value)
+    @paused = value
   end
 
 end
