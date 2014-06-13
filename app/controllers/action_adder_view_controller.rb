@@ -281,7 +281,7 @@ class ActionAdderViewController < UIViewController
     super
     # collect the scene information to pass on to the play view controller
     #@state.scenes = [@main_view.gather_scene_info] # only one scene while developing
-    @play_view_controller.update_play_scene
+    #@play_view_controller.update_play_scene
   end
 
   def name_for_label(name)
