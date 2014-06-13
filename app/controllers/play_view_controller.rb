@@ -27,10 +27,15 @@ class PlayViewController < UIViewController
     setup_reset(view)
   end
 
+  def viewDidAppear(animated)
+    update_play_scene
+  end
+
   def viewDidDisappear(animated)
     @timers.each do |timer|
       timer.invalidate
     end
+    @timers = []
   end
 
   def update_play_scene

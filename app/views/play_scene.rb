@@ -402,10 +402,14 @@ class PlayScene < SKScene
     addChild(toy)
     # physics body stuff
     physics_points = ToyPhysicsBody.new(toy_in_scene.template.parts).convex_hull_for_physics(toy_in_scene.zoom)
+    if physics_points.length == 0
+      toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
+    else
     path = CGPathCreateMutable()
     CGPathMoveToPoint(path, nil, *physics_points[0])
     physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
     toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+    end
     toy.physicsBody.contactTestBitMask = 1
 
     #properties
@@ -435,9 +439,9 @@ class PlayScene < SKScene
 
   # Called from Play View Controller in able to preprocess exploded
   def add_explode_ref(explode_id)
-    @toy_hash[explode_id].each do |toy|
-      #create_explode_toy(toy)
-    end
+    # @toy_hash[explode_id].each do |toy|
+    #   #create_explode_toy(toy)
+    # end
   end
 
   # Places exploded parts at toy.userData in @toy_hash
