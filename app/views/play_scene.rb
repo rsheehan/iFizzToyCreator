@@ -8,6 +8,7 @@ class PlayScene < SKScene
   attr_reader :loaded_toys # ToyInScene not put into play straight away
   attr_reader :mutex
 
+  TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
 
   def didMoveToView(view)
@@ -16,6 +17,8 @@ class PlayScene < SKScene
       create_scene_contents
       @content_created = true
     end
+    #@physicsWorld.gravity = CGVectorMake(0, -5)
+    physicsWorld.gravity = CGVectorMake(0, -4)
   end
 
   def create_scene_contents
@@ -124,6 +127,11 @@ class PlayScene < SKScene
     new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
     partsArray = check_parts(toy_in_scene.template.parts,toy_in_scene.template.center)
+    timer = force * TIMER_SCALE
+    if timer < 1
+      return
+    end
+
     force = scale_force_mass(force, toy.physicsBody.mass)
     partsArray.each do |part|
       #position = centre_part(part, toy.position)
@@ -181,9 +189,10 @@ class PlayScene < SKScene
       addChild(new_sprite_toy)
       #puts "Mag: " + force.to_s
       #puts "Force X: " + (force/displacement.x/20).to_s + ", Y: " + (-force/displacement.y/20).to_s
-      new_sprite_toy.physicsBody.send(:apply_force, CGPointMake(force/displacement.x , force/displacement.y))
+      new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
       @toy_hash[new_name] << new_sprite_toy
-      fadeOut = SKAction.fadeOutWithDuration(5.0)
+      puts "Timer: " + timer.to_s
+      fadeOut = SKAction.fadeOutWithDuration(timer)
       remove = SKAction.removeFromParent()
       seq = SKAction.sequence([fadeOut, remove])
       if not DEBUG_EXPLOSIONS
