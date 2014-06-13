@@ -40,6 +40,9 @@ class PlayScene < SKScene
   # This is called once per frame.
   # Most screen logic goes here.
   def update(current_time)
+    if @check
+      puts @toy_hash[@check].last.physicsBody.to_s
+    end
     @actions_to_fire.each do |action|
       toy_id = action[:toy]
       toys = @toy_hash[toy_id] # all toys of the correct type
@@ -57,7 +60,7 @@ class PlayScene < SKScene
         toys = new_toys
       end
       toys.delete_if do |toy| # toys here are SKSpriteNodes
-        if toy.physicsBody == nil
+        if toy.userData[:uniqueID] == -1
           delete = true
         else
           effect = action[:effect_type]
@@ -74,10 +77,9 @@ class PlayScene < SKScene
             when :explosion
               #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
               @mutex.synchronize do
-                if toy.physicsBody != nil
+                if toy.userData[:uniqueID] != -1
                   explode_toy(toy, param)
-                  removeChildrenInArray([toy])
-                  toy.physicsBody = nil
+                  toy.userData[:uniqueID] = -1
                 end
               end
               delete = true
@@ -129,6 +131,13 @@ class PlayScene < SKScene
     partsArray = check_parts(toy_in_scene.template.parts,toy_in_scene.template.center)
     timer = force * TIMER_SCALE
     if timer < 1
+      fadeOut = SKAction.fadeOutWithDuration(timer)
+      remove = SKAction.removeFromParent()
+      seq = SKAction.sequence([fadeOut, remove])
+      if not DEBUG_EXPLOSIONS
+        apply_action_to_toy(toy, seq)
+      end
+
       return
     end
 
@@ -191,7 +200,7 @@ class PlayScene < SKScene
       #puts "Force X: " + (force/displacement.x/20).to_s + ", Y: " + (-force/displacement.y/20).to_s
       new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
       @toy_hash[new_name] << new_sprite_toy
-      puts "Timer: " + timer.to_s
+      #puts "Timer: " + timer.to_s
       fadeOut = SKAction.fadeOutWithDuration(timer)
       remove = SKAction.removeFromParent()
       seq = SKAction.sequence([fadeOut, remove])
@@ -199,7 +208,16 @@ class PlayScene < SKScene
         new_sprite_toy.runAction(seq)
       end
     end
+    remove = SKAction.removeFromParent()
+    apply_action_to_toy(toy, remove)
     new_name
+  end
+
+  def apply_action_to_toy(toy, action)
+    toy.runAction(action)
+    toy.userData[:wheels].each do |wheel|
+      wheel.runAction(action)
+    end
   end
 
 
@@ -416,6 +434,8 @@ class PlayScene < SKScene
     toy.physicsBody.allowsRotation = toy_in_scene.template.can_rotate;
     toy.physicsBody.dynamic = !(toy_in_scene.template.stuck)
 
+    toy.userData[:wheels] = []
+
     # now any wheels
     toy_in_scene.add_wheels_in_scene(self).each do |wheel|
       # first the node
@@ -433,6 +453,7 @@ class PlayScene < SKScene
       # then the joint
       axle = SKPhysicsJointPin.jointWithBodyA(toy.physicsBody, bodyB: wheel_node.physicsBody, anchor: wheel.position)
       physicsWorld.addJoint(axle)
+      toy.userData[:wheels] << wheel_node
     end
     toy
   end
