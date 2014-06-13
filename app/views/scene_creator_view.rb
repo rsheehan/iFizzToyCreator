@@ -365,7 +365,7 @@ class SceneCreatorView < CreatorView
     results[:id] = @selected.template.identifier
     disp = @selected.position - @secondary_selected.position
     results[:x] = disp.x
-    results[:y] = disp.y * -1
+    results[:y] = disp.y
     results[:zoom] = @selected.zoom
     results[:angle] = @selected.angle
     @selected = @secondary_selected

@@ -32,6 +32,11 @@ class ToyPhysicsBody
         @all_points << point
       end
     end
+    @dots.each do |part|
+      part.points.each do |point|
+        @all_points << point
+      end
+    end
     #convex_hull(all_points)
 
     ## at the moment only does the paths
@@ -67,7 +72,7 @@ class ToyPhysicsBody
         when PointsPart
           case part.points.length
             when 1
-              @dots << part
+              @circles << CirclePart.new(part.points[0], 2.5, part.colour)
             #when 2
             #  @lines << part
             else
@@ -135,17 +140,32 @@ class ToyPhysicsBody
       return []
     end
     if path.length == 2
+
       dline = path[0] - path[1]
-      new_points = []
-      new_points[0] = path[0]
-      new_points[3] = path[1]
-
       len = Math.sqrt( dline.x ** 2 + dline.y ** 2)
+      new_points = []
+      if dline.x.abs > dline.y.abs
+        new_points[0] = CGPointMake(path[0].x, path[0].y+2)
+        new_points[1] = CGPointMake(path[0].x, path[0].y-2)
+        new_points[2] = CGPointMake(path[1].x, path[1].y-2)
+        new_points[3] = CGPointMake(path[1].x, path[1].y+2)
+      else
+        new_points[0] = CGPointMake(path[0].x+2, path[0].y)
+        new_points[1] = CGPointMake(path[0].x-2, path[0].y)
+        new_points[2] = CGPointMake(path[1].x-2, path[1].y)
+        new_points[3] = CGPointMake(path[1].x+2, path[1].y)
+      end
 
-      dline = dline / (len/2)
-
-      new_points[1] = CGPointMake(path[0].x - dline.x, path[0].y + dline.y)
-      new_points[2] = CGPointMake(path[1].x - dline.x, path[1].y + dline.y)
+      # new_points[0] = path[0]
+      # new_points[3] = path[1]
+      #
+      #
+      # puts "Length: " + len.to_s
+      # puts "DLine: X " + dline.x.to_s + ", Y " + dline.y.to_s
+      # dline = dline / (len/2)
+      #
+      # new_points[1] = CGPointMake(path[0].x - dline.x, path[0].y + dline.y)
+      # new_points[2] = CGPointMake(path[1].x - dline.x, path[1].y + dline.y)
 
       path = new_points
     end
