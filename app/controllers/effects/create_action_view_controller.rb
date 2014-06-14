@@ -22,6 +22,7 @@ class CreateActionViewController < UIViewController
     command_label.textAlignment = NSTextAlignmentCenter
     view.addSubview(command_label)
     setup_done
+    @main_view.setNeedsDisplay
   end
 
   def setup_done
