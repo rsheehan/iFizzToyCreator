@@ -165,6 +165,10 @@ class SceneCreatorView < CreatorView
             touch_begin_collision
           when :show_actions
             touch_begin_show_actions
+          when :create_new_toy
+            if @selected.close_enough(@current_point)
+              @drag = true
+            end
         end
     end
     setNeedsDisplay
@@ -300,6 +304,8 @@ class SceneCreatorView < CreatorView
             touch_end_explosion
           when :collision
             touch_end_collision
+          when :create_new_toy
+            @drag = false
         end
       when :circle
         centre = @points[0]
@@ -570,7 +576,7 @@ class SceneCreatorView < CreatorView
           draw_static_rotate_circle(context, @selected.position)
         end
       when :create_new_toy
-        if @current_point
+        if @current_point and @drag
           @selected.position = @current_point
         end
     end
