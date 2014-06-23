@@ -7,7 +7,7 @@ class SceneCreatorView < CreatorView
 
 # @truly_selected is a stroke/toy which is currently being touched by the user
 # @selected is a stroke/toy which was touched and is now hilighted
-  attr_writer :selected, :colliding_selected, :show_action_controller
+  attr_writer :selected, :secondary_selected, :show_action_controller
   attr_reader :actions
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
@@ -165,6 +165,10 @@ class SceneCreatorView < CreatorView
             touch_begin_collision
           when :show_actions
             touch_begin_show_actions
+          when :create_new_toy
+            if @selected.close_enough(@current_point)
+              @drag = true
+            end
         end
     end
     setNeedsDisplay
@@ -207,7 +211,7 @@ class SceneCreatorView < CreatorView
 
   # A touch in collision mode
   def touch_begin_collision
-    @colliding_selected = close_toy(@current_point)
+    @secondary_selected = close_toy(@current_point)
   end
 
   # So we can start lines from off the edge of the view.
@@ -300,6 +304,8 @@ class SceneCreatorView < CreatorView
             touch_end_explosion
           when :collision
             touch_end_collision
+          when :create_new_toy
+            @drag = false
         end
       when :circle
         centre = @points[0]
@@ -352,16 +358,32 @@ class SceneCreatorView < CreatorView
       radians *= -1
     end
 
-    magnitude = radians * 300
+    magnitude = radians
 
     @delegate.rotation = magnitude
     @delegate.close_modal_view
   end
 
+  # [ID, Displacement.x, displacement.y, zoom, angle]
+  def end_create_toy
+    @delegate.close_modal_view
+    results = {}
+    results[:id] = @selected.template.identifier
+    disp = @selected.position - @secondary_selected.position
+    results[:x] = disp.x
+    results[:y] = disp.y
+    results[:zoom] = @selected.zoom
+    results[:angle] = @selected.angle
+    @selected = @secondary_selected
+    @secondary_selected = nil
+    @delegate.selected_toy = @selected
+    @delegate.create_new_toy = results
+  end
+
   # Called when the touch ends for a collision toy selection.
   def touch_end_collision
-    if @colliding_selected
-      @delegate.colliding_toy = @colliding_selected
+    if @secondary_selected
+      @delegate.colliding_toy = @secondary_selected
       #@delegate.close_modal_view
     end
   end
@@ -403,14 +425,26 @@ class SceneCreatorView < CreatorView
 
   def draw_force_arrow(context, start, finish)
     #CGContextSetLineWidth(context, 10)
-    length = Math.hypot(finish.x - start.x, finish.y - start.y)
-    arrow_points = []
-    arrow_points << CGPointMake(0, -5) << CGPointMake(length - 50, -5) << CGPointMake(length - 50, -40)
-    arrow_points << CGPointMake(length, 0)
-    arrow_points << CGPointMake(length - 50, 40) << CGPointMake(length - 50, 5) << CGPointMake(0, 5)
+    arrow_size = 50
 
-    cosine = (finish.x - start.x) / length
-    sine = (finish.y - start.y) / length
+    dx = finish.x - start.x
+    #puts "FinY: " + finish.y.to_s + ", StarY: " + start.y.to_s + ", DiffY: " + (finish.y - start.y).to_s
+    dy = finish.y - start.y
+    #puts "DY: " + dy.to_s
+    combined = dx.abs + dy.abs
+    length = Math.hypot(dx, dy)
+    if length < arrow_size
+      length = arrow_size
+      dx = length * (dx/combined)
+      dy = length * (dy/combined)
+    end
+    arrow_points = []
+    arrow_points << CGPointMake(0, -5) << CGPointMake(length - arrow_size, -5) << CGPointMake(length - arrow_size, -40)
+    arrow_points << CGPointMake(length, 0)
+    arrow_points << CGPointMake(length - arrow_size, 40) << CGPointMake(length - arrow_size, 5) << CGPointMake(0, 5)
+
+    cosine = dx / length
+    sine = dy / length
 
     arrow_transform_pointer = Pointer.new(CGAffineTransform.type)
     arrow_transform_pointer[0] = CGAffineTransform.new(cosine, sine, -sine, cosine, start.x, start.y)
@@ -428,6 +462,7 @@ class SceneCreatorView < CreatorView
   def draw_force_circle(context, center, radius)
     rectangle = CGRectMake(center.x - radius, center.y - radius, radius*2, radius*2)
     CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
+    CGContextSetLineWidth(context, 5)
     CGContextAddEllipseInRect(context, rectangle)
     CGContextStrokePath(context)
   end
@@ -510,10 +545,10 @@ class SceneCreatorView < CreatorView
       @selected.draw(context)
       CGContextEndTransparencyLayer(context)
     end
-    if @colliding_selected
+    if @secondary_selected
       CGContextBeginTransparencyLayer(context, nil)
       setup_context(context, true)
-      @colliding_selected.draw(context)
+      @secondary_selected.draw(context)
       CGContextEndTransparencyLayer(context)
     end
     if @points
@@ -529,7 +564,7 @@ class SceneCreatorView < CreatorView
         end
       when :explosion
         if @current_point && @selected
-          draw_force_arrow(context, @selected.position, @current_point)
+          #draw_force_arrow(context, @selected.position, @current_point)
           length = Math.hypot(@selected.position.x - @current_point.x, @selected.position.y - @current_point.y)
           draw_force_circle(context, @selected.position, length)
         end
@@ -539,6 +574,10 @@ class SceneCreatorView < CreatorView
            draw_rotate_circle(context, @selected.position, @current_point)
         else
           draw_static_rotate_circle(context, @selected.position)
+        end
+      when :create_new_toy
+        if @current_point and @drag
+          @selected.position = @current_point
         end
     end
   end

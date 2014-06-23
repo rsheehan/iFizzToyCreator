@@ -68,6 +68,11 @@ class CirclePart < ToyPart
     [left, right, top, bottom]
   end
 
+  def center
+    bound = extremes
+    [ (bound[0] - bound[1]).abs, (bound[2] - bound[3]).abs ]
+  end
+
   def left
     @position.x - @radius
   end
@@ -115,6 +120,11 @@ class PointsPart < ToyPart
     end
     #p [left, right, top, bottom]
     [left, right, top, bottom]
+  end
+
+  def center
+    bound = extremes
+    [ (bound[0] - bound[1]).abs, (bound[2] - bound[3]).abs ]
   end
 
   def points_for_scene_background(scene_size)

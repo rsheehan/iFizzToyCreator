@@ -5,12 +5,14 @@ class ActionAdderViewController < UIViewController
   # Actions are hashes with the following keys.
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
-  ACTIONS = [:touch, :repeat, :collision]
-  EFFECTS = [:apply_force, :explosion, :apply_torque]
-
+  ACTIONS = [:touch, :timer, :collision]
+  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy]
   MODES = [:show_actions,:show_properties]
 
-  FORCE_SCALE = 10
+  FORCE_SCALE = 250
+  EXPLODE_SCALE = 80
+  ROTATION_SCALE = 2
+
 
   attr_writer :state, :scene_creator_view_controller, :play_view_controller
   #attr_reader :selected_toy
@@ -119,7 +121,7 @@ class ActionAdderViewController < UIViewController
       action_list_view_controller.state = @state
       action_list_view_controller.scene_creator_view_controller = @scene_creator_view_controller
       action_list_view_controller.selected = @selected_toy
-      presentViewController(action_list_view_controller, animated: false, completion: nil)
+      presentViewController(action_list_view_controller, animated: true, completion: nil)
     end
   end
 
@@ -133,7 +135,7 @@ class ActionAdderViewController < UIViewController
       prop_list_view_controller.state = @state
       prop_list_view_controller.scene_creator_view_controller = @scene_creator_view_controller
       prop_list_view_controller.selected = @selected_toy
-      presentViewController(prop_list_view_controller, animated: false, completion: nil)
+      presentViewController(prop_list_view_controller, animated: true, completion: nil)
     end
   end
 
@@ -214,31 +216,40 @@ class ActionAdderViewController < UIViewController
   # When this is received the action info is complete.
   def force=(force_vector)
     action_type, action_param = get_action
-    effect_type = :applyForce
+    effect_type = :apply_force
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
-    @main_view.colliding_selected = nil
+    @main_view.secondary_selected = nil
     @main_view.setNeedsDisplay
   end
 
   def rotation=(force)
     action_type, action_param = get_action
-    effect_type = :applyTorque
-    effect_param = force
+    effect_type = :apply_torque
+    effect_param = force * ROTATION_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
-    @main_view.colliding_selected = nil
+    @main_view.secondary_selected = nil
     @main_view.setNeedsDisplay
   end
 
   def explosion=(force)
     action_type, action_param = get_action
     effect_type = :explosion
-    effect_param = force
+    effect_param = force * EXPLODE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
-    @main_view.colliding_selected = nil
+    @main_view.secondary_selected = nil
+    @main_view.setNeedsDisplay
+  end
+
+  def create_new_toy=(args)
+    action_type, action_param = get_action
+    effect_type = :create_new_toy
+    effect_param = args
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    @main_view.secondary_selected = nil
     @main_view.setNeedsDisplay
   end
 
@@ -261,8 +272,8 @@ class ActionAdderViewController < UIViewController
   end
 
   # Closes any modal view.
-  def close_modal_view
-    dismissModalViewControllerAnimated(false, completion: nil)
+  def close_modal_view (animation = false)
+    dismissModalViewControllerAnimated(animation, completion: nil)
   end
 
   # Called when the view disappears.
@@ -270,7 +281,7 @@ class ActionAdderViewController < UIViewController
     super
     # collect the scene information to pass on to the play view controller
     #@state.scenes = [@main_view.gather_scene_info] # only one scene while developing
-    @play_view_controller.update_play_scene
+    #@play_view_controller.update_play_scene
   end
 
   def name_for_label(name)
@@ -279,7 +290,7 @@ class ActionAdderViewController < UIViewController
         Language::TOUCH
       when :collision
         Language::COLLISION
-      when :repeat
+      when :timer
         Language::REPEAT
       when :hold
         Language::HOLD
@@ -300,12 +311,46 @@ class ActionAdderViewController < UIViewController
     end
   end
 
+  def drop_toy(toy)
+    drag_action_view_controller = CreateActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    drag_action_view_controller.bounds_for_view = @bounds
+    #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+    drag_action_view_controller.selected = @selected_toy
+    drag_action_view_controller.new_toy = ToyInScene.new(@state.toys[toy])
+    #drag_action_view_controller.delegate = self
+    #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
+    drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+
+    dismissViewControllerAnimated(true, completion: lambda { presentViewController(drag_action_view_controller, animated: false, completion: nil)})
+  end
+
+  def close_toybox
+    dismissModalViewControllerAnimated(true, completion: nil)
+  end
+
+  def create_toy_action_viewer (toy)
+    drag_action_view_controller = CreateActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    drag_action_view_controller.bounds_for_view = @bounds
+    #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+    drag_action_view_controller.selected = @selected_toy
+    drag_action_view_controller.new_toy = toy
+    #drag_action_view_controller.delegate = self
+    #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
+    drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+    presentViewController(drag_action_view_controller, animated: false, completion: nil)
+  end
+
   #======================
   # Actions
   #======================
 
   # Adding a touch event.
   def touch
+    @action_button_name = nil
+    @repeat_time_mins = nil
+    @colliding_toy = nil
     touch_action_view_controller = TouchActionViewController.alloc.initWithNibName(nil, bundle: nil)
     touch_action_view_controller.bounds_for_view = @bounds
     touch_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -315,7 +360,13 @@ class ActionAdderViewController < UIViewController
   end
 
   # Adding a repeat event.
-  def repeat
+  def timer
+    @action_button_name = nil
+    @repeat_time_mins = nil
+    @colliding_toy = nil
+    #disable buttons when showing modal screen
+    enable_show_mode_buttons(false)
+
     #create a picker view controller pop up to define how long to repeat for
     repeat_action_view_controller = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
     repeat_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -326,6 +377,12 @@ class ActionAdderViewController < UIViewController
 
   #adding a collision event
   def collision
+    @action_button_name = nil
+    @repeat_time_mins = nil
+    @colliding_toy = nil
+    #disable buttons when showing modal screen
+    enable_show_mode_buttons(false)
+
     #make a modal to select another toy - must disable selecting same toy?
     collision_action_view_controller = CollisionActionViewController.alloc.initWithNibName(nil, bundle: nil)
     collision_action_view_controller.bounds_for_view = @bounds
@@ -374,6 +431,15 @@ class ActionAdderViewController < UIViewController
     #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
     drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
     presentViewController(drag_action_view_controller, animated: false, completion: nil)
+  end
+
+  def create_new_toy
+    toybox_view_controller = ToyBoxViewController.alloc.initWithNibName(nil, bundle: nil)
+    toybox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    toybox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
+    toybox_view_controller.delegate = self
+    toybox_view_controller.state = @state
+    presentViewController(toybox_view_controller, animated: true, completion: nil)
   end
 
 end

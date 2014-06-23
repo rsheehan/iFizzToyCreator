@@ -30,7 +30,7 @@ class ActionListViewController < UIViewController
 
       @delete_mode = false
       @del_button = UIButton.buttonWithType(UIButtonTypeCustom)
-      @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+      @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       @del_button.sizeToFit
       @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @del_button.frame.size]
       @del_button.addTarget(self, action: :delete, forControlEvents: UIControlEventTouchUpInside)
@@ -57,15 +57,23 @@ class ActionListViewController < UIViewController
 
     # Back to the Select toy screen.
     def back
-      @delegate.close_modal_view
+      self.view.window.removeGestureRecognizer(@recognizer)
+      @delegate.close_modal_view(true)
     end
 
+    def viewDidAppear(animated)
+      #add gesture recognizer to close window on tap outside
+      @recognizer = UITapGestureRecognizer.alloc.initWithTarget(self, action: 'handleTapOutside:')
+      @recognizer.cancelsTouchesInView = false
+      @recognizer.numberOfTapsRequired = 1
+      view.window.addGestureRecognizer(@recognizer)
+    end
 
     #activate delete mode
     def delete
       if @table_view.isEditing
         @table_view.setEditing(false, animated: true)
-        @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+        @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       else
         @table_view.setEditing(true, animated: true)
         @del_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
@@ -125,7 +133,7 @@ class ActionListViewController < UIViewController
           end
 
         when :timer
-          action_cell.action_image = UIImage.imageNamed("repeat.png")
+          action_cell.action_image = UIImage.imageNamed("timer.png")
           # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
           #show how often in object view
           textImage = drawText(action[:action_param][0].to_s.rjust(2, "0") + ':' + action[:action_param][1].to_s.rjust(2, "0"), inImage:UIImage.imageNamed("empty.png") )
@@ -134,6 +142,8 @@ class ActionListViewController < UIViewController
           action_cell.action_image = UIImage.imageNamed("touch.png")
           action_cell.object_image = UIImage.imageNamed(action[:action_param]+ ".png")
       end
+
+      action_cell.effect_image = UIImage.imageNamed(action[:effect_type]+".png")
 
       #effect image
 
@@ -156,6 +166,16 @@ class ActionListViewController < UIViewController
       return "   Trigger                        Object                          Effect"
     end
 
-
+    def handleTapOutside(sender)
+      if (sender.state == UIGestureRecognizerStateEnded)
+        location = sender.locationInView(nil) #Passing nil gives us coordinates in the window
+        #Then we convert the tap's location into the local view's coordinate system, and test to see if it's in or outside. If outside, dismiss the view.
+        if (!self.view.pointInside(self.view.convertPoint(location, fromView:self.view.window), withEvent:nil))
+          # Remove the recognizer first so it's view.window is valid.
+          self.view.window.removeGestureRecognizer(sender)
+          self.dismissModalViewControllerAnimated(true)
+        end
+      end
+    end
 
 end

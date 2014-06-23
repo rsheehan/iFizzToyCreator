@@ -5,7 +5,7 @@ class ToyInScene
 
   attr_reader :old_position, :old_angle, :old_zoom, :template
   attr_accessor :angle, :zoom, :position
-  attr_reader :image  # for the PlayScene
+  attr_reader :image, :uid  # for the PlayScene
 
   def initialize(toy_template, zoom = 1.0)
     @template = toy_template
@@ -17,7 +17,7 @@ class ToyInScene
     else
       @image = @template.image
     end
-
+    @uid = rand(2**60).to_s
   end
 
   def update_image
@@ -33,6 +33,8 @@ class ToyInScene
   def to_json_compatible
     json_toy_in_scene = {}
     json_toy_in_scene[:toy_id] = @template.identifier
+    #include in case toy is deleted
+    json_toy_in_scene[:template] = @template.to_json_compatible
     json_toy_in_scene[:position] = { x: @position.x, y: @position.y }
     json_toy_in_scene[:angle] = @angle
     json_toy_in_scene[:zoom] = @zoom

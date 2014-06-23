@@ -74,6 +74,11 @@ class ToyTemplate
     [left, right, top, bottom]
   end
 
+  def center
+    bound = extreme_points
+    [ (bound[0] - bound[1]).abs, (bound[2] - bound[3]).abs ]
+  end
+
   def image_bitmap(size, scale)
     centre_in_image = CGPointMake(*size) / 2
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)

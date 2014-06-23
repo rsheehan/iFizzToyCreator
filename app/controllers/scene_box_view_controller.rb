@@ -22,7 +22,7 @@ class SceneBoxViewController < UIViewController
 
       @delete_mode = false
       @del_button = UIButton.buttonWithType(UIButtonTypeCustom)
-      @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+      @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       @del_button.sizeToFit
       @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @del_button.frame.size]
       @del_button.addTarget(self, action: :delete, forControlEvents: UIControlEventTouchUpInside)
@@ -47,6 +47,14 @@ class SceneBoxViewController < UIViewController
       @state = state
     end
 
+    def viewDidAppear(animated)
+      #add gesture recognizer to close window on tap outside
+      @recognizer = UITapGestureRecognizer.alloc.initWithTarget(self, action: 'handleTapOutside:')
+      @recognizer.cancelsTouchesInView = false
+      @recognizer.numberOfTapsRequired = 1
+      view.window.addGestureRecognizer(@recognizer)
+    end
+
     #def process_row_of_buttons(row_of_buttons)
     #  row_of_buttons.each do |row_button|
     #    size = row_button.frame.size
@@ -60,6 +68,7 @@ class SceneBoxViewController < UIViewController
 
     # Back to the previous screen.
     def back
+      self.view.window.removeGestureRecognizer(@recognizer)
       @delegate.close_toybox
     end
 
@@ -73,7 +82,7 @@ class SceneBoxViewController < UIViewController
       if @delete_mode
         @delete_mode = false
         #set image
-        @del_button.setImage(UIImage.imageNamed(:delete), forState: UIControlStateNormal)
+        @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
       else
         @delete_mode = true
         #set image
@@ -85,7 +94,8 @@ class SceneBoxViewController < UIViewController
 
     end
 
-    def delete_scene(index_path)
+    def delete_scene(sender)
+      index_path = @collection_view.indexPathForCell(sender.superview);
       @state.scenes.delete_at(index_path.row)
       #remove item from collectionview
       @collection_view.deleteItemsAtIndexPaths([index_path])
@@ -93,6 +103,7 @@ class SceneBoxViewController < UIViewController
       @state.save
 
     end
+
     # The methods to implement the UICollectionViewDataSource protocol.
 
     SCENEBUTTON = "ToyButton"
@@ -108,6 +119,7 @@ class SceneBoxViewController < UIViewController
         scene_button = cv.dequeueReusableCellWithReuseIdentifier(DELETESCENEBUTTON, forIndexPath: index_path)
         scene_button.layer.removeAllAnimations
         animateToyButton(scene_button,0,false)
+        scene_button.del_toy_button.addTarget(self, action: 'delete_scene:', forControlEvents: UIControlEventTouchUpInside)
       else
         scene_button = cv.dequeueReusableCellWithReuseIdentifier(SCENEBUTTON, forIndexPath: index_path)
       end
@@ -123,12 +135,12 @@ class SceneBoxViewController < UIViewController
         return
       end
       if decreasing
-        rotation -= 0.01
+        rotation -= 0.005
         if rotation <= -3.14/128
           decreasing = false
         end
       else
-        rotation += 0.01
+        rotation += 0.005
         if rotation >= 3.14/128
           decreasing = true
         end
@@ -160,11 +172,21 @@ class SceneBoxViewController < UIViewController
     # And the methods for the UICollectionViewDelegate protocol.
     def collectionView(cv, didSelectItemAtIndexPath: index_path)
       item = index_path.row
-      if @delete_mode
-        delete_scene(index_path)
-      else
+      if not @delete_mode
+        self.view.window.removeGestureRecognizer(@recognizer)
         @delegate.drop_scene(item)
       end
     end
 
+    def handleTapOutside(sender)
+      if (sender.state == UIGestureRecognizerStateEnded)
+        location = sender.locationInView(nil) #Passing nil gives us coordinates in the window
+        #Then we convert the tap's location into the local view's coordinate system, and test to see if it's in or outside. If outside, dismiss the view.
+        if (!self.view.pointInside(self.view.convertPoint(location, fromView:self.view.window), withEvent:nil))
+          # Remove the recognizer first so it's view.window is valid.
+          self.view.window.removeGestureRecognizer(sender)
+          self.dismissModalViewControllerAnimated(true)
+        end
+      end
+    end
 end

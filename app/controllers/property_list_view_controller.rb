@@ -42,7 +42,6 @@ class PropertyListViewController < UIViewController
   end
 
   def viewDidAppear(animated)
-
     #add gesture recognizer to close window on tap outside
     @recognizer = UITapGestureRecognizer.alloc.initWithTarget(self, action: 'handleTapOutside:')
     @recognizer.cancelsTouchesInView = false
@@ -71,8 +70,7 @@ class PropertyListViewController < UIViewController
   # Back to the Select toy screen.
   def back
     self.view.window.removeGestureRecognizer(@recognizer)
-    # self.view.window.removeGestureRecognizer(sender)
-    @delegate.close_modal_view
+    @delegate.close_modal_view(true)
   end
 
   def tableView(tv, numberOfRowsInSection: section)
