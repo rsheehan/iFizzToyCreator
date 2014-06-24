@@ -38,19 +38,6 @@ class PlayViewController < UIViewController
     @timers = []
   end
 
-  def viewDidAppear(animated)
-    return unless @play_view
-    @play_view.paused = false
-    return unless @play_scene
-    @play_scene.paused = false
-  end
-
-  def viewDidDisappear(animated)
-    return unless @play_view
-    @play_view.paused = true
-    return unless @play_scene
-    @play_scene.paused = true
-  end
 
   def update_play_scene
     return unless @play_view # this is because of the orientation bug being worked around in app_delegate
