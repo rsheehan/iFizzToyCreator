@@ -31,6 +31,7 @@ class ToyCreatorViewController < UIViewController
   end
 
   def new
+    save_toy
     start_new_toy
   end
 
@@ -75,6 +76,11 @@ class ToyCreatorViewController < UIViewController
     @id = toy.identifier
     #dismiss modal
     dismissModalViewControllerAnimated(true, completion: nil)
+  end
+
+  def viewWillDisappear(animated)
+    super
+    save_toy
   end
 
   def save_toy
