@@ -332,6 +332,9 @@ class SceneCreatorView < CreatorView
   # Called when the touch ends for a force drag.
   def touch_end_force
     vector = @current_point - @selected.position
+    radians = @selected.angle * Math::PI / 180
+    ratio = Math.cos(radians)
+    vector = vector * ratio
     vector.y = -vector.y  # convert to SpriteKit coordinates
     @delegate.force = vector
     @delegate.close_modal_view
