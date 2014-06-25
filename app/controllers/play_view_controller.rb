@@ -182,7 +182,8 @@ class PlayViewController < UIViewController
     button.sizeToFit
     button.frame = [position, button.frame.size]
     button.addTarget(self, action: image_name, forControlEvents: UIControlEventTouchUpInside)
-    #view.addSubview(button)
+    view.addSubview(button)
+    view.addSubview(button)
     button
   end
 
