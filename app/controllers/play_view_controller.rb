@@ -24,18 +24,95 @@ class PlayViewController < UIViewController
     @button_actions = {} # keys = buttons, values = list of actions for that button
     setup_sides
     @timers = []
+    @shake_actions = []
+    @noise_actions = []
     setup_reset(view)
+    @listening = false
+    @lowPassResults = 0
+  end
+
+  def listen_to_mic
+    puts AVAudioSession.sharedInstance.to_s
+
+    AVAudioSession.sharedInstance.requestRecordPermission(lambda do |granted|
+        if granted
+          puts "Microphone is enabled.."
+        else
+          puts "Microphone is disabled.."
+
+          Dispatch::Queue.main.async do
+                UIAlertView.alloc.initWithTitle("Microphone Access Denied",
+                                                message:"This app requires access to your device's Microphone.\n\nPlease enable Microphone access for this app in Settings / Privacy / Microphone",
+                                                delegate:nil,
+                                                cancelButtonTitle:"Dismiss",
+                                                otherButtonTitles:nil).show
+          end
+        end
+      end)
+
+    audioSession = AVAudioSession.sharedInstance
+    audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, error:nil)
+    audioSession.setActive(true, error:nil)
+
+    @listening = true
+    url = NSURL.fileURLWithPath("/dev/null");
+    settings = NSDictionary.dictionaryWithObjectsAndKeys(
+        NSNumber.numberWithFloat(44100.0),                 AVSampleRateKey,
+        NSNumber.numberWithInt(KAudioFormatAppleLossless), AVFormatIDKey,
+        NSNumber.numberWithInt(2),                         AVNumberOfChannelsKey,
+        NSNumber.numberWithInt(AVAudioQualityMax),         AVEncoderAudioQualityKey,
+        nil)
+    error = nil
+    @recorder = AVAudioRecorder.alloc.initWithURL(url, settings:settings, error:error)
+
+    if (@recorder)
+      @recorder.prepareToRecord
+      @recorder.meteringEnabled = true
+      res = @recorder.record
+      puts "recording started = "+res.to_s
+      @levelTimer = NSTimer.scheduledTimerWithTimeInterval(0.03, target: self, selector: 'levelTimerCallback:', userInfo: nil, repeats: true)
+    else
+      puts error.description
+    end
+  end
+
+  def levelTimerCallback(timer)
+    @recorder.updateMeters
+
+    if (@recorder.peakPowerForChannel(0) >= 0)
+      puts "loud noise detected"
+      @play_scene.add_actions_for_update(@noise_actions)
+    end
+
   end
 
   def viewDidAppear(animated)
     update_play_scene
+    self.becomeFirstResponder
   end
 
-  def viewDidDisappear(animated)
+  def viewWillDisappear(animated)
     @timers.each do |timer|
       timer.invalidate
     end
     @timers = []
+    self.resignFirstResponder
+    if @listening
+      @levelTimer.invalidate
+      @levelTimer = nil
+      @listening = false
+    end
+  end
+
+  def canBecomeFirstResponder
+    true
+  end
+
+  def motionEnded(motion, withEvent:event)
+    if (motion == UIEventSubtypeMotionShake)
+      #trigger shake events
+      @play_scene.add_actions_for_update(@shake_actions)
+    end
   end
 
   def update_play_scene
@@ -59,13 +136,20 @@ class PlayViewController < UIViewController
       case action[:action_type]
         when :button
           button = enable_button(action[:action_param])
-        #add_action_to_button
+          #add_action_to_button
           @button_actions[button] << action
         when :timer
           puts("Action",action)
           @timers << NSTimer.scheduledTimerWithTimeInterval(action[:action_param][0]*60 + action[:action_param][1], target: self, selector: "perform_action:", userInfo: action, repeats: true)
         when :collision
           @play_scene.add_collision(action)
+        when :shake
+          @shake_actions << action
+        when :loud_noise
+          @noise_actions << action
+          if not @listening
+            listen_to_mic
+          end
       end
     end
 
@@ -169,14 +253,14 @@ class PlayViewController < UIViewController
   def button_action(sender)
     # find the correct action and submit it for firing
     #puts "button: #{sender}"
-    # pass the actions through to the scene for its update method to use
-    @play_scene.add_actions_for_update(@button_actions[sender])
-  end
+        # pass the actions through to the scene for its update method to use
+        @play_scene.add_actions_for_update(@button_actions[sender])
+                                                                                                                                                     end
 
-  def perform_action(timer)
-    puts(timer)
-    puts(timer.userInfo)
-    @play_scene.add_actions_for_update([timer.userInfo])
-  end
+    def perform_action(timer)
+      puts(timer)
+      puts(timer.userInfo)
+      @play_scene.add_actions_for_update([timer.userInfo])
+    end
 
-end
+  end
