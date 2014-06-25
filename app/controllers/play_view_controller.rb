@@ -28,6 +28,7 @@ class PlayViewController < UIViewController
   end
 
   def viewDidAppear(animated)
+    @state.save
     update_play_scene
   end
 
@@ -150,17 +151,17 @@ class PlayViewController < UIViewController
   # Also returns the button.
   def enable_button(name)
     button = case name
-               when :left_top
+               when :left_top, "left_top"
                  @left_top_button
-               when :left_middle
+               when :left_middle, "left_middle"
                  @left_middle_button
-               when :left_bottom
+               when :left_bottom, "left_bottom"
                  @left_bottom_button
-               when :right_top
+               when :right_top, "right_top"
                  @right_top_button
-               when :right_middle
+               when :right_middle, "right_middle"
                  @right_middle_button
-               when :right_bottom
+               when :right_bottom, "right_bottom"
                  @right_bottom_button
              end
     button.enabled = true

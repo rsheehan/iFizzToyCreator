@@ -259,6 +259,9 @@ class ActionAdderViewController < UIViewController
     action = {toy: toy.template.identifier, action_type: action_type, action_param: action_param,
               effect_type: effect_type, effect_param: effect_param}
     @scene_creator_view_controller.main_view.add_action(action)
+    toy.template.actions << action
+    #save actions
+    @state.save
   end
 
   # Called when undo state might change.
@@ -279,6 +282,7 @@ class ActionAdderViewController < UIViewController
   # Called when the view disappears.
   def viewWillDisappear(animated)
     super
+    @state.save
     # collect the scene information to pass on to the play view controller
     #@state.scenes = [@main_view.gather_scene_info] # only one scene while developing
     #@play_view_controller.update_play_scene
