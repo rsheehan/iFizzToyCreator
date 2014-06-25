@@ -28,7 +28,6 @@ class PlayViewController < UIViewController
   end
 
   def viewDidAppear(animated)
-    @state.save
     update_play_scene
   end
 

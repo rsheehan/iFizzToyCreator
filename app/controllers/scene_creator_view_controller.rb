@@ -2,7 +2,7 @@ class SceneCreatorViewController < UIViewController
 
   include CreatorViewControllerModule
 
-  MODES = [:scene, :toy, :save_scene, :new]
+  MODES = [:scene, :toy, :new]
 
   attr_writer :toybox, :play_view_controller
   attr_reader :main_view
@@ -49,6 +49,7 @@ class SceneCreatorViewController < UIViewController
 
   # Show the scene box.
   def scene
+    save_scene
     puts "Show the scene box"
     scenebox_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
     scenebox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
