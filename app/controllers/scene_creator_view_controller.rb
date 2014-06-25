@@ -113,7 +113,7 @@ class SceneCreatorViewController < UIViewController
     # collect the scene information to pass on to the play view controller
     save_scene
 
-    @play_view_controller.update_play_scene
+    #@play_view_controller.update_play_scene
   end
 
   def refresh

@@ -1,10 +1,14 @@
 # The scene where it all works.
+#require 'thread'
+
 class PlayScene < SKScene
 
   attr_accessor :toys # ToyInScene objects
   attr_accessor :edges # ToyParts - either CirclePart or PointsPart
   attr_reader :loaded_toys # ToyInScene not put into play straight away
+  attr_reader :mutex
 
+  TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
 
   def didMoveToView(view)
@@ -13,6 +17,8 @@ class PlayScene < SKScene
       create_scene_contents
       @content_created = true
     end
+    #@physicsWorld.gravity = CGVectorMake(0, -5)
+    physicsWorld.gravity = CGVectorMake(0, -4)
   end
 
   def create_scene_contents
@@ -20,6 +26,8 @@ class PlayScene < SKScene
     #self.backgroundColor = SceneCreatorView::DEFAULT_SCENE_COLOUR # no longer necessary, see create_image
     self.scaleMode = SKSceneScaleModeAspectFill
     self.physicsWorld.contactDelegate = self
+    @paused = true
+    @mutex = Mutex.new
     add_edges
     add_toys
   end
@@ -32,6 +40,9 @@ class PlayScene < SKScene
   # This is called once per frame.
   # Most screen logic goes here.
   def update(current_time)
+    if @check
+      puts @toy_hash[@check].last.physicsBody.to_s
+    end
     @actions_to_fire.each do |action|
       toy_id = action[:toy]
       toys = @toy_hash[toy_id] # all toys of the correct type
@@ -49,40 +60,50 @@ class PlayScene < SKScene
         toys = new_toys
       end
       toys.delete_if do |toy| # toys here are SKSpriteNodes
-        effect = action[:effect_type]
-        param = action[:effect_param]
-        delete = false
-        send = false
-        case effect
-          when :applyForce
-            # make force relative to the toy
-            rotation = CGAffineTransformMakeRotation(toy.zRotation)
-            # TODO: need to take the scale of the node into consideration when applying forces
-            param = CGPointApplyAffineTransform(param, rotation)
-            send = true
-          when :explosion
-            #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
-            if toy.physicsBody != nil
-              explode_toy(toy, param)
-              removeChildrenInArray([toy])
-              toy.physicsBody = nil
-            end
-            delete = true
-          when :applyTorque
-            send = true
-          when :create_new_toy
-            toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
-            new_toy = new_toy(toy_in_scene)
-            puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
-            puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
-            new_toy.position = toy.position + toy_in_scene.position
-            puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
-            new_toy.userData[:id] = rand(2**60).to_s
-            @toy_hash[action[:effect_param][:id]] << new_toy
-        end
-        if send
-          param = scale_force_mass(param, toy.physicsBody.mass)
-          toy.physicsBody.send(effect, param)
+        if toy.userData[:uniqueID] == -1
+          delete = true
+        else
+          effect = action[:effect_type]
+          param = action[:effect_param]
+          delete = false
+          send = false
+          case effect
+            when :apply_force
+              # make force relative to the toy
+              rotation = CGAffineTransformMakeRotation(toy.zRotation)
+              param = CGPointApplyAffineTransform(param, rotation)
+              send = true
+              effect = "applyForce"
+            when :explosion
+              #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
+              @mutex.synchronize do
+                if toy.userData[:uniqueID] != -1
+                  explode_toy(toy, param)
+                  toy.userData[:uniqueID] = -1
+                end
+              end
+              delete = true
+            when :apply_torque
+              param *= toy.size.width/2
+              effect = "applyTorque"
+              send = true
+            when :create_new_toy # TODO Adjust to angle of toy
+              toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
+              toy_in_scene.position = CGPointMake(action[:effect_param][:x], action[:effect_param][:y]) + view.convertPoint(toy.position, fromScene: self)
+              new_toy = new_toy(toy_in_scene)
+              #new_toy.position = CGPointApplyAffineTransform(new_toy.position,)
+              #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
+              #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
+              #new_toy.position = toy.position + toy_in_scene.position
+              #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+              new_toy.userData[:templateID] = toy_in_scene.uid
+              new_toy.userData[:uniqueID] = rand(2**60).to_s
+              @toy_hash[action[:effect_param][:id]] << new_toy
+          end
+          if send
+            param = scale_force_mass(param, toy.physicsBody.mass)
+            toy.physicsBody.send(effect, param)
+          end
         end
         delete
       end
@@ -101,10 +122,25 @@ class PlayScene < SKScene
 
   def explode_toy(toy, force)
     toy_in_scene = @toys.select {|s| s.template.identifier == toy.name and s.uid == toy.userData[:uniqueID]}.first
+    if toy_in_scene.nil?
+      toy_in_scene = loaded_toys[toy.name].select {|s| s.uid == toy.userData[:templateID]}.first
+    end
     templates = []
     new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
     partsArray = check_parts(toy_in_scene.template.parts,toy_in_scene.template.center)
+    timer = force * TIMER_SCALE
+    if timer < 1
+      fadeOut = SKAction.fadeOutWithDuration(timer)
+      remove = SKAction.removeFromParent()
+      seq = SKAction.sequence([fadeOut, remove])
+      if not DEBUG_EXPLOSIONS
+        apply_action_to_toy(toy, seq)
+      end
+
+      return
+    end
+
     force = scale_force_mass(force, toy.physicsBody.mass)
     partsArray.each do |part|
       #position = centre_part(part, toy.position)
@@ -120,7 +156,7 @@ class PlayScene < SKScene
       end
 
       new_toy.change_angle(toy_in_scene.angle)
-      new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(new_toy.image))
+      new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(get_image(new_toy)))
       if part.is_a? PointsPart
         new_sprite_toy.zRotation = toy.zRotation
         new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
@@ -164,19 +200,29 @@ class PlayScene < SKScene
       #puts "Force X: " + (force/displacement.x/20).to_s + ", Y: " + (-force/displacement.y/20).to_s
       new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
       @toy_hash[new_name] << new_sprite_toy
-      fadeOut = SKAction.fadeOutWithDuration(5.0)
+      #puts "Timer: " + timer.to_s
+      fadeOut = SKAction.fadeOutWithDuration(timer)
       remove = SKAction.removeFromParent()
       seq = SKAction.sequence([fadeOut, remove])
       if not DEBUG_EXPLOSIONS
         new_sprite_toy.runAction(seq)
       end
     end
+    remove = SKAction.removeFromParent()
+    apply_action_to_toy(toy, remove)
     new_name
+  end
+
+  def apply_action_to_toy(toy, action)
+    toy.runAction(action)
+    toy.userData[:wheels].each do |wheel|
+      wheel.runAction(action)
+    end
   end
 
 
   # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
-  # TODO: Check for overlap!!
+
   def check_parts(parts,center)
     circle_parts = parts.select {|x| x.is_a? (CirclePart) }
     point_parts = parts.select {|x| x.is_a? (PointsPart) }
@@ -275,7 +321,14 @@ class PlayScene < SKScene
       case edge
         when CirclePart
           puts "PlayScene - don't add circles yet"
-          #TODO
+          body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
+          body.dynamic = false
+          body.contactTestBitMask = 1
+          node = SKNode.node
+          node.position = CGPointMake(edge.position[0], size.height - edge.position[1])
+          node.hidden = true
+          node.physicsBody = body
+          addChild(node)
         when PointsPart
           points = edge.points_for_scene_background(size)
           current_pt = points[0]
@@ -337,7 +390,12 @@ class PlayScene < SKScene
 
   def add_toys
     @toy_hash = {}
+    @loaded_toys = {}
     @toys.each do |toy_in_scene|
+      if loaded_toys[toy_in_scene.template.identifier].nil?
+        loaded_toys[toy_in_scene.template.identifier] = []
+      end
+      loaded_toys[toy_in_scene.template.identifier] << toy_in_scene
       toy = new_toy(toy_in_scene)
       id = toy_in_scene.template.identifier
       @toy_hash[id] = [] unless @toy_hash[id]
@@ -362,15 +420,21 @@ class PlayScene < SKScene
     addChild(toy)
     # physics body stuff
     physics_points = ToyPhysicsBody.new(toy_in_scene.template.parts).convex_hull_for_physics(toy_in_scene.zoom)
+    if physics_points.length == 0
+      toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
+    else
     path = CGPathCreateMutable()
     CGPathMoveToPoint(path, nil, *physics_points[0])
     physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
     toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+    end
     toy.physicsBody.contactTestBitMask = 1
 
     #properties
     toy.physicsBody.allowsRotation = toy_in_scene.template.can_rotate;
     toy.physicsBody.dynamic = !(toy_in_scene.template.stuck)
+
+    toy.userData[:wheels] = []
 
     # now any wheels
     toy_in_scene.add_wheels_in_scene(self).each do |wheel|
@@ -389,15 +453,16 @@ class PlayScene < SKScene
       # then the joint
       axle = SKPhysicsJointPin.jointWithBodyA(toy.physicsBody, bodyB: wheel_node.physicsBody, anchor: wheel.position)
       physicsWorld.addJoint(axle)
+      toy.userData[:wheels] << wheel_node
     end
     toy
   end
 
   # Called from Play View Controller in able to preprocess exploded
   def add_explode_ref(explode_id)
-    @toy_hash[explode_id].each do |toy|
-      create_explode_toy(toy)
-    end
+    # @toy_hash[explode_id].each do |toy|
+    #   #create_explode_toy(toy)
+    # end
   end
 
   # Places exploded parts at toy.userData in @toy_hash
@@ -420,10 +485,15 @@ class PlayScene < SKScene
         new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
 
         physics_points = ToyPhysicsBody.new(new_toy.template.parts).convex_hull_for_physics(new_toy.zoom)
-        path = CGPathCreateMutable()
-        CGPathMoveToPoint(path, nil, *physics_points[0])
-        physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
-        new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+        if physics_points.length == 0
+          new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
+        else
+          path = CGPathCreateMutable()
+          CGPathMoveToPoint(path, nil, *physics_points[0])
+          physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
+          new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+        end
+
       elsif part.is_a? CirclePart
         wheel = new_toy.add_wheels_in_scene(self)[0]
         new_sprite_toy.hidden = false
@@ -438,7 +508,7 @@ class PlayScene < SKScene
       new_sprite_toy.name = new_name
       # addChild(new_sprite_toy)
 
-      # new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
+      # new_sprite_toy.physicsBody.send(:apply_force, CGPointMake(force/displacement.x , force/displacement.y))
       @toy_hash[new_name] << new_sprite_toy
       # fadeOut = SKAction.fadeOutWithDuration(5.0)
       # remove = SKAction.removeFromParent()
@@ -521,6 +591,10 @@ class PlayScene < SKScene
       @collision_actions = []
       @collision_actions << action
     end
+  end
+
+  def paused= (value)
+    @paused = value
   end
 
 end

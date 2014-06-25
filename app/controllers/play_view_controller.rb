@@ -23,7 +23,19 @@ class PlayViewController < UIViewController
     view.addSubview(@play_view)
     @button_actions = {} # keys = buttons, values = list of actions for that button
     setup_sides
+    @timers = []
+    setup_reset(view)
+  end
 
+  def viewDidAppear(animated)
+    update_play_scene
+  end
+
+  def viewDidDisappear(animated)
+    @timers.each do |timer|
+      timer.invalidate
+    end
+    @timers = []
   end
 
   def update_play_scene
@@ -51,7 +63,7 @@ class PlayViewController < UIViewController
           @button_actions[button] << action
         when :timer
           puts("Action",action)
-          NSTimer.scheduledTimerWithTimeInterval(action[:action_param][0]*60 + action[:action_param][1], target: self, selector: "perform_action:", userInfo: action, repeats: true)
+          @timers << NSTimer.scheduledTimerWithTimeInterval(action[:action_param][0]*60 + action[:action_param][1], target: self, selector: "perform_action:", userInfo: action, repeats: true)
         when :collision
           @play_scene.add_collision(action)
       end
@@ -60,6 +72,7 @@ class PlayViewController < UIViewController
     # end of development code
 
     @play_view.presentScene(@play_scene)
+    @play_scene.paused = true
     actions.each do |action|
       case action[:effect_type]
         when :explosion
@@ -69,10 +82,28 @@ class PlayViewController < UIViewController
           action[:uid] = uid
       end
     end
+    @play_scene.paused = false
   end
 
   def bounds_for_view=(bounds)
     @bounds = bounds
+  end
+
+  def setup_reset(view)
+    image_name = "reset"
+    position = [@bounds.size.width/2-37.5, 10]
+    button = UIButton.buttonWithType(UIButtonTypeCustom)
+    button.setImage(UIImage.imageNamed(image_name), forState: UIControlStateNormal)
+    button.setImage(UIImage.imageNamed(image_name + '_selected'), forState: UIControlStateSelected) rescue puts 'rescued'
+    button.sizeToFit
+    button.frame = [position, button.frame.size]
+    button.addTarget(self, action: image_name, forControlEvents: UIControlEventTouchUpInside)
+    #view.addSubview(button)
+    button
+  end
+
+  def reset
+    update_play_scene
   end
 
   # The sides are left for user interactions to the running scenes

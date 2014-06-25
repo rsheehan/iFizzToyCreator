@@ -9,9 +9,9 @@ class ActionAdderViewController < UIViewController
   EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy]
   MODES = [:show_actions,:show_properties]
 
-  FORCE_SCALE = 100
+  FORCE_SCALE = 250
   EXPLODE_SCALE = 80
-  ROTATION_SCALE = 300
+  ROTATION_SCALE = 2
 
 
   attr_writer :state, :scene_creator_view_controller, :play_view_controller
@@ -216,7 +216,7 @@ class ActionAdderViewController < UIViewController
   # When this is received the action info is complete.
   def force=(force_vector)
     action_type, action_param = get_action
-    effect_type = :applyForce
+    effect_type = :apply_force
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
@@ -226,7 +226,7 @@ class ActionAdderViewController < UIViewController
 
   def rotation=(force)
     action_type, action_param = get_action
-    effect_type = :applyTorque
+    effect_type = :apply_torque
     effect_param = force * ROTATION_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     #remove shadows from other colliding toy if collision action
@@ -281,7 +281,7 @@ class ActionAdderViewController < UIViewController
     super
     # collect the scene information to pass on to the play view controller
     #@state.scenes = [@main_view.gather_scene_info] # only one scene while developing
-    @play_view_controller.update_play_scene
+    #@play_view_controller.update_play_scene
   end
 
   def name_for_label(name)
@@ -364,6 +364,9 @@ class ActionAdderViewController < UIViewController
     @action_button_name = nil
     @repeat_time_mins = nil
     @colliding_toy = nil
+    #disable buttons when showing modal screen
+    enable_show_mode_buttons(false)
+
     #create a picker view controller pop up to define how long to repeat for
     repeat_action_view_controller = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
     repeat_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -377,6 +380,9 @@ class ActionAdderViewController < UIViewController
     @action_button_name = nil
     @repeat_time_mins = nil
     @colliding_toy = nil
+    #disable buttons when showing modal screen
+    enable_show_mode_buttons(false)
+
     #make a modal to select another toy - must disable selecting same toy?
     collision_action_view_controller = CollisionActionViewController.alloc.initWithNibName(nil, bundle: nil)
     collision_action_view_controller.bounds_for_view = @bounds

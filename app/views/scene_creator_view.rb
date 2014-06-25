@@ -165,6 +165,10 @@ class SceneCreatorView < CreatorView
             touch_begin_collision
           when :show_actions
             touch_begin_show_actions
+          when :create_new_toy
+            if @selected.close_enough(@current_point)
+              @drag = true
+            end
         end
     end
     setNeedsDisplay
@@ -301,7 +305,7 @@ class SceneCreatorView < CreatorView
           when :collision
             touch_end_collision
           when :create_new_toy
-            touch_end_create_toy
+            @drag = false
         end
       when :circle
         centre = @points[0]
@@ -364,13 +368,13 @@ class SceneCreatorView < CreatorView
   end
 
   # [ID, Displacement.x, displacement.y, zoom, angle]
-  def touch_end_create_toy
+  def end_create_toy
     @delegate.close_modal_view
     results = {}
     results[:id] = @selected.template.identifier
     disp = @selected.position - @secondary_selected.position
     results[:x] = disp.x
-    results[:y] = disp.y * -1
+    results[:y] = disp.y
     results[:zoom] = @selected.zoom
     results[:angle] = @selected.angle
     @selected = @secondary_selected
@@ -575,7 +579,7 @@ class SceneCreatorView < CreatorView
           draw_static_rotate_circle(context, @selected.position)
         end
       when :create_new_toy
-        if @current_point
+        if @current_point and @drag
           @selected.position = @current_point
         end
     end
