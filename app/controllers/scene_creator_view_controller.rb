@@ -78,6 +78,10 @@ class SceneCreatorViewController < UIViewController
   def drop_toy(toy_index)
     # get the toy
     @main_view.add_toy(ToyInScene.new(@state.toys[toy_index]))
+    #add toy's actions to scene
+    @state.toys[toy_index].actions.each do |action|
+      @main_view.add_action(action)
+    end
     close_toybox
     grab
   end

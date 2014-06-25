@@ -6,7 +6,7 @@ class ToyTemplate
   ACCURACY = 100.0   # the rounding factor for the data
 
   attr_reader :image, :parts, :identifier
-  attr_accessor :stuck, :can_rotate
+  attr_accessor :stuck, :can_rotate, :actions
 
   def initialize(parts, identifier) #, image)
     @identifier = identifier
@@ -15,7 +15,7 @@ class ToyTemplate
 
     @stuck = false
     @can_rotate = true
-
+    @actions = []
     #ToyPhysicsBody.new(self) <--
 
     #@image = image
@@ -40,6 +40,23 @@ class ToyTemplate
       json_parts << part.to_json_compatible
     end
     json_toy[:parts] = json_parts
+
+    #actions
+    json_actions = []
+    @actions.each do |action|
+      if action[:effect_type] == :apply_force
+        json_actions << action.each_with_object({}){|(k,v), h| if k == :effect_param
+                                                                 h[k] = [v.x, v.y]
+                                                               else
+                                                                 h[k] = v
+                                                               end }
+      else
+        json_actions << action
+      end
+
+    end
+    json_toy[:actions] = json_actions
+
     json_toy
   end
 

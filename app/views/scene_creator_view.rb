@@ -80,7 +80,9 @@ class SceneCreatorView < CreatorView
 
   # Add an action to this scene.
   def add_action(action)
-    @actions << action
+    if !@actions.include?(action)
+      @actions << action
+    end
   end
 
   # Similar to gathering the toy info in ToyCreatorView but the scale is 1.
