@@ -104,6 +104,10 @@ class SceneCreatorViewController < UIViewController
     end
     scene.toys.each do |toy|
       @main_view.add_toy(toy)
+      #add toy's actions to scene
+      toy.template.actions.each do |action|
+        @main_view.add_action(action)
+      end
     end
     #update id
     @id = scene.identifier
