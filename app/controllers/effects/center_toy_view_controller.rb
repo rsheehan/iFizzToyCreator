@@ -23,7 +23,7 @@ class CenterToyViewController < UIViewController
     @diff_constant_time = @diff / @how_many_times
     @delta_alpha = (1-lowerAlpha) / @how_many_times
     @count = 0
-    @timer = NSTimer.scheduledTimerWithTimeInterval(@delay, target: self, selector: "animate:", userInfo: [@diff_constant_time, @delta_alpha], repeats: true)
+    @timer = NSTimer.scheduledTimerWithTimeInterval(@delay, target: self, selector: "animate:", userInfo: [@diff_constant_time, @delta_alpha, 0], repeats: true)
     @scene_creator_view_controller.refresh
   end
 
@@ -31,19 +31,19 @@ class CenterToyViewController < UIViewController
     #@scene_creator_view_controller.main_view.shift_view_by(@diff*-1)
     #@selected.change_position(@toy_origin)
     @count = 0
-    @timer = NSTimer.scheduledTimerWithTimeInterval(@delay, target: self, selector: "animate:", userInfo: [@diff_constant_time*-1, @delta_alpha*-1], repeats: true)
+    @timer = NSTimer.scheduledTimerWithTimeInterval(@delay, target: self, selector: "animate:", userInfo: [@diff_constant_time*-1, @delta_alpha*-1, 0], repeats: true)
   end
 
   def animate(timer)
-    if @count < @how_many_times
+    if timer.userData[2] < @how_many_times
       @selected.change_position(@selected.position + timer.userInfo[0])
       @scene_creator_view_controller.main_view.alpha_view -= timer.userInfo[1]
     else
-      @timer.invalidate
-      @timer = nil
+      timer.invalidate
+      #@timer = nil
       return
     end
-    @count+=1
+    timer.userData[2]+=1
     @scene_creator_view_controller.refresh
   end
 
