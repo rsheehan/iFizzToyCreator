@@ -179,18 +179,20 @@ class State
     toy.can_rotate = (json_toy[:can_rotate] == nil) ? true : json_toy[:can_rotate]
 
     actions = []
-    json_toy[:actions].each do |json_action|
-      hash = {}.addEntriesFromDictionary(json_action)
-      hash = hash.each_with_object({}){|(k,v), h| if (k == "action_type" or k == "effect_type")
-                                                        h[k.to_sym] = v.to_sym
-                                                      else
-                                                        h[k.to_sym] = v
-                                                      end }
-      if hash[:effect_type] == :apply_force
-        arrayPt = hash[:effect_param]
-        hash[:effect_param] = CGPointMake(arrayPt[0], arrayPt[1])
+    if json_toy[:actions] != nil
+      json_toy[:actions].each do |json_action|
+        hash = {}.addEntriesFromDictionary(json_action)
+        hash = hash.each_with_object({}){|(k,v), h| if (k == "action_type" or k == "effect_type")
+                                                          h[k.to_sym] = v.to_sym
+                                                        else
+                                                          h[k.to_sym] = v
+                                                        end }
+        if hash[:effect_type] == :apply_force
+          arrayPt = hash[:effect_param]
+          hash[:effect_param] = CGPointMake(arrayPt[0], arrayPt[1])
+        end
+        actions << hash
       end
-      actions << hash
     end
     toy.actions = actions
 
