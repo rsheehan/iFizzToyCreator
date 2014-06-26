@@ -6,12 +6,13 @@ class ActionAdderViewController < UIViewController
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise]
-  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy]
+  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect]
   MODES = [:show_actions,:show_properties]
 
   FORCE_SCALE = 250
   EXPLODE_SCALE = 80
   ROTATION_SCALE = 2
+  DELETE_FADE_TIME = 0.7 # seconds
 
 
   attr_writer :state, :scene_creator_view_controller, :play_view_controller
@@ -497,6 +498,17 @@ class ActionAdderViewController < UIViewController
     toybox_view_controller.delegate = self
     toybox_view_controller.state = @state
     presentViewController(toybox_view_controller, animated: true, completion: nil)
+  end
+
+  def delete_effect
+    action_type, action_param = get_action
+    effect_type = :delete_effect
+    effect_param = DELETE_FADE_TIME
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    @main_view.secondary_selected = nil
+    enable_action_buttons(true)
+    enable_effect_buttons(false)
+    @main_view.setNeedsDisplay
   end
 
 end

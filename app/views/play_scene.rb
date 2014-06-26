@@ -100,6 +100,12 @@ class PlayScene < SKScene
               param *= toy.size.width/2
               effect = "applyTorque"
               send = true
+            when :delete_effect
+              fadeOut = SKAction.fadeOutWithDuration(param)
+              remove = SKAction.removeFromParent()
+              sequence = SKAction.sequence([fadeOut, remove])
+              toy.runAction(sequence)
+              delete = true
             when :create_new_toy # TODO Adjust to angle of toy
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
@@ -172,16 +178,16 @@ class PlayScene < SKScene
     @toy_hash[new_name] = []
     partsArray = check_parts(toy_in_scene.template.parts,toy_in_scene.template.center)
     timer = force * TIMER_SCALE
-    if timer < 1
-      fadeOut = SKAction.fadeOutWithDuration(timer)
-      remove = SKAction.removeFromParent()
-      seq = SKAction.sequence([fadeOut, remove])
-      if not DEBUG_EXPLOSIONS
-        apply_action_to_toy(toy, seq)
-      end
-
-      return
-    end
+    # if timer < 1
+    #   fadeOut = SKAction.fadeOutWithDuration(timer)
+    #   remove = SKAction.removeFromParent()
+    #   seq = SKAction.sequence([fadeOut, remove])
+    #   if not DEBUG_EXPLOSIONS
+    #     apply_action_to_toy(toy, seq)
+    #   end
+    #
+    #   return
+    # end
 
     force = scale_force_mass(force, toy.physicsBody.mass)
     partsArray.each do |part|
