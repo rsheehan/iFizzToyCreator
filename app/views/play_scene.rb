@@ -139,7 +139,7 @@ class PlayScene < SKScene
     if @actions_to_be_fired
       @actions_to_fire += @actions_to_be_fired
     end
-    
+
   end
 
   def scale_force_mass(param, mass)

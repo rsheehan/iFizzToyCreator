@@ -88,7 +88,12 @@ class ActionListViewController < UIViewController
       tv.deleteRowsAtIndexPaths([index_path], withRowAnimation: UITableViewRowAnimationAutomatic)
       #delete action
       item = index_path.row
+      #remove from scene
       @state.scenes[@state.currentscene].actions.delete_if { |action|
+        action == @toy_actions.at(item)
+      }
+      #remove from toy
+      @selected.template.actions.delete_if { |action|
         action == @toy_actions.at(item)
       }
       @toy_actions.delete_at(item)
