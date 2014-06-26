@@ -33,6 +33,9 @@ class Language
   REPEAT        = 'timer'     # Repeat?
   HOLD          = 'hold'
   SCORE         = 'score'
+  WHEN_CREATED  = 'when created'
+  SHAKE         = 'shake'
+  LOUD_NOISE    = 'loud noise'
 
   # Effect Names
   FORCE         = 'force'

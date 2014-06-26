@@ -5,7 +5,7 @@ class ActionAdderViewController < UIViewController
   # Actions are hashes with the following keys.
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
-  ACTIONS = [:touch, :timer, :collision]
+  ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise]
   EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy]
   MODES = [:show_actions,:show_properties]
 
@@ -201,6 +201,17 @@ class ActionAdderViewController < UIViewController
     elsif @colliding_toy
       action_type = :collision
       action_param = @colliding_toy.template.identifier
+    elsif @loud_noise
+      action_type = :loud_noise
+      action_param = nil
+    elsif @when_created
+      action_type = :when_created
+      action_param = nil
+    elsif @shake
+      action_type = :shake
+      action_param = nil
+    elsif @score_reaches
+      #TODO when implementing score
     else
       action_type = :unknown
       action_param = :unknown
@@ -209,6 +220,10 @@ class ActionAdderViewController < UIViewController
     @action_button_name = nil
     @repeat_time_mins = nil
     @colliding_toy = nil
+    @loud_noise = nil
+    @when_created = nil
+    @shake = nil
+    @score_reaches = nil
     return action_type, action_param
   end
 
@@ -298,6 +313,12 @@ class ActionAdderViewController < UIViewController
         Language::REPEAT
       when :hold
         Language::HOLD
+      when :shake
+        Language::SHAKE
+      when :when_created
+        Language::WHEN_CREATED
+      when :loud_noise
+        Language::LOUD_NOISE
       when :score
         Language::SCORE
       when :apply_force
@@ -394,6 +415,38 @@ class ActionAdderViewController < UIViewController
     collision_action_view_controller.other_toy = @selected_toy
     collision_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
     presentViewController(collision_action_view_controller, animated: false, completion: nil)
+  end
+
+  def shake
+    #store shake and switch to effect
+    @shake = true
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
+  end
+
+  def score_reaches
+    #TODO make user select score global or local
+    #ask which value it reaches - popup
+    #then move on to effect
+
+  end
+
+  def when_created
+    #include start?
+    #move straight to effect as have already selected toy
+    @when_created = true
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
+  end
+
+  def loud_noise
+    #store loud noise and switch to effect
+    @loud_noise = true
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
   end
 
   #======================
