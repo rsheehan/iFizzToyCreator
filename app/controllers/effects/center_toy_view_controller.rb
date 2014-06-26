@@ -35,7 +35,7 @@ class CenterToyViewController < UIViewController
   end
 
   def animate(timer)
-    if timer.userData[2] < @how_many_times
+    if timer.userInfo[2] < @how_many_times
       @selected.change_position(@selected.position + timer.userInfo[0])
       @scene_creator_view_controller.main_view.alpha_view -= timer.userInfo[1]
     else
@@ -43,7 +43,7 @@ class CenterToyViewController < UIViewController
       #@timer = nil
       return
     end
-    timer.userData[2]+=1
+    timer.userInfo[2]+=1
     @scene_creator_view_controller.refresh
   end
 
