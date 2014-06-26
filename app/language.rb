@@ -44,6 +44,7 @@ class Language
   CREATE_NEW_TOY= 'create'
   TRANSITION    = 'transition'
   SOUND         = 'sound'
+  DELETE        = 'delete'
 
   # Commands
   CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'

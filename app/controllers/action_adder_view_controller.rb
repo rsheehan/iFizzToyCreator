@@ -334,6 +334,8 @@ class ActionAdderViewController < UIViewController
         Language::TRANSITION
       when :sound
         Language::SOUND
+      when :delete_effect
+        Language::DELETE
     end
   end
 
