@@ -544,16 +544,16 @@ class SceneCreatorView < CreatorView
     # now draw the added toys
     @toys_in_scene.each { |toy| toy.draw(context) if toy != @selected }
     @strokes.each { |stroke| stroke.draw(context) if stroke != @selected }
-    if @selected
-      CGContextBeginTransparencyLayer(context, nil)
-      setup_context(context, true)
-      @selected.draw(context)
-      CGContextEndTransparencyLayer(context)
-    end
     if @secondary_selected
       CGContextBeginTransparencyLayer(context, nil)
       setup_context(context, true)
       @secondary_selected.draw(context)
+      CGContextEndTransparencyLayer(context)
+    end
+    if @selected
+      CGContextBeginTransparencyLayer(context, nil)
+      setup_context(context, true)
+      @selected.draw(context)
       CGContextEndTransparencyLayer(context)
     end
     if @points
