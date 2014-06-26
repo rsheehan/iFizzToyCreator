@@ -13,6 +13,10 @@ class PlayScene < SKScene
 
   def didMoveToView(view)
     @actions_to_fire = []
+    if not @create_actions
+      @create_actions = []
+    end
+
     unless @content_created
       create_scene_contents
       @content_created = true
@@ -37,6 +41,15 @@ class PlayScene < SKScene
     @actions_to_fire += actions
   end
 
+  def add_create_action(action)
+    if @create_actions
+      @create_actions << action
+    else
+      @create_actions = [action]
+    end
+
+  end
+
   # This is called once per frame.
   # Most screen logic goes here.
   def update(current_time)
@@ -50,7 +63,7 @@ class PlayScene < SKScene
         next
       end
       #if collision - remove all toys that are same but not collided
-      if action[:action_type] == :collision
+      if action[:action_type] == :collision or action[:action_type] == :when_created
         new_toys = []
         toys.each do |toy|
           if toy.userData[:uniqueID] == action[:action_param][1]
@@ -98,6 +111,20 @@ class PlayScene < SKScene
               #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
               new_toy.userData[:templateID] = toy_in_scene.uid
               new_toy.userData[:uniqueID] = rand(2**60).to_s
+
+              #trigger any create actions
+              @create_actions.each do |create_action|
+                if create_action[:toy] == new_toy.name
+                  #trigger event
+                  create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
+                  if @actions_to_be_fired
+                    @actions_to_be_fired << create_action
+                  else
+                    @actions_to_be_fired = [create_action]
+                  end
+                  puts "create action "+ create_action.to_s
+                end
+              end
               @toy_hash[action[:effect_param][:id]] << new_toy
           end
           if send
@@ -109,6 +136,10 @@ class PlayScene < SKScene
       end
     end
     @actions_to_fire = []
+    if @actions_to_be_fired
+      @actions_to_fire += @actions_to_be_fired
+    end
+    
   end
 
   def scale_force_mass(param, mass)
@@ -454,6 +485,15 @@ class PlayScene < SKScene
       axle = SKPhysicsJointPin.jointWithBodyA(toy.physicsBody, bodyB: wheel_node.physicsBody, anchor: wheel.position)
       physicsWorld.addJoint(axle)
       toy.userData[:wheels] << wheel_node
+    end
+
+    #trigger any create actions
+    @create_actions.each do |action|
+      if action[:toy] == toy.name
+        #trigger event
+        action[:action_param] = [nil, toy.userData[:uniqueID]]
+        add_actions_for_update([action])
+      end
     end
     toy
   end

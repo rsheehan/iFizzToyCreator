@@ -150,6 +150,8 @@ class PlayViewController < UIViewController
           if not @listening
             listen_to_mic
           end
+        when :when_created
+          @play_scene.add_create_action(action)
       end
     end
 
