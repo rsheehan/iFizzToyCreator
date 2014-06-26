@@ -544,7 +544,7 @@ class SceneCreatorView < CreatorView
     #super
     context = UIGraphicsGetCurrentContext()
     if @alpha_view
-      puts "Alpha: " + @alpha_view.to_s
+      #puts "Alpha: " + @alpha_view.to_s
       CGContextSetAlpha(context, @alpha_view)
     end
     # now draw the added toys
