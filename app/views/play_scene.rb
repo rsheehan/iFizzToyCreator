@@ -88,16 +88,25 @@ class PlayScene < SKScene
               effect = "applyTorque"
               send = true
             when :create_new_toy # TODO Adjust to angle of toy
+              rotation = CGAffineTransformMakeRotation(toy.zRotation)
               toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
-              toy_in_scene.position = CGPointMake(action[:effect_param][:x], action[:effect_param][:y]) + view.convertPoint(toy.position, fromScene: self)
               new_toy = new_toy(toy_in_scene)
-              #new_toy.position = CGPointApplyAffineTransform(new_toy.position,)
               #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
               #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
-              #new_toy.position = toy.position + toy_in_scene.position
+              displacement = CGPointApplyAffineTransform(toy_in_scene.position, rotation)
+              puts "Spawner Pos, X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
+              puts "OriginalDisp, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
+              puts "Displacement, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
+              new_toy.position = toy.position + displacement
+              puts "NewToyDisp, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+              puts "Old Rotation: " + new_toy.zRotation.to_s
+              puts "Spawner Rotation: " + toy.zRotation.to_s
+              new_zRotation = (new_toy.zRotation + toy.zRotation)
+
+              new_toy.zRotation = new_zRotation
+              puts "New Rotation: " + new_toy.zRotation.to_s
               #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
-              new_toy.userData[:templateID] = toy_in_scene.uid
-              new_toy.userData[:uniqueID] = rand(2**60).to_s
+              new_toy.userData[:id] = rand(2**60).to_s
               @toy_hash[action[:effect_param][:id]] << new_toy
           end
           if send
