@@ -166,6 +166,8 @@ class PlayViewController < UIViewController
         when :create_new_toy
           uid = @play_scene.add_create_toy_ref(action[:effect_param], @state.toys.select {|s| s.identifier == action[:effect_param][:id]}.first)
           action[:uid] = uid
+        when :score
+          @play_scene.scores[action[:toy]] = action[:effect_param]
       end
     end
     @play_scene.paused = false

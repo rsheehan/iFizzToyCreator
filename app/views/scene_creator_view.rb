@@ -9,6 +9,7 @@ class SceneCreatorView < CreatorView
 # @selected is a stroke/toy which was touched and is now hilighted
   attr_writer :selected, :secondary_selected, :show_action_controller
   attr_reader :actions
+  attr_accessor :alpha_view
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
 
@@ -25,6 +26,7 @@ class SceneCreatorView < CreatorView
     pinch_recognizer = UIPinchGestureRecognizer.alloc.initWithTarget(self, action: 'zoom_selected:')
     pinch_recognizer.delegate = self
     addGestureRecognizer(pinch_recognizer)
+    @alpha_view = 1.0
     self
   end
 
@@ -541,9 +543,18 @@ class SceneCreatorView < CreatorView
   def drawRect(rect)
     #super
     context = UIGraphicsGetCurrentContext()
+    if @alpha_view
+      #puts "Alpha: " + @alpha_view.to_s
+      CGContextSetAlpha(context, @alpha_view)
+    end
     # now draw the added toys
+    CGContextBeginTransparencyLayer(context, nil)
     @toys_in_scene.each { |toy| toy.draw(context) if toy != @selected }
     @strokes.each { |stroke| stroke.draw(context) if stroke != @selected }
+    CGContextEndTransparencyLayer(context)
+    if @alpha_view
+      CGContextSetAlpha(context, 1.0)
+    end
     if @secondary_selected
       CGContextBeginTransparencyLayer(context, nil)
       setup_context(context, true)

@@ -7,9 +7,11 @@ class PlayScene < SKScene
   attr_accessor :edges # ToyParts - either CirclePart or PointsPart
   attr_reader :loaded_toys # ToyInScene not put into play straight away
   attr_reader :mutex
+  attr_writer :scores
 
   TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
+  MAX_CREATES = 10
 
   def didMoveToView(view)
     @actions_to_fire = []
@@ -32,6 +34,7 @@ class PlayScene < SKScene
     self.physicsWorld.contactDelegate = self
     @paused = true
     @mutex = Mutex.new
+    @scores = {}
     add_edges
     add_toys
   end
@@ -100,15 +103,44 @@ class PlayScene < SKScene
               param *= toy.size.width/2
               effect = "applyTorque"
               send = true
+            when :delete_effect
+              fadeOut = SKAction.fadeOutWithDuration(param)
+              remove = SKAction.removeFromParent()
+              sequence = SKAction.sequence([fadeOut, remove])
+              toy.runAction(sequence)
+              delete = true
+            when :score_adder
+              if not toy.userData[:score]
+                toy.userData[:score] = 0
+              end
+              toy.userData[:score] += param
+              puts "Toy Score: " + toy.userData[:score].to_s
+              if @scores[toy.name]
+                if @scores[toy.name] == toy.userData[:score]
+                  #TODO Call thing which it wants to do which is what?
+                end
+              end
             when :create_new_toy # TODO Adjust to angle of toy
+              rotation = CGAffineTransformMakeRotation(toy.zRotation)
               toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
-              toy_in_scene.position = CGPointMake(action[:effect_param][:x], action[:effect_param][:y]) + view.convertPoint(toy.position, fromScene: self)
               new_toy = new_toy(toy_in_scene)
-              #new_toy.position = CGPointApplyAffineTransform(new_toy.position,)
+              #puts rotation
               #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
               #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
-              #new_toy.position = toy.position + toy_in_scene.position
+              #displacement = CGPointApplyAffineTransform(toy_in_scene.position, rotation)
+              puts "Spawner Pos, X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
+              puts "OriginalDisp, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
+              #puts "Displacement, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
+              new_toy.position = toy.position + toy_in_scene.position #displacement
+              # puts "NewToyDisp, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+              # puts "Old Rotation: " + new_toy.zRotation.to_s
+              # puts "Spawner Rotation: " + toy.zRotation.to_s
+              # new_zRotation = (new_toy.zRotation + toy.zRotation)
+
+              #new_toy.zRotation = new_zRotation
+              puts "New Rotation: " + new_toy.zRotation.to_s
               #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+              new_toy.userData[:id] = rand(2**60).to_s
               new_toy.userData[:templateID] = toy_in_scene.uid
               new_toy.userData[:uniqueID] = rand(2**60).to_s
 
@@ -126,6 +158,13 @@ class PlayScene < SKScene
                 end
               end
               @toy_hash[action[:effect_param][:id]] << new_toy
+              while @toy_hash[action[:effect_param][:id]].length > MAX_CREATES
+                to_remove = @toy_hash[action[:effect_param][:id]].shift
+                fadeOut = SKAction.fadeOutWithDuration(0.7)
+                remove = SKAction.removeFromParent()
+                sequence = SKAction.sequence([fadeOut, remove])
+                to_remove.runAction(sequence)
+              end
           end
           if send
             param = scale_force_mass(param, toy.physicsBody.mass)
@@ -161,16 +200,16 @@ class PlayScene < SKScene
     @toy_hash[new_name] = []
     partsArray = check_parts(toy_in_scene.template.parts,toy_in_scene.template.center)
     timer = force * TIMER_SCALE
-    if timer < 1
-      fadeOut = SKAction.fadeOutWithDuration(timer)
-      remove = SKAction.removeFromParent()
-      seq = SKAction.sequence([fadeOut, remove])
-      if not DEBUG_EXPLOSIONS
-        apply_action_to_toy(toy, seq)
-      end
-
-      return
-    end
+    # if timer < 1
+    #   fadeOut = SKAction.fadeOutWithDuration(timer)
+    #   remove = SKAction.removeFromParent()
+    #   seq = SKAction.sequence([fadeOut, remove])
+    #   if not DEBUG_EXPLOSIONS
+    #     apply_action_to_toy(toy, seq)
+    #   end
+    #
+    #   return
+    # end
 
     force = scale_force_mass(force, toy.physicsBody.mass)
     partsArray.each do |part|

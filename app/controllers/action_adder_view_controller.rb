@@ -6,12 +6,13 @@ class ActionAdderViewController < UIViewController
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise]
-  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy]
+  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder]
   MODES = [:show_actions,:show_properties]
 
   FORCE_SCALE = 250
   EXPLODE_SCALE = 80
   ROTATION_SCALE = 2
+  DELETE_FADE_TIME = 0.7 # seconds
 
 
   attr_writer :state, :scene_creator_view_controller, :play_view_controller
@@ -323,8 +324,8 @@ class ActionAdderViewController < UIViewController
         Language::WHEN_CREATED
       when :loud_noise
         Language::LOUD_NOISE
-      when :score
-        Language::SCORE
+      when :score_reaches
+        Language::SCORE_REACHES
       when :apply_force
         Language::FORCE
       when :apply_torque
@@ -337,6 +338,10 @@ class ActionAdderViewController < UIViewController
         Language::TRANSITION
       when :sound
         Language::SOUND
+      when :delete_effect
+        Language::DELETE
+      when :score_adder
+        Language::SCORE_ADDER
     end
   end
 
@@ -455,9 +460,14 @@ class ActionAdderViewController < UIViewController
       when :score_reaches
         #set action
         @score_reaches = number_str.to_i
+
       when :timer
         #TODO
     end
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
+
     close_popover
   end
 
@@ -528,6 +538,28 @@ class ActionAdderViewController < UIViewController
     toybox_view_controller.delegate = self
     toybox_view_controller.state = @state
     presentViewController(toybox_view_controller, animated: true, completion: nil)
+  end
+
+  def delete_effect
+    action_type, action_param = get_action
+    effect_type = :delete_effect
+    effect_param = DELETE_FADE_TIME
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    @main_view.secondary_selected = nil
+    enable_action_buttons(true)
+    enable_effect_buttons(false)
+    @main_view.setNeedsDisplay
+  end
+
+  def score_adder
+    action_type, action_param = get_action
+    effect_type = :score_adder
+    effect_param = 1
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    @main_view.secondary_selected = nil
+    enable_action_buttons(true)
+    enable_effect_buttons(false)
+    @main_view.setNeedsDisplay
   end
 
 end
