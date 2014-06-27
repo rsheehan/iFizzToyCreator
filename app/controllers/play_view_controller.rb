@@ -152,6 +152,8 @@ class PlayViewController < UIViewController
           end
         when :when_created
           @play_scene.add_create_action(action)
+        when :score_reaches
+          @play_scene.add_score_action(action)
       end
     end
 

@@ -213,7 +213,7 @@ class ActionAdderViewController < UIViewController
       action_param = nil
     elsif @score_reaches
       action_type = :score_reaches
-      action_param = @score_reaches
+      action_param = [@score_reaches]
     else
       action_type = :unknown
       action_param = :unknown
