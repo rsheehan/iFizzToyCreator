@@ -19,6 +19,10 @@ class PlayScene < SKScene
       @create_actions = []
     end
 
+    if not @score_actions
+      @score_actions = []
+    end
+
     unless @content_created
       create_scene_contents
       @content_created = true
@@ -50,7 +54,14 @@ class PlayScene < SKScene
     else
       @create_actions = [action]
     end
+  end
 
+  def add_score_action(action)
+    if @score_actions
+      @score_actions << action
+    else
+      @score_actions = [action]
+    end
   end
 
   # This is called once per frame.
@@ -66,7 +77,7 @@ class PlayScene < SKScene
         next
       end
       #if collision - remove all toys that are same but not collided
-      if action[:action_type] == :collision or action[:action_type] == :when_created
+      if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches
         new_toys = []
         toys.each do |toy|
           if toy.userData[:uniqueID] == action[:action_param][1]
@@ -115,9 +126,16 @@ class PlayScene < SKScene
               end
               toy.userData[:score] += param
               puts "Toy Score: " + toy.userData[:score].to_s
-              if @scores[toy.name]
-                if @scores[toy.name] == toy.userData[:score]
-                  #TODO Call thing which it wants to do which is what?
+              @score_actions.each do |score_action|
+                if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score]
+                  score_action[:action_param] =  [score_action[:action_param][0], toy.userData[:uniqueID]]
+                  if @actions_to_be_fired
+                    @actions_to_be_fired << score_action
+                  else
+                    @actions_to_be_fired = [score_action]
+                  end
+                  puts "score action "+ score_action.to_s
+                  toy.userData[:score] = 0
                 end
               end
             when :create_new_toy # TODO Adjust to angle of toy

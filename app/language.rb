@@ -32,7 +32,7 @@ class Language
   COLLISION     = 'collision'
   REPEAT        = 'timer'     # Repeat?
   HOLD          = 'hold'
-  SCORE         = 'score'
+  SCORE_REACHES = 'when score reaches'
   WHEN_CREATED  = 'when created'
   SHAKE         = 'shake'
   LOUD_NOISE    = 'loud noise'
