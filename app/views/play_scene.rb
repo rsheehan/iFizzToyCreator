@@ -115,8 +115,8 @@ class PlayScene < SKScene
               end
               toy.userData[:score] += param
               puts "Toy Score: " + toy.userData[:score].to_s
-              if @scores[toy.userData[:id]]
-                if @scores[toy.userData[:id]] == toy.userData[:score]
+              if @scores[toy.name]
+                if @scores[toy.name] == toy.userData[:score]
                   #TODO Call thing which it wants to do which is what?
                 end
               end
