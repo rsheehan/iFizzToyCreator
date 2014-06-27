@@ -23,6 +23,11 @@ module CreatorViewControllerModule
     @main_view.reset_undo
   end
 
+  def viewDidDisappear(animated)
+    super
+    @state.save
+  end
+
   def setup_label(name)
     view_label = UILabel.alloc.initWithFrame([[0, 0], [@main_view.bounds.size.width, 20]])
     view_label.textColor = UIColor.whiteColor

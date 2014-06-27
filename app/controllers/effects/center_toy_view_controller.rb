@@ -13,8 +13,8 @@ class CenterToyViewController < UIViewController
     center_diff = center - toy_center
     #@selected.change_position(true_center)
     @diff = center_diff - @toy_origin
-    duration = 0.5
-    @delay = 0.01
+    duration = 0.8
+    @delay = 0.2
     lowerAlpha = 0.3
     #transform = CGAffineTransformMakeTranslation(diff.x, diff.y)
     #puts "Diff , X: " + transform.tx.to_s + ", Y: " + transform.ty.to_s

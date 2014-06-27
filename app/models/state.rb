@@ -31,7 +31,7 @@ class State
       @toys[replaced] = toy
     end
 
-    save
+    #save
   end
 
   # Adds a scene and saves the updated state.
@@ -51,7 +51,7 @@ class State
       @currentscene = replaced
     end
 
-    save
+    #save
   end
 
   def save
