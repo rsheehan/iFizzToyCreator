@@ -32,7 +32,7 @@ class Language
   COLLISION     = 'collision'
   REPEAT        = 'timer'     # Repeat?
   HOLD          = 'hold'
-  SCORE         = 'score'
+  SCORE_REACHES = 'when score reaches'
   WHEN_CREATED  = 'when created'
   SHAKE         = 'shake'
   LOUD_NOISE    = 'loud noise'
@@ -44,6 +44,7 @@ class Language
   CREATE_NEW_TOY= 'create'
   TRANSITION    = 'transition'
   SOUND         = 'sound'
+  INCREASE_SCORE= 'increase score'
 
   # Commands
   CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'

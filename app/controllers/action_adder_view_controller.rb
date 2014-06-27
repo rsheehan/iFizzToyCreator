@@ -211,12 +211,17 @@ class ActionAdderViewController < UIViewController
       action_type = :shake
       action_param = nil
     elsif @score_reaches
-      #TODO when implementing score
+      action_type = :score_reaches
+      action_param = @score_reaches
     else
       action_type = :unknown
       action_param = :unknown
     end
-    # reset action params
+    reset_action_params
+    return action_type, action_param
+  end
+
+  def reset_action_params
     @action_button_name = nil
     @repeat_time_mins = nil
     @colliding_toy = nil
@@ -224,7 +229,6 @@ class ActionAdderViewController < UIViewController
     @when_created = nil
     @shake = nil
     @score_reaches = nil
-    return action_type, action_param
   end
 
   # Gets the force information for the actions effect.
@@ -373,9 +377,7 @@ class ActionAdderViewController < UIViewController
 
   # Adding a touch event.
   def touch
-    @action_button_name = nil
-    @repeat_time_mins = nil
-    @colliding_toy = nil
+    reset_action_params
     touch_action_view_controller = TouchActionViewController.alloc.initWithNibName(nil, bundle: nil)
     touch_action_view_controller.bounds_for_view = @bounds
     touch_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -386,9 +388,7 @@ class ActionAdderViewController < UIViewController
 
   # Adding a repeat event.
   def timer
-    @action_button_name = nil
-    @repeat_time_mins = nil
-    @colliding_toy = nil
+    reset_action_params
     #disable buttons when showing modal screen
     enable_show_mode_buttons(false)
 
@@ -402,9 +402,7 @@ class ActionAdderViewController < UIViewController
 
   #adding a collision event
   def collision
-    @action_button_name = nil
-    @repeat_time_mins = nil
-    @colliding_toy = nil
+    reset_action_params
     #disable buttons when showing modal screen
     enable_show_mode_buttons(false)
 
@@ -418,6 +416,7 @@ class ActionAdderViewController < UIViewController
   end
 
   def shake
+    reset_action_params
     #store shake and switch to effect
     @shake = true
     enable_action_buttons(false)
@@ -426,13 +425,44 @@ class ActionAdderViewController < UIViewController
   end
 
   def score_reaches
+    reset_action_params
     #TODO make user select score global or local
     #ask which value it reaches - popup
     #then move on to effect
+    @popover_type = :score_reaches
+    content = NumericInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.setTitle('Enter the score that will trigger the event')
+    content.delegate = self
+    @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    @popover.delegate = self
+    @popover.presentPopoverFromRect(@action_buttons[:score_reaches].frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+  end
 
+  def popoverControllerShouldDismissPopover(popoverController)
+    if popoverController.contentViewController.is_a?(NumericInputPopOverViewController)
+      return false
+    end
+    true
+  end
+
+  def close_popover
+    @popover_type = nil
+    @popover.dismissPopoverAnimated(true)
+  end
+
+  def submit_number(number_str)
+    case @popover_type
+      when :score_reaches
+        #set action
+        @score_reaches = number_str.to_i
+      when :timer
+        #TODO
+    end
+    close_popover
   end
 
   def when_created
+    reset_action_params
     #include start?
     #move straight to effect as have already selected toy
     @when_created = true
@@ -442,6 +472,7 @@ class ActionAdderViewController < UIViewController
   end
 
   def loud_noise
+    reset_action_params
     #store loud noise and switch to effect
     @loud_noise = true
     enable_action_buttons(false)
