@@ -68,38 +68,41 @@ class PlayScene < SKScene
   # Most screen logic goes here.
   def update(current_time)
     @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
-
       toyArray.each do |toy|
         # go through toys and flip if traveling in opposite direction to front??
-        if toy.userData[:front] and toy.physicsBody != nil
-          vel = toy.physicsBody.velocity
-          puts "velocity = %f, %f" % [vel.dx, vel.dy]
-          case toy.userData[:front]
-            when Constants::Front::Right
-              if vel.dx > 0.5
-                toy.xScale = 1.0
-                puts 'scale = -1'
-              elsif vel.dx < -0.5
-                toy.xScale = -1.0;
-              end
-            when Constants::Front::Left
-              if vel.dx > 0.5
-                toy.xScale = -1.0
-              elsif vel.dx < -0.5
-                toy.xScale = 1.0
-              end
-            when Constants::Front::Up
-              if vel.dy > 0
-                toy.xScale = -1.0
-              else
-                toy.xScale = 1.0
-              end
-            when Constants::Front::Bottom
-              if vel.dy > 0
-                toy.xScale = 1.0
-              else
-                toy.xScale = -1.0
-              end
+        if toy.userData != nil and toy.userData[:uniqueID] != -1
+          # puts "toy name = " + toy.name
+          # puts "physicsBody = " + toy.physicsBody.to_s
+          # puts "user data = " + toy.userData.to_s
+          if toy.userData[:front] and toy.physicsBody != nil
+            vel = toy.physicsBody.velocity
+            case toy.userData[:front]
+              when Constants::Front::Right
+                if vel.dx > 0.5
+                  toy.xScale = 1.0
+                  puts 'scale = -1'
+                elsif vel.dx < -0.5
+                  toy.xScale = -1.0;
+                end
+              when Constants::Front::Left
+                if vel.dx > 0.5
+                  toy.xScale = -1.0
+                elsif vel.dx < -0.5
+                  toy.xScale = 1.0
+                end
+              when Constants::Front::Up
+                if vel.dy > 0
+                  toy.xScale = -1.0
+                else
+                  toy.xScale = 1.0
+                end
+              when Constants::Front::Bottom
+                if vel.dy > 0
+                  toy.xScale = 1.0
+                else
+                  toy.xScale = -1.0
+                end
+            end
           end
         end
       end
@@ -108,7 +111,6 @@ class PlayScene < SKScene
     if @check
       puts @toy_hash[@check].last.physicsBody.to_s
     end
-
     @actions_to_fire.each do |action|
       toy_id = action[:toy]
       toys = @toy_hash[toy_id] # all toys of the correct type
@@ -125,7 +127,6 @@ class PlayScene < SKScene
         end
         toys = new_toys
       end
-
       toys.delete_if do |toy| # toys here are SKSpriteNodes
         if toy.userData[:uniqueID] == -1
           delete = true
@@ -134,7 +135,6 @@ class PlayScene < SKScene
           param = action[:effect_param]
           delete = false
           send = false
-
           case effect
             when :apply_force
               # make force relative to the toy
@@ -449,6 +449,7 @@ class PlayScene < SKScene
     @edges.each do |edge|
       case edge
         when CirclePart
+          puts "PlayScene - don't add circles yet"
           body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
           body.dynamic = false
           body.contactTestBitMask = 1
@@ -548,7 +549,6 @@ class PlayScene < SKScene
     if toy_in_scene.template.always_travels_forward
       toy.userData[:front] = toy_in_scene.template.front
     end
-
     addChild(toy)
     # physics body stuff
     physics_points = ToyPhysicsBody.new(toy_in_scene.template.parts).convex_hull_for_physics(toy_in_scene.zoom)
@@ -692,7 +692,7 @@ class PlayScene < SKScene
     #check each collision action - if  the 2 colliding toys have the corresponding identifiers to a collision action, add it
     if @collision_actions
       @collision_actions.each do |action|
-        if contact.bodyA.node.userData[:uniqueID] == contact.bodyB.node.userData[:uniqueID]
+        if contact.bodyA.node.userData == contact.bodyB.node.userData
           next
         end
         if contact.bodyA.node.name == action[:toy]
