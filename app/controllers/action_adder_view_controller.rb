@@ -6,7 +6,7 @@ class ActionAdderViewController < UIViewController
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise]
-  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect]
+  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder]
   MODES = [:show_actions,:show_properties]
 
   FORCE_SCALE = 250
@@ -336,6 +336,8 @@ class ActionAdderViewController < UIViewController
         Language::SOUND
       when :delete_effect
         Language::DELETE
+      when :score_adder
+        Language::SCORE_ADDER
     end
   end
 
@@ -506,6 +508,17 @@ class ActionAdderViewController < UIViewController
     action_type, action_param = get_action
     effect_type = :delete_effect
     effect_param = DELETE_FADE_TIME
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    @main_view.secondary_selected = nil
+    enable_action_buttons(true)
+    enable_effect_buttons(false)
+    @main_view.setNeedsDisplay
+  end
+
+  def score_adder
+    action_type, action_param = get_action
+    effect_type = :score_adder
+    effect_param = 1
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     @main_view.secondary_selected = nil
     enable_action_buttons(true)

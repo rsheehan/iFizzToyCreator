@@ -7,9 +7,11 @@ class PlayScene < SKScene
   attr_accessor :edges # ToyParts - either CirclePart or PointsPart
   attr_reader :loaded_toys # ToyInScene not put into play straight away
   attr_reader :mutex
+  attr_writer :scores
 
   TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
+  MAX_CREATES = 10
 
   def didMoveToView(view)
     @actions_to_fire = []
@@ -32,6 +34,7 @@ class PlayScene < SKScene
     self.physicsWorld.contactDelegate = self
     @paused = true
     @mutex = Mutex.new
+    @scores = {}
     add_edges
     add_toys
   end
@@ -106,23 +109,35 @@ class PlayScene < SKScene
               sequence = SKAction.sequence([fadeOut, remove])
               toy.runAction(sequence)
               delete = true
+            when :score_adder
+              if not toy.userData[:score]
+                toy.userData[:score] = 0
+              end
+              toy.userData[:score] += param
+              puts "Toy Score: " + toy.userData[:score].to_s
+              if @scores[toy.userData[:id]]
+                if @scores[toy.userData[:id]] == toy.userData[:score]
+                  #TODO Call thing which it wants to do which is what?
+                end
+              end
             when :create_new_toy # TODO Adjust to angle of toy
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
               new_toy = new_toy(toy_in_scene)
+              #puts rotation
               #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
               #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
-              displacement = CGPointApplyAffineTransform(toy_in_scene.position, rotation)
+              #displacement = CGPointApplyAffineTransform(toy_in_scene.position, rotation)
               puts "Spawner Pos, X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
               puts "OriginalDisp, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
-              puts "Displacement, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
-              new_toy.position = toy.position + displacement
-              puts "NewToyDisp, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
-              puts "Old Rotation: " + new_toy.zRotation.to_s
-              puts "Spawner Rotation: " + toy.zRotation.to_s
-              new_zRotation = (new_toy.zRotation + toy.zRotation)
+              #puts "Displacement, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
+              new_toy.position = toy.position + toy_in_scene.position #displacement
+              # puts "NewToyDisp, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+              # puts "Old Rotation: " + new_toy.zRotation.to_s
+              # puts "Spawner Rotation: " + toy.zRotation.to_s
+              # new_zRotation = (new_toy.zRotation + toy.zRotation)
 
-              new_toy.zRotation = new_zRotation
+              #new_toy.zRotation = new_zRotation
               puts "New Rotation: " + new_toy.zRotation.to_s
               #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
               new_toy.userData[:id] = rand(2**60).to_s
@@ -143,6 +158,13 @@ class PlayScene < SKScene
                 end
               end
               @toy_hash[action[:effect_param][:id]] << new_toy
+              while @toy_hash[action[:effect_param][:id]].length > MAX_CREATES
+                to_remove = @toy_hash[action[:effect_param][:id]].shift
+                fadeOut = SKAction.fadeOutWithDuration(0.7)
+                remove = SKAction.removeFromParent()
+                sequence = SKAction.sequence([fadeOut, remove])
+                to_remove.runAction(sequence)
+              end
           end
           if send
             param = scale_force_mass(param, toy.physicsBody.mass)
