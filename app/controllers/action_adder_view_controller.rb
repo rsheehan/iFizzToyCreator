@@ -302,7 +302,7 @@ class ActionAdderViewController < UIViewController
   # Called when the view disappears.
   def viewWillDisappear(animated)
     super
-    @state.save
+    #@state.save
     # collect the scene information to pass on to the play view controller
     #@state.scenes = [@main_view.gather_scene_info] # only one scene while developing
     #@play_view_controller.update_play_scene
