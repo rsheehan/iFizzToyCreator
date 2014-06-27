@@ -2,7 +2,7 @@ class SceneCreatorViewController < UIViewController
 
   include CreatorViewControllerModule
 
-  MODES = [:scene, :toy, :save_scene, :new]
+  MODES = [:scene, :toy, :new]
 
   attr_writer :toybox, :play_view_controller
   attr_reader :main_view
@@ -49,6 +49,7 @@ class SceneCreatorViewController < UIViewController
 
   # Show the scene box.
   def scene
+    save_scene
     puts "Show the scene box"
     scenebox_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
     scenebox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -78,6 +79,10 @@ class SceneCreatorViewController < UIViewController
   def drop_toy(toy_index)
     # get the toy
     @main_view.add_toy(ToyInScene.new(@state.toys[toy_index]))
+    #add toy's actions to scene
+    @state.toys[toy_index].actions.each do |action|
+      @main_view.add_action(action)
+    end
     close_toybox
     grab
   end
@@ -99,6 +104,10 @@ class SceneCreatorViewController < UIViewController
     end
     scene.toys.each do |toy|
       @main_view.add_toy(toy)
+      #add toy's actions to scene
+      toy.template.actions.each do |action|
+        @main_view.add_action(action)
+      end
     end
     #update id
     @id = scene.identifier

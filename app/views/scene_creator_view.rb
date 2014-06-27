@@ -9,6 +9,7 @@ class SceneCreatorView < CreatorView
 # @selected is a stroke/toy which was touched and is now hilighted
   attr_writer :selected, :secondary_selected, :show_action_controller
   attr_reader :actions
+  attr_accessor :alpha_view
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
 
@@ -25,6 +26,7 @@ class SceneCreatorView < CreatorView
     pinch_recognizer = UIPinchGestureRecognizer.alloc.initWithTarget(self, action: 'zoom_selected:')
     pinch_recognizer.delegate = self
     addGestureRecognizer(pinch_recognizer)
+    @alpha_view = 1.0
     self
   end
 
@@ -80,7 +82,9 @@ class SceneCreatorView < CreatorView
 
   # Add an action to this scene.
   def add_action(action)
-    @actions << action
+    if !@actions.include?(action)
+      @actions << action
+    end
   end
 
   # Similar to gathering the toy info in ToyCreatorView but the scale is 1.
@@ -336,6 +340,9 @@ class SceneCreatorView < CreatorView
   # Called when the touch ends for a force drag.
   def touch_end_force
     vector = @current_point - @selected.position
+    radians = @selected.angle * Math::PI / 180
+    ratio = Math.cos(radians)
+    vector = vector * ratio
     vector.y = -vector.y  # convert to SpriteKit coordinates
     @delegate.force = vector
     @delegate.close_modal_view
@@ -536,19 +543,28 @@ class SceneCreatorView < CreatorView
   def drawRect(rect)
     #super
     context = UIGraphicsGetCurrentContext()
+    if @alpha_view
+      #puts "Alpha: " + @alpha_view.to_s
+      CGContextSetAlpha(context, @alpha_view)
+    end
     # now draw the added toys
+    CGContextBeginTransparencyLayer(context, nil)
     @toys_in_scene.each { |toy| toy.draw(context) if toy != @selected }
     @strokes.each { |stroke| stroke.draw(context) if stroke != @selected }
-    if @selected
-      CGContextBeginTransparencyLayer(context, nil)
-      setup_context(context, true)
-      @selected.draw(context)
-      CGContextEndTransparencyLayer(context)
+    CGContextEndTransparencyLayer(context)
+    if @alpha_view
+      CGContextSetAlpha(context, 1.0)
     end
     if @secondary_selected
       CGContextBeginTransparencyLayer(context, nil)
       setup_context(context, true)
       @secondary_selected.draw(context)
+      CGContextEndTransparencyLayer(context)
+    end
+    if @selected
+      CGContextBeginTransparencyLayer(context, nil)
+      setup_context(context, true)
+      @selected.draw(context)
       CGContextEndTransparencyLayer(context)
     end
     if @points

@@ -58,6 +58,7 @@ class ActionListViewController < UIViewController
     # Back to the Select toy screen.
     def back
       self.view.window.removeGestureRecognizer(@recognizer)
+      @state.save
       @delegate.close_modal_view(true)
     end
 
@@ -87,7 +88,12 @@ class ActionListViewController < UIViewController
       tv.deleteRowsAtIndexPaths([index_path], withRowAnimation: UITableViewRowAnimationAutomatic)
       #delete action
       item = index_path.row
+      #remove from scene
       @state.scenes[@state.currentscene].actions.delete_if { |action|
+        action == @toy_actions.at(item)
+      }
+      #remove from toy
+      @selected.template.actions.delete_if { |action|
         action == @toy_actions.at(item)
       }
       @toy_actions.delete_at(item)
@@ -173,6 +179,7 @@ class ActionListViewController < UIViewController
         if (!self.view.pointInside(self.view.convertPoint(location, fromView:self.view.window), withEvent:nil))
           # Remove the recognizer first so it's view.window is valid.
           self.view.window.removeGestureRecognizer(sender)
+          @state.save
           self.dismissModalViewControllerAnimated(true)
         end
       end

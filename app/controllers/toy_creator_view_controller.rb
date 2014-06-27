@@ -2,7 +2,7 @@ class ToyCreatorViewController < UIViewController
 
   include CreatorViewControllerModule
 
-  MODES = [:toy, :save_toy, :new]
+  MODES = [:toy, :new]
 
   
   def loadView # preferable to viewDidLoad because not using xib
@@ -31,6 +31,7 @@ class ToyCreatorViewController < UIViewController
   end
 
   def new
+    save_toy
     start_new_toy
   end
 
@@ -41,6 +42,7 @@ class ToyCreatorViewController < UIViewController
 
   # Show the toy box.
   def toy
+    save_toy
     toybox_view_controller = ToyBoxViewController.alloc.initWithNibName(nil, bundle: nil)
     toybox_view_controller.state = @state
 
@@ -77,6 +79,11 @@ class ToyCreatorViewController < UIViewController
     dismissModalViewControllerAnimated(true, completion: nil)
   end
 
+  def viewWillDisappear(animated)
+    super
+    save_toy
+  end
+
   def save_toy
     toy_parts = @main_view.gather_toy_info
 
@@ -87,10 +94,7 @@ class ToyCreatorViewController < UIViewController
   end
 
   def clear
-    #@main_view.setup_for_new
-    @id = rand(2**60).to_s
     @main_view.clear
-
   end
 
 end

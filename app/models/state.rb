@@ -180,6 +180,24 @@ class State
     toy.front = (json_toy[:front] == nil) ? Constants::Front::Right : json_toy[:front]
     toy.always_travels_forward = (json_toy[:always_travels_forward] == nil) ? false : json_toy[:always_travels_forward]
 
+    actions = []
+    if json_toy[:actions] != nil
+      json_toy[:actions].each do |json_action|
+        hash = {}.addEntriesFromDictionary(json_action)
+        hash = hash.each_with_object({}){|(k,v), h| if (k == "action_type" or k == "effect_type")
+                                                          h[k.to_sym] = v.to_sym
+                                                        else
+                                                          h[k.to_sym] = v
+                                                        end }
+        if hash[:effect_type] == :apply_force
+          arrayPt = hash[:effect_param]
+          hash[:effect_param] = CGPointMake(arrayPt[0], arrayPt[1])
+        end
+        actions << hash
+      end
+    end
+    toy.actions = actions
+
     toy
   end
 

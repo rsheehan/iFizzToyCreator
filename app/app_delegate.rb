@@ -3,7 +3,7 @@ class AppDelegate
   TAB_HEIGHT = 56 # this was the returned tab bar height
 
   def application(application, didFinishLaunchingWithOptions: launchOptions)
-    application.applicationSupportsShakeToEdit = false
+    application.applicationSupportsShakeToEdit = true
 
     @window = UIWindow.alloc.initWithFrame(UIScreen.mainScreen.bounds)
     @window.makeKeyAndVisible # do this early otherwise some of the dimensions are wrong

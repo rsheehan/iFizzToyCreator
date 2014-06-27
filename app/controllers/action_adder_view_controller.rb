@@ -5,13 +5,14 @@ class ActionAdderViewController < UIViewController
   # Actions are hashes with the following keys.
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
-  ACTIONS = [:touch, :timer, :collision]
-  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy]
+  ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise]
+  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder]
   MODES = [:show_actions,:show_properties]
 
   FORCE_SCALE = 250
   EXPLODE_SCALE = 80
   ROTATION_SCALE = 2
+  DELETE_FADE_TIME = 0.7 # seconds
 
 
   attr_writer :state, :scene_creator_view_controller, :play_view_controller
@@ -201,15 +202,34 @@ class ActionAdderViewController < UIViewController
     elsif @colliding_toy
       action_type = :collision
       action_param = @colliding_toy.template.identifier
+    elsif @loud_noise
+      action_type = :loud_noise
+      action_param = nil
+    elsif @when_created
+      action_type = :when_created
+      action_param = nil
+    elsif @shake
+      action_type = :shake
+      action_param = nil
+    elsif @score_reaches
+      action_type = :score_reaches
+      action_param = [@score_reaches]
     else
       action_type = :unknown
       action_param = :unknown
     end
-    # reset action params
+    reset_action_params
+    return action_type, action_param
+  end
+
+  def reset_action_params
     @action_button_name = nil
     @repeat_time_mins = nil
     @colliding_toy = nil
-    return action_type, action_param
+    @loud_noise = nil
+    @when_created = nil
+    @shake = nil
+    @score_reaches = nil
   end
 
   # Gets the force information for the actions effect.
@@ -259,6 +279,9 @@ class ActionAdderViewController < UIViewController
     action = {toy: toy.template.identifier, action_type: action_type, action_param: action_param,
               effect_type: effect_type, effect_param: effect_param}
     @scene_creator_view_controller.main_view.add_action(action)
+    toy.template.actions << action
+    #save actions
+    @state.save
   end
 
   # Called when undo state might change.
@@ -279,6 +302,7 @@ class ActionAdderViewController < UIViewController
   # Called when the view disappears.
   def viewWillDisappear(animated)
     super
+    @state.save
     # collect the scene information to pass on to the play view controller
     #@state.scenes = [@main_view.gather_scene_info] # only one scene while developing
     #@play_view_controller.update_play_scene
@@ -294,8 +318,14 @@ class ActionAdderViewController < UIViewController
         Language::REPEAT
       when :hold
         Language::HOLD
-      when :score
-        Language::SCORE
+      when :shake
+        Language::SHAKE
+      when :when_created
+        Language::WHEN_CREATED
+      when :loud_noise
+        Language::LOUD_NOISE
+      when :score_reaches
+        Language::SCORE_REACHES
       when :apply_force
         Language::FORCE
       when :apply_torque
@@ -308,6 +338,10 @@ class ActionAdderViewController < UIViewController
         Language::TRANSITION
       when :sound
         Language::SOUND
+      when :delete_effect
+        Language::DELETE
+      when :score_adder
+        Language::SCORE_ADDER
     end
   end
 
@@ -348,9 +382,7 @@ class ActionAdderViewController < UIViewController
 
   # Adding a touch event.
   def touch
-    @action_button_name = nil
-    @repeat_time_mins = nil
-    @colliding_toy = nil
+    reset_action_params
     touch_action_view_controller = TouchActionViewController.alloc.initWithNibName(nil, bundle: nil)
     touch_action_view_controller.bounds_for_view = @bounds
     touch_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -361,9 +393,7 @@ class ActionAdderViewController < UIViewController
 
   # Adding a repeat event.
   def timer
-    @action_button_name = nil
-    @repeat_time_mins = nil
-    @colliding_toy = nil
+    reset_action_params
     #disable buttons when showing modal screen
     enable_show_mode_buttons(false)
 
@@ -377,9 +407,7 @@ class ActionAdderViewController < UIViewController
 
   #adding a collision event
   def collision
-    @action_button_name = nil
-    @repeat_time_mins = nil
-    @colliding_toy = nil
+    reset_action_params
     #disable buttons when showing modal screen
     enable_show_mode_buttons(false)
 
@@ -390,6 +418,76 @@ class ActionAdderViewController < UIViewController
     collision_action_view_controller.other_toy = @selected_toy
     collision_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
     presentViewController(collision_action_view_controller, animated: false, completion: nil)
+  end
+
+  def shake
+    reset_action_params
+    #store shake and switch to effect
+    @shake = true
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
+  end
+
+  def score_reaches
+    reset_action_params
+    #TODO make user select score global or local
+    #ask which value it reaches - popup
+    #then move on to effect
+    @popover_type = :score_reaches
+    content = NumericInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.setTitle('Enter the score that will trigger the event')
+    content.delegate = self
+    @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    @popover.delegate = self
+    @popover.presentPopoverFromRect(@action_buttons[:score_reaches].frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+  end
+
+  def popoverControllerShouldDismissPopover(popoverController)
+    if popoverController.contentViewController.is_a?(NumericInputPopOverViewController)
+      return false
+    end
+    true
+  end
+
+  def close_popover
+    @popover_type = nil
+    @popover.dismissPopoverAnimated(true)
+  end
+
+  def submit_number(number_str)
+    case @popover_type
+      when :score_reaches
+        #set action
+        @score_reaches = number_str.to_i
+
+      when :timer
+        #TODO
+    end
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
+
+    close_popover
+  end
+
+  def when_created
+    reset_action_params
+    #include start?
+    #move straight to effect as have already selected toy
+    @when_created = true
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
+  end
+
+  def loud_noise
+    reset_action_params
+    #store loud noise and switch to effect
+    @loud_noise = true
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
   end
 
   #======================
@@ -440,6 +538,28 @@ class ActionAdderViewController < UIViewController
     toybox_view_controller.delegate = self
     toybox_view_controller.state = @state
     presentViewController(toybox_view_controller, animated: true, completion: nil)
+  end
+
+  def delete_effect
+    action_type, action_param = get_action
+    effect_type = :delete_effect
+    effect_param = DELETE_FADE_TIME
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    @main_view.secondary_selected = nil
+    enable_action_buttons(true)
+    enable_effect_buttons(false)
+    @main_view.setNeedsDisplay
+  end
+
+  def score_adder
+    action_type, action_param = get_action
+    effect_type = :score_adder
+    effect_param = 1
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    @main_view.secondary_selected = nil
+    enable_action_buttons(true)
+    enable_effect_buttons(false)
+    @main_view.setNeedsDisplay
   end
 
 end
