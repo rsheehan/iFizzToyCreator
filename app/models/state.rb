@@ -178,7 +178,7 @@ class State
     toy.stuck = (json_toy[:stuck] == nil) ? false : json_toy[:stuck]
     toy.can_rotate = (json_toy[:can_rotate] == nil) ? true : json_toy[:can_rotate]
     toy.front = (json_toy[:front] == nil) ? Constants::Front::Right : json_toy[:front]
-    toy.always_travels_forward = (json_toy[:always_travels_forward] == nil) ? true : json_toy[:always_travels_forward]
+    toy.always_travels_forward = (json_toy[:always_travels_forward] == nil) ? false : json_toy[:always_travels_forward]
 
     toy
   end
