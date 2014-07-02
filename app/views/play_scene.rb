@@ -95,7 +95,6 @@ class PlayScene < SKScene
   # This is called once per frame.
   # Most screen logic goes here.
   def update(current_time)
-
     @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
       toyArray.each do |toy|
         # go through toys and flip if traveling in opposite direction to front??
@@ -307,7 +306,7 @@ class PlayScene < SKScene
       displacement = new_toy.centre_parts
       if displacement.x == 0
         displacement = CGPointMake(1, displacement.y)
-        end
+      end
       if displacement.y == 0
         displacement = CGPointMake(displacement.x, 1)
       end
@@ -573,17 +572,20 @@ class PlayScene < SKScene
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)
     toy.zRotation = -toy_in_scene.angle
-    toy.userData = {uniqueID: toy_in_scene.uid}
+    toy.userData = {score: 0, uniqueID: toy_in_scene.uid} #add unique id to allow for single collision
+    if toy_in_scene.template.always_travels_forward
+      toy.userData[:front] = toy_in_scene.template.front
+    end
     addChild(toy)
     # physics body stuff
     physics_points = ToyPhysicsBody.new(toy_in_scene.template.parts).convex_hull_for_physics(toy_in_scene.zoom)
     if physics_points.length == 0
       toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
     else
-    path = CGPathCreateMutable()
-    CGPathMoveToPoint(path, nil, *physics_points[0])
-    physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
-    toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+      path = CGPathCreateMutable()
+      CGPathMoveToPoint(path, nil, *physics_points[0])
+      physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
+      toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
     end
     toy.physicsBody.contactTestBitMask = 1
 

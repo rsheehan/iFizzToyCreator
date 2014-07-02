@@ -6,7 +6,8 @@ class ToyTemplate
   ACCURACY = 100.0   # the rounding factor for the data
 
   attr_reader :image, :parts, :identifier
-  attr_accessor :stuck, :can_rotate, :actions
+  attr_accessor :stuck, :can_rotate, :front, :always_travels_forward, :actions
+
 
   def initialize(parts, identifier) #, image)
     @identifier = identifier
@@ -15,6 +16,8 @@ class ToyTemplate
 
     @stuck = false
     @can_rotate = true
+    @front = Constants::Front::Right
+    @always_travels_forward = false
     @actions = []
     #ToyPhysicsBody.new(self) <--
 
@@ -34,6 +37,9 @@ class ToyTemplate
     #properties
     json_toy[:can_rotate] = @can_rotate
     json_toy[:stuck] = @stuck
+    json_toy[:front] = @front
+    json_toy[:always_travels_forward] = @always_travels_forward
+
     #parts
     json_parts = []
     @parts.each do |part|

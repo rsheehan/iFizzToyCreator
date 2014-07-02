@@ -2,7 +2,7 @@ class PropertyListViewController < UIViewController
 
   attr_writer :delegate, :selected, :scene_creator_view_controller
 
-  PROPERTIES = {Can_Rotate: 'boolean', Stuck: 'boolean'}
+  PROPERTIES = {Can_Rotate: 'boolean', Stuck: 'boolean', Always_Travels_Forward:'boolean', Front: 'other'}
 
   LITTLE_GAP = 10
   BIG_GAP = 40
@@ -101,15 +101,44 @@ class PropertyListViewController < UIViewController
             switch.on = @selected.template.stuck
             @stuck_switch = switch
             @stuck_switch.addTarget(self,action:'stuck_switch_changed', forControlEvents:UIControlEventValueChanged)
+          when :Always_Travels_Forward
+            cell.text = 'Always travels forward'
+            switch.on = @selected.template.always_travels_forward
+            @travel_switch = switch
+            @travel_switch.addTarget(self,action:'travel_switch_changed', forControlEvents:UIControlEventValueChanged)
 
+        end
+      when 'other'
+        case name
+          when :Front
+            #show 4 way switch for direction
+            cell.text = 'Front Direction'
+            cell.accessoryView = frontDirectionControl
         end
     end
 
     cell
   end
 
+  def frontDirectionControl
+      @frontDirectionControl = UISegmentedControl.alloc.initWithFrame( CGRectZero)
+      @frontDirectionControl.segmentedControlStyle = UISegmentedControlStyleBar
+      @frontDirectionControl.insertSegmentWithTitle('Left', atIndex: 0, animated: false)
+      @frontDirectionControl.insertSegmentWithTitle('Up', atIndex: 1, animated: false)
+      @frontDirectionControl.insertSegmentWithTitle('Right', atIndex: 2, animated: false)
+      @frontDirectionControl.insertSegmentWithTitle('Down', atIndex: 3, animated: false)
+      @frontDirectionControl.sizeToFit
+      @frontDirectionControl.selectedSegmentIndex = @selected.template.front
+      @frontDirectionControl.addTarget(self, action: 'front_direction_changed', forControlEvents: UIControlEventValueChanged)
+      @frontDirectionControl
+  end
+
   def tableView(tableView, titleForHeaderInSection:section)
     return "Properties"
+  end
+
+  def front_direction_changed
+    @selected.template.front = @frontDirectionControl.selectedSegmentIndex
   end
 
   def stuck_switch_changed
@@ -119,6 +148,10 @@ class PropertyListViewController < UIViewController
 
   def rotate_switch_changed
     @selected.template.can_rotate = @rotate_switch.on?
+  end
+
+  def travel_switch_changed
+    @selected.template.always_travels_forward = @travel_switch.on?
   end
 
   def handleTapOutside(sender)
