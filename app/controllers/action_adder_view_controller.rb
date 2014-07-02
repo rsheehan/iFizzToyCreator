@@ -163,10 +163,9 @@ class ActionAdderViewController < UIViewController
   end
 
   # sets the time information for the repeat action.
-  def repeat_time(minutes, seconds)
-    @repeat_time_mins = minutes
+  def repeat_time(seconds)
     @repeat_time_secs = seconds
-    puts('Time SET',minutes,seconds)
+    puts('Time SET',seconds)
   end
 
   def close_touch_view_controller
@@ -196,9 +195,9 @@ class ActionAdderViewController < UIViewController
     if @action_button_name
       action_type = :button
       action_param = @action_button_name
-    elsif @repeat_time_mins
+    elsif @repeat_time_secs
       action_type = :timer
-      action_param = [@repeat_time_mins,@repeat_time_secs]
+      action_param = [@repeat_time_secs]
     elsif @colliding_toy
       action_type = :collision
       action_param = @colliding_toy.template.identifier
@@ -224,7 +223,7 @@ class ActionAdderViewController < UIViewController
 
   def reset_action_params
     @action_button_name = nil
-    @repeat_time_mins = nil
+    @repeat_time_secs = nil
     @colliding_toy = nil
     @loud_noise = nil
     @when_created = nil
@@ -471,7 +470,7 @@ class ActionAdderViewController < UIViewController
         @score_reaches = number_str.to_i
 
       when :timer
-        repeat_time(number_str[0],number_str[1])
+        repeat_time(number_str)
     end
     enable_action_buttons(false)
     enable_show_mode_buttons(false)
