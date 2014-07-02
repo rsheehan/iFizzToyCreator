@@ -23,6 +23,10 @@ class PlayScene < SKScene
       @score_actions = []
     end
 
+    if not @toy_touch_actions
+      @toy_touch_actions = []
+    end
+
     unless @content_created
       create_scene_contents
       @content_created = true
@@ -64,10 +68,33 @@ class PlayScene < SKScene
     end
   end
 
+  def add_toy_touch_action(action)
+    if @toy_touch_actions
+      @toy_touch_actions << action
+    else
+      @toy_touch_actions = [action]
+    end
+  end
+
+  def touchesBegan(touches, withEvent:event)
+    touch = touches.anyObject
+    location = touch.locationInNode(self)
+    node = self.nodeAtPoint(location)
+
+    @toy_touch_actions.each do |touch_action|
+      #if touched toy with touch action - trigger action
+      if (node.name == touch_action[:toy])
+          #trigger action on this node
+          new_action = touch_action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [nil,node.userData[:uniqueID]]; h }
+          add_actions_for_update([new_action])
+      end
+    end
+
+  end
+
   # This is called once per frame.
   # Most screen logic goes here.
   def update(current_time)
-
     @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
       toyArray.each do |toy|
         # go through toys and flip if traveling in opposite direction to front??
@@ -118,7 +145,7 @@ class PlayScene < SKScene
         next
       end
       #if collision - remove all toys that are same but not collided
-      if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches
+      if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches or action[:action_type] == :toy_touch
         new_toys = []
         toys.each do |toy|
           if toy.userData[:uniqueID] == action[:action_param][1]
@@ -269,7 +296,7 @@ class PlayScene < SKScene
       displacement = new_toy.centre_parts
       if displacement.x == 0
         displacement = CGPointMake(1, displacement.y)
-        end
+      end
       if displacement.y == 0
         displacement = CGPointMake(displacement.x, 1)
       end
@@ -467,17 +494,20 @@ class PlayScene < SKScene
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)
     toy.zRotation = -toy_in_scene.angle
-    toy.userData = {uniqueID: toy_in_scene.uid}
+    toy.userData = {score: 0, uniqueID: toy_in_scene.uid} #add unique id to allow for single collision
+    if toy_in_scene.template.always_travels_forward
+      toy.userData[:front] = toy_in_scene.template.front
+    end
     addChild(toy)
     # physics body stuff
     physics_points = ToyPhysicsBody.new(toy_in_scene.template.parts).convex_hull_for_physics(toy_in_scene.zoom)
     if physics_points.length == 0
       toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
     else
-    path = CGPathCreateMutable()
-    CGPathMoveToPoint(path, nil, *physics_points[0])
-    physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
-    toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+      path = CGPathCreateMutable()
+      CGPathMoveToPoint(path, nil, *physics_points[0])
+      physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
+      toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
     end
     toy.physicsBody.contactTestBitMask = 1
 

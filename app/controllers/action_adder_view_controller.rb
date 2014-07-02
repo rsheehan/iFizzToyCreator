@@ -5,7 +5,7 @@ class ActionAdderViewController < UIViewController
   # Actions are hashes with the following keys.
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
-  ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise]
+  ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
   EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder]
   MODES = [:show_actions,:show_properties]
 
@@ -74,9 +74,9 @@ class ActionAdderViewController < UIViewController
   end
 
   def button_view(frame)
-    button_view = UIView.alloc.initWithFrame(frame)
-    button_view.backgroundColor = UIColor.darkGrayColor
-    button_view
+    button_scrollview = UIScrollView.alloc.initWithFrame(frame)
+    button_scrollview.backgroundColor = UIColor.darkGrayColor
+    button_scrollview
   end
 
   # Add buttons.
@@ -95,6 +95,7 @@ class ActionAdderViewController < UIViewController
       button_view.addSubview(label)
       position[1] += CGRectGetHeight(label.frame) + 8
     end
+    button_view.setContentSize(CGSizeMake(95,position[1]))
     view.addSubview(button_view)
     buttons
   end
@@ -213,6 +214,9 @@ class ActionAdderViewController < UIViewController
     elsif @score_reaches
       action_type = :score_reaches
       action_param = [@score_reaches]
+    elsif @toy_touch
+      action_type = :toy_touch
+      action_param = nil
     else
       action_type = :unknown
       action_param = :unknown
@@ -229,6 +233,7 @@ class ActionAdderViewController < UIViewController
     @when_created = nil
     @shake = nil
     @score_reaches = nil
+    @toy_touch = nil
   end
 
   # Gets the force information for the actions effect.
@@ -323,6 +328,8 @@ class ActionAdderViewController < UIViewController
         Language::WHEN_CREATED
       when :loud_noise
         Language::LOUD_NOISE
+      when :toy_touch
+        Language::TOY_TOUCH
       when :score_reaches
         Language::SCORE_REACHES
       when :apply_force
@@ -493,6 +500,15 @@ class ActionAdderViewController < UIViewController
     reset_action_params
     #store loud noise and switch to effect
     @loud_noise = true
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
+  end
+
+  def toy_touch
+    reset_action_params
+    #store selected toy and switch to effect
+    @toy_touch = @selected_toy
     enable_action_buttons(false)
     enable_show_mode_buttons(false)
     enable_effect_buttons(true)

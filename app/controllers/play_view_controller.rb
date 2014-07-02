@@ -115,6 +115,7 @@ class PlayViewController < UIViewController
     end
   end
 
+
   def update_play_scene
     return unless @play_view # this is because of the orientation bug being worked around in app_delegate
     @play_scene = PlayScene.alloc.initWithSize(@play_view.frame.size)
@@ -154,6 +155,8 @@ class PlayViewController < UIViewController
           @play_scene.add_create_action(action)
         when :score_reaches
           @play_scene.add_score_action(action)
+        when :toy_touch
+          @play_scene.add_toy_touch_action(action)
       end
     end
 
