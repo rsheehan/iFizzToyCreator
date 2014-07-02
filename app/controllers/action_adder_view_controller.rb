@@ -12,7 +12,7 @@ class ActionAdderViewController < UIViewController
   FORCE_SCALE = 250
   EXPLODE_SCALE = 80
   ROTATION_SCALE = 2
-  DELETE_FADE_TIME = 0.7 # seconds
+  DELETE_FADE_TIME = 0.4 # seconds
 
 
   attr_writer :state, :scene_creator_view_controller, :play_view_controller

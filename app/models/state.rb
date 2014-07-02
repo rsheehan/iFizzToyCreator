@@ -8,6 +8,7 @@ class State
     # scenes include the actions at the moment
     @scenes = []
     @currentscene = 0
+    @thread = nil
     load
     #@toys = []
     # check to see if any state is saved?
@@ -55,18 +56,24 @@ class State
   end
 
   def save
-    paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
-    documents_path = paths.objectAtIndex(0) # Get the docs directory
-    file_path = documents_path.stringByAppendingPathComponent('state') # Add the file name
-    puts "Writing image to #{file_path}"
-    writeStream = NSOutputStream.outputStreamToFileAtPath(file_path, append: false)
-    if writeStream
-      writeStream.open
-      error = Pointer.new(:object)
-      bytes = NSJSONSerialization.writeJSONObject(json_compatible, toStream: writeStream, options: 0, error: error)
-      puts "saved #{bytes} bytes"
-      writeStream.close
+    if @thread.nil?
+      @thread = Thread.new {
+      paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
+      documents_path = paths.objectAtIndex(0) # Get the docs directory
+      file_path = documents_path.stringByAppendingPathComponent('state') # Add the file name
+      puts "Writing image to #{file_path}"
+      writeStream = NSOutputStream.outputStreamToFileAtPath(file_path, append: false)
+      if writeStream
+        writeStream.open
+        error = Pointer.new(:object)
+        bytes = NSJSONSerialization.writeJSONObject(json_compatible, toStream: writeStream, options: 0, error: error)
+        puts "saved #{bytes} bytes"
+        writeStream.close
+      end
+      @thread = nil
+      }
     end
+
   end
 
   def load
