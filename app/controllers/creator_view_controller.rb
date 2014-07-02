@@ -137,7 +137,7 @@ module CreatorViewControllerModule
     tool_view.sizeToFit
     tool_scrollview = UIScrollView.alloc.initWithFrame(CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height))
     tool_scrollview.backgroundColor = UIColor.darkGrayColor
-    tool_scrollview.setContentSize(tool_view.bounds.size)
+    tool_scrollview.setContentSize(CGSizeMake(tool_view.bounds.size.width,tool_view.bounds.size.height-20))
     tool_scrollview.addSubview(tool_view)
     view.addSubview(tool_scrollview)
   end

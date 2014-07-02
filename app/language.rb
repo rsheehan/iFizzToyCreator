@@ -36,6 +36,7 @@ class Language
   WHEN_CREATED  = 'when created'
   SHAKE         = 'shake'
   LOUD_NOISE    = 'loud noise'
+  TOY_TOUCH    = 'tap toy'
 
   # Effect Names
   FORCE         = 'force'

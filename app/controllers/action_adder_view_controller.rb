@@ -74,9 +74,9 @@ class ActionAdderViewController < UIViewController
   end
 
   def button_view(frame)
-    button_view = UIView.alloc.initWithFrame(frame)
-    button_view.backgroundColor = UIColor.darkGrayColor
-    button_view
+    button_scrollview = UIScrollView.alloc.initWithFrame(frame)
+    button_scrollview.backgroundColor = UIColor.darkGrayColor
+    button_scrollview
   end
 
   # Add buttons.
@@ -95,6 +95,7 @@ class ActionAdderViewController < UIViewController
       button_view.addSubview(label)
       position[1] += CGRectGetHeight(label.frame) + 8
     end
+    button_view.setContentSize(CGSizeMake(95,position[1]))
     view.addSubview(button_view)
     buttons
   end
@@ -327,6 +328,8 @@ class ActionAdderViewController < UIViewController
         Language::WHEN_CREATED
       when :loud_noise
         Language::LOUD_NOISE
+      when :toy_touch
+        Language::TOY_TOUCH
       when :score_reaches
         Language::SCORE_REACHES
       when :apply_force
