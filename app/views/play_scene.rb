@@ -67,6 +67,47 @@ class PlayScene < SKScene
   # This is called once per frame.
   # Most screen logic goes here.
   def update(current_time)
+
+    @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
+      toyArray.each do |toy|
+        # go through toys and flip if traveling in opposite direction to front??
+        if toy.userData != nil and toy.userData[:uniqueID] != -1
+          # puts "toy name = " + toy.name
+          # puts "physicsBody = " + toy.physicsBody.to_s
+          # puts "user data = " + toy.userData.to_s
+          if toy.userData[:front] and toy.physicsBody != nil
+            vel = toy.physicsBody.velocity
+            case toy.userData[:front]
+              when Constants::Front::Right
+                if vel.dx > 0
+                  toy.xScale = 1.0
+                else
+                  toy.xScale = -1.0
+                end
+              when Constants::Front::Left
+                if vel.dx > 0
+                  toy.xScale = -1.0
+                else
+                  toy.xScale = 1.0
+                end
+              when Constants::Front::Up
+                if vel.dy > 0
+                  toy.xScale = -1.0
+                else
+                  toy.xScale = 1.0
+                end
+              when Constants::Front::Bottom
+                if vel.dy > 0
+                  toy.xScale = 1.0
+                else
+                  toy.xScale = -1.0
+                end
+            end
+          end
+        end
+      end
+    end
+
     if @check
       puts @toy_hash[@check].last.physicsBody.to_s
     end
