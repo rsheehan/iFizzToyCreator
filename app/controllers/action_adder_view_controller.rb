@@ -163,10 +163,9 @@ class ActionAdderViewController < UIViewController
   end
 
   # sets the time information for the repeat action.
-  def repeat_time(minutes, seconds)
-    @repeat_time_mins = minutes
+  def repeat_time(seconds)
     @repeat_time_secs = seconds
-    puts('Time SET',minutes,seconds)
+    puts('Time SET',seconds)
   end
 
   def close_touch_view_controller
@@ -196,9 +195,9 @@ class ActionAdderViewController < UIViewController
     if @action_button_name
       action_type = :button
       action_param = @action_button_name
-    elsif @repeat_time_mins
+    elsif @repeat_time_secs
       action_type = :timer
-      action_param = [@repeat_time_mins,@repeat_time_secs]
+      action_param = [@repeat_time_secs]
     elsif @colliding_toy
       action_type = :collision
       action_param = @colliding_toy.template.identifier
@@ -224,7 +223,7 @@ class ActionAdderViewController < UIViewController
 
   def reset_action_params
     @action_button_name = nil
-    @repeat_time_mins = nil
+    @repeat_time_secs = nil
     @colliding_toy = nil
     @loud_noise = nil
     @when_created = nil
@@ -398,11 +397,18 @@ class ActionAdderViewController < UIViewController
     enable_show_mode_buttons(false)
 
     #create a picker view controller pop up to define how long to repeat for
-    repeat_action_view_controller = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    repeat_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-    repeat_action_view_controller.modalPresentationStyle = UIModalPresentationFormSheet
-    repeat_action_view_controller.delegate = self
-    presentViewController(repeat_action_view_controller, animated: false, completion: nil)
+    # repeat_action_view_controller = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    # repeat_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    # repeat_action_view_controller.modalPresentationStyle = UIModalPresentationFormSheet
+    # repeat_action_view_controller.delegate = self
+    # presentViewController(repeat_action_view_controller, animated: false, completion: nil)
+    @popover_type = :timer
+    content = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.delegate = self
+    @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    @popover.delegate = self
+    @popover.presentPopoverFromRect(@action_buttons[:timer].frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+
   end
 
   #adding a collision event
@@ -446,6 +452,8 @@ class ActionAdderViewController < UIViewController
   def popoverControllerShouldDismissPopover(popoverController)
     if popoverController.contentViewController.is_a?(NumericInputPopOverViewController)
       return false
+    elsif popoverController.contentViewController.is_a?(RepeatActionViewController)
+      return false
     end
     true
   end
@@ -462,7 +470,7 @@ class ActionAdderViewController < UIViewController
         @score_reaches = number_str.to_i
 
       when :timer
-        #TODO
+        repeat_time(number_str)
     end
     enable_action_buttons(false)
     enable_show_mode_buttons(false)

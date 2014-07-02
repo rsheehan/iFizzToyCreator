@@ -140,7 +140,7 @@ class PlayViewController < UIViewController
           @button_actions[button] << action
         when :timer
           puts("Action",action)
-          @timers << NSTimer.scheduledTimerWithTimeInterval(action[:action_param][0]*60 + action[:action_param][1], target: self, selector: "perform_action:", userInfo: action, repeats: true)
+          @timers << NSTimer.scheduledTimerWithTimeInterval(action[:action_param][0], target: self, selector: "perform_action:", userInfo: action, repeats: true)
         when :collision
           @play_scene.add_collision(action)
         when :shake

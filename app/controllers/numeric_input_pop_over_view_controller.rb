@@ -37,9 +37,11 @@ class NumericInputPopOverViewController < UIViewController
 
     #number input
     @number_input = UITextField.alloc.initWithFrame([[@width/4, 10+@title.frame.size.height],[@width/2,30]])
+    @number_input.textAlignment = NSTextAlignmentCenter
     @number_input.delegate = self
     @number_input.keyboardType = UIKeyboardTypeNumberPad
     @number_input.setBackgroundColor(UIColor.whiteColor)
+    @number_input.setText('1')
     view.addSubview(@number_input)
 
     #continue button
@@ -81,7 +83,10 @@ class NumericInputPopOverViewController < UIViewController
 
   def continue(sender)
     if @delegate
-      @delegate.submit_number(@number_input.text)
+      text = @number_input.text
+      if text.to_i > 0
+        @delegate.submit_number(@number_input.text)
+      end
     end
   end
 
