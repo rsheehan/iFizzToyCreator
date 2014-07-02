@@ -164,7 +164,11 @@ class PlayViewController < UIViewController
     actions.each do |action|
       case action[:effect_type]
         when :explosion
-          @play_scene.add_explode_ref(action[:toy])
+          # For each toy with exploded ref, verify exploded array is populated
+          toy = @state.toys.select {|s| s.identifier == action[:toy]}.first
+          if toy.exploded.size == 0
+            toy.populate_exploded
+          end
         when :create_new_toy
           uid = @play_scene.add_create_toy_ref(action[:effect_param], @state.toys.select {|s| s.identifier == action[:effect_param][:id]}.first)
           action[:uid] = uid

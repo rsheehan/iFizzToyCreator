@@ -5,14 +5,14 @@ class ToyTemplate
   IMAGE_SCALE = 0.25 # this is the scale factor when a toy image is first created.
   ACCURACY = 100.0   # the rounding factor for the data
 
-  attr_reader :image, :parts, :identifier
+  attr_reader :image, :parts, :identifier, :exploded
   attr_accessor :stuck, :can_rotate, :actions
 
   def initialize(parts, identifier) #, image)
     @identifier = identifier
     @parts = parts
     @image = create_image(1)
-
+    @exploded = []
     @stuck = false
     @can_rotate = true
     @actions = []
@@ -142,6 +142,80 @@ class ToyTemplate
     CGContextSetLineWidth(context, TOY_LINE_SIZE * IMAGE_SCALE * scale)
     CGContextSetLineCap(context, KCGLineCapRound)
     CGContextSetLineJoin(context, KCGLineJoinRound)
+  end
+
+
+  def populate_exploded
+    @exploded = check_parts(@parts, center)
+  end
+
+  # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
+
+  def check_parts(parts,center)
+    circle_parts = parts.select {|x| x.is_a? (CirclePart) }
+    point_parts = parts.select {|x| x.is_a? (PointsPart) }
+    if point_parts.length == 0
+      return parts
+    end
+    point_parts.sort_by { |x| x.points.length * -1 }
+
+    #ensure there is at least 4 parts
+    point_parts.each do |part|
+      if point_parts.length + circle_parts.length > 4
+        break
+      end
+      new_points = []
+      if part.points.length == 2
+        average_point = (part.points[0] + part.points[1]) /2
+        new_points << [part.points[0], average_point]
+        new_points << [average_point, part.points[1]]
+      else
+        half = part.points.length / 2
+        new_points << part.points[0..half]
+        if part.points.length % 2 == 1
+          left_point = (part.points[half] + part.points[half+1]) /2
+          right_point = (part.points[half+1] + part.points[half+2]) /2
+          new_points << part.points[half..part.points.length]
+          new_points[0].push(left_point)
+          new_points[1].insert(0, right_point)
+        else
+          new_points << part.points[half+1..part.points.length]
+        end
+      end
+      point_parts << PointsPart.new(new_points[0], part.colour)
+      point_parts << PointsPart.new(new_points[1], part.colour)
+      point_parts.delete(part)
+    end
+
+    #split if center is close to toy center
+    point_parts.each do |part|
+      #if center of part is close to center of toy split it
+      if (part.center[0]-center[0]).abs < 1 and (part.center[1]-center[1]).abs < 1
+        new_points = []
+        if part.points.length == 2
+          average_point = (part.points[0] + part.points[1]) /2
+          new_points << [part.points[0], average_point]
+          new_points << [average_point, part.points[1]]
+        else
+          half = part.points.length / 2
+          new_points << part.points[0..half]
+          if part.points.length % 2 == 1
+            left_point = (part.points[half] + part.points[half+1]) /2
+            right_point = (part.points[half+1] + part.points[half+2]) /2
+            new_points << part.points[half..part.points.length]
+            new_points[0].push(left_point)
+            new_points[1].insert(0, right_point)
+          else
+            new_points << part.points[half+1..part.points.length]
+          end
+        end
+        point_parts << PointsPart.new(new_points[0], part.colour)
+        point_parts << PointsPart.new(new_points[1], part.colour)
+        point_parts.delete(part)
+      end
+    end
+
+    return point_parts + circle_parts
   end
 
 end
