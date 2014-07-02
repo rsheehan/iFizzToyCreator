@@ -154,6 +154,8 @@ class PlayViewController < UIViewController
           @play_scene.add_create_action(action)
         when :score_reaches
           @play_scene.add_score_action(action)
+        when :toy_touch
+          @play_scene.add_toy_touch_action(action)
       end
     end
 

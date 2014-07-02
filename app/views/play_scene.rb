@@ -23,6 +23,10 @@ class PlayScene < SKScene
       @score_actions = []
     end
 
+    if not @toy_touch_actions
+      @toy_touch_actions = []
+    end
+
     unless @content_created
       create_scene_contents
       @content_created = true
@@ -62,6 +66,30 @@ class PlayScene < SKScene
     else
       @score_actions = [action]
     end
+  end
+
+  def add_toy_touch_action(action)
+    if @toy_touch_actions
+      @toy_touch_actions << action
+    else
+      @toy_touch_actions = [action]
+    end
+  end
+
+  def touchesBegan(touches, withEvent:event)
+    touch = touches.anyObject
+    location = touch.locationInNode(self)
+    node = self.nodeAtPoint(location)
+
+    @toy_touch_actions.each do |touch_action|
+      #if touched toy with touch action - trigger action
+      if (node.name == touch_action[:toy])
+          #trigger action on this node
+          new_action = touch_action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [nil,node.userData[:uniqueID]]; h }
+          add_actions_for_update([new_action])
+      end
+    end
+
   end
 
   # This is called once per frame.
@@ -118,7 +146,7 @@ class PlayScene < SKScene
         next
       end
       #if collision - remove all toys that are same but not collided
-      if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches
+      if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches or action[:action_type] == :toy_touch
         new_toys = []
         toys.each do |toy|
           if toy.userData[:uniqueID] == action[:action_param][1]
