@@ -21,6 +21,7 @@ class PlayViewController < UIViewController
     @play_view.showsNodeCount = true
     @play_view.showsFPS = true
     view.addSubview(@play_view)
+    @play_view.showsPhysics = true
     @button_actions = {} # keys = buttons, values = list of actions for that button
     setup_sides
     @timers = []

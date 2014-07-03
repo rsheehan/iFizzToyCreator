@@ -209,16 +209,18 @@ class PlayScene < SKScene
             when :create_new_toy # TODO Adjust to angle of toy
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
+              puts "TIS Pos, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
+              toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - CGPointMake(action[:effect_param][:x], action[:effect_param][:y])
               new_toy = new_toy(toy_in_scene)
               #puts rotation
               #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
               #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
               #displacement = CGPointApplyAffineTransform(toy_in_scene.position, rotation)
               puts "Spawner Pos, X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
-              puts "OriginalDisp, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
+              puts "OriginalDisp, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
               #puts "Displacement, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
-              new_toy.position = toy.position + toy_in_scene.position #displacement
-              # puts "NewToyDisp, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+              #new_toy.position = toy.position - toy_in_scene.position #displacement
+              puts "NewToyDisp, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
               # puts "Old Rotation: " + new_toy.zRotation.to_s
               # puts "Spawner Rotation: " + toy.zRotation.to_s
               # new_zRotation = (new_toy.zRotation + toy.zRotation)
@@ -249,7 +251,8 @@ class PlayScene < SKScene
                 fadeOut = SKAction.fadeOutWithDuration(0.7)
                 remove = SKAction.removeFromParent()
                 sequence = SKAction.sequence([fadeOut, remove])
-                to_remove.runAction(sequence)
+                #to_remove.runAction(sequence)
+                apply_action_to_toy(to_remove, sequence)
               end
           end
           if send
@@ -492,7 +495,9 @@ class PlayScene < SKScene
     image = get_image(toy_in_scene)
     toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(image))
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
+    puts "Position in Creat X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)
+    puts "Position in Scene X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
     toy.zRotation = -toy_in_scene.angle
     toy.userData = {score: 0, uniqueID: toy_in_scene.uid} #add unique id to allow for single collision
     if toy_in_scene.template.always_travels_forward
@@ -523,6 +528,7 @@ class PlayScene < SKScene
       wheel_node = SKNode.node
       wheel_node.hidden = true
       wheel_node.position = wheel.position
+      puts "Wheel pos X: " + wheel.position.x.to_s + ", Y: " + wheel.position.y.to_s
       #give the wheel the same name and id as the toy
       wheel_node.name = toy_in_scene.template.identifier
       wheel_node.userData = toy.userData
