@@ -77,6 +77,7 @@ class State
   end
 
   def load
+    @thread = "lock"
     paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
     documents_path = paths.objectAtIndex(0) # Get the docs directory
     file_path = documents_path.stringByAppendingPathComponent('state') # Add the file name
@@ -90,6 +91,7 @@ class State
       readStream.close
       convert_from_json_compatible(json_state) if json_state
     end
+    @thread = nil
   end
 
   def json_compatible
