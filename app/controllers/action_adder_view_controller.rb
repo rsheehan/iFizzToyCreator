@@ -6,7 +6,7 @@ class ActionAdderViewController < UIViewController
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
-  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder]
+  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound]
   MODES = [:show_actions,:show_properties]
 
   FORCE_SCALE = 250
@@ -461,6 +461,8 @@ class ActionAdderViewController < UIViewController
       return false
     elsif popoverController.contentViewController.is_a?(RepeatActionViewController)
       return false
+    elsif popoverController.contentViewController.is_a?(SoundSelectPopoverViewController)
+      return false
     end
     true
   end
@@ -584,6 +586,30 @@ class ActionAdderViewController < UIViewController
     enable_action_buttons(true)
     enable_effect_buttons(false)
     @main_view.setNeedsDisplay
+  end
+
+  def play_sound
+    #show popover to select sound to play
+    @popover_type = :play_sound
+    content = SoundSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.delegate = self
+    @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    @popover.delegate = self
+    @popover.presentPopoverFromRect([[@effect_buttons[:play_sound].frame.origin.x+@effect_button_view.frame.origin.x,@effect_buttons[:play_sound].frame.origin.y],@effect_buttons[:play_sound].frame.size], inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+
+
+  end
+
+  def set_sound(sound_name)
+    action_type, action_param = get_action
+    effect_type = :play_sound
+    effect_param = sound_name
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    @main_view.secondary_selected = nil
+    enable_action_buttons(true)
+    enable_effect_buttons(false)
+    @main_view.setNeedsDisplay
+    close_popover
   end
 
 end

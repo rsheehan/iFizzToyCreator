@@ -107,26 +107,67 @@ class PlayScene < SKScene
             case toy.userData[:front]
               when Constants::Front::Right
                 if vel.dx > 0
+                  # if toy.xScale != 1.0
+                  #   physicsBody = toy.physicsBody
+                  #   toy.physicsBody = toy.userData[:flippedBody]
+                  #   toy.userData[:flippedBody] = physicsBody
+                  # end
+                  toy.physicsBody.xScale = 1.0
                   toy.xScale = 1.0
                 else
+                  # if toy.xScale != -1.0
+                  #   physicsBody = toy.physicsBody
+                  #   toy.physicsBody = toy.userData[:flippedBody]
+                  #   toy.userData[:flippedBody] = physicsBody
+                  # end
                   toy.xScale = -1.0
                 end
               when Constants::Front::Left
                 if vel.dx > 0
+                  # if toy.xScale != -1.0
+                  #   physicsBody = toy.physicsBody
+                  #   toy.physicsBody = toy.userData[:flippedBody]
+                  #   toy.userData[:flippedBody] = physicsBody
+                  # end
                   toy.xScale = -1.0
                 else
+                  # if toy.xScale != 1.0
+                  #   physicsBody = toy.physicsBody
+                  #   toy.physicsBody = toy.userData[:flippedBody]
+                  #   toy.userData[:flippedBody] = physicsBody
+                  # end
                   toy.xScale = 1.0
                 end
               when Constants::Front::Up
                 if vel.dy > 0
+                  # if toy.xScale != -1.0
+                  #   physicsBody = toy.physicsBody
+                  #   toy.physicsBody = toy.userData[:flippedBody]
+                  #   toy.userData[:flippedBody] = physicsBody
+                  # end
                   toy.xScale = -1.0
                 else
+                  # if toy.xScale != 1.0
+                  #   physicsBody = toy.physicsBody
+                  #   toy.physicsBody = toy.userData[:flippedBody]
+                  #   toy.userData[:flippedBody] = physicsBody
+                  # end
                   toy.xScale = 1.0
                 end
               when Constants::Front::Bottom
                 if vel.dy > 0
+                  # if toy.xScale != 1.0
+                  #   physicsBody = toy.physicsBody
+                  #   toy.physicsBody = toy.userData[:flippedBody]
+                  #   toy.userData[:flippedBody] = physicsBody
+                  # end
                   toy.xScale = 1.0
                 else
+                  # if toy.xScale != -1.0
+                  #   physicsBody = toy.physicsBody
+                  #   toy.physicsBody = toy.userData[:flippedBody]
+                  #   toy.userData[:flippedBody] = physicsBody
+                  # end
                   toy.xScale = -1.0
                 end
             end
@@ -188,6 +229,16 @@ class PlayScene < SKScene
               sequence = SKAction.sequence([fadeOut, remove])
               toy.runAction(sequence)
               delete = true
+            when :play_sound
+              local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, param.gsub(' ','_')+'.wav'))
+              # BW::Media.play(local_file) do |media_player|
+              #   #do nothing - have to have block for some reason
+              # end
+              @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
+              @player.numberOfLoops = 1 
+              @player.prepareToPlay
+              @player.play
+
             when :score_adder
               if not toy.userData[:score]
                 toy.userData[:score] = 0
@@ -613,6 +664,55 @@ class PlayScene < SKScene
       axle = SKPhysicsJointPin.jointWithBodyA(toy.physicsBody, bodyB: wheel_node.physicsBody, anchor: wheel.position)
       physicsWorld.addJoint(axle)
       toy.userData[:wheels] << wheel_node
+    end
+
+    #add flipped physicsbody if traveling forward
+    if toy_in_scene.template.always_travels_forward
+      if physics_points.length == 0
+        toy.userData[:flippedBody] = SKPhysicsBody.bodyWithCircleOfRadius(1)
+      else
+        path = CGPathCreateMutable()
+        CGPathMoveToPoint(path, nil, *physics_points[0])
+        physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
+        if toy_in_scene.template.front == Constants::Front::Left or toy_in_scene.template.front == Constants::Front::Right
+          transform = CGAffineTransformMakeScale(-1.0, 1.0)
+        else
+          transform = CGAffineTransformMakeScale(1.0,-1.0)
+        end
+        pnter = Pointer.new("{CGAffineTransform=ffffff}",6)
+        pnter[0] = transform
+        flipped_Path = CGPathCreateCopyByTransformingPath(path, pnter) #??? was &transform, might work
+        toy.userData[:flippedBody] = SKPhysicsBody.bodyWithPolygonFromPath(flipped_Path)
+        toy.userData[:flippedBody].contactTestBitMask = 1
+
+        #properties
+        toy.userData[:flippedBody].allowsRotation = toy_in_scene.template.can_rotate;
+        toy.userData[:flippedBody].dynamic = !(toy_in_scene.template.stuck)
+
+        # toy_in_scene.add_wheels_in_scene(self).each do |wheel|
+        #   # first the node
+        #   wheel_node = SKNode.node
+        #   wheel_node.hidden = true
+        #   #rotate wheel 180deg about toy center to get new pos?
+        #   transform = CGAffineTransformMakeTranslation(*toy_in_scene.position)
+        #   transform = CGAffineTransformRotate(transform, Math::PI)
+        #   transform = CGAffineTransformTranslate(transform, -toy_in_scene.position.x, -toy_in_scene.position.y)
+        #   wheel_node.position = CGPointApplyAffineTransform(wheel.position, transform)
+        #
+        #   #give the wheel the same name and id as the toy
+        #   wheel_node.name = toy_in_scene.template.identifier
+        #   wheel_node.userData = toy.userData
+        #   # then the body
+        #   body = SKPhysicsBody.bodyWithCircleOfRadius(wheel.radius)
+        #   body.contactTestBitMask = 1
+        #   wheel_node.physicsBody = body
+        #   # then the joint
+        #   axle = SKPhysicsJointPin.jointWithBodyA(toy.userData[:flippedBody], bodyB: wheel_node.physicsBody, anchor: wheel_node.position)
+        #   physicsWorld.addJoint(axle)
+        # end
+
+      end
+
     end
 
     #trigger any create actions

@@ -20,7 +20,6 @@ class RepeatActionViewController < UIViewController
 
     @margin = @close_button.frame.size.width
 
-
     #picker for time
     picker_view = UIPickerView.alloc.initWithFrame([[0,0],[@width,216]])
     picker_view.dataSource = self
