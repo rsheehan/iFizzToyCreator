@@ -376,7 +376,7 @@ class SceneCreatorView < CreatorView
     @delegate.close_modal_view
     results = {}
     results[:id] = @selected.template.identifier
-    disp = @selected.position - @secondary_selected.position
+    disp = @secondary_selected.position - @selected.position
     results[:x] = disp.x
     results[:y] = disp.y
     results[:zoom] = @selected.zoom

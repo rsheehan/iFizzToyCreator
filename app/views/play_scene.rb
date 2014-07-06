@@ -258,23 +258,19 @@ class PlayScene < SKScene
             when :create_new_toy # TODO Adjust to angle of toy
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
-              new_toy = new_toy(toy_in_scene)
-              #puts rotation
-              #puts "SpwanerPos X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
-              #puts "DispPos X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
-              #displacement = CGPointApplyAffineTransform(toy_in_scene.position, rotation)
-              puts "Spawner Pos, X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
-              puts "OriginalDisp, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
-              #puts "Displacement, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
-              new_toy.position = toy.position + toy_in_scene.position #displacement
-              # puts "NewToyDisp, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
-              # puts "Old Rotation: " + new_toy.zRotation.to_s
-              # puts "Spawner Rotation: " + toy.zRotation.to_s
-              # new_zRotation = (new_toy.zRotation + toy.zRotation)
+              #puts "TIS Pos, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
 
-              #new_toy.zRotation = new_zRotation
-              puts "New Rotation: " + new_toy.zRotation.to_s
-              #puts "ChildPos X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+              displacement = CGPointMake(action[:effect_param][:x], action[:effect_param][:y])
+              puts "DisB4 Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
+              displacement = CGPointApplyAffineTransform(displacement, rotation)
+              displacement = CGPointMake(displacement.x, displacement.y * -1)
+              puts "DisAf Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
+              toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
+              new_toy = new_toy(toy_in_scene)
+
+
+              new_toy.zRotation = (new_toy.zRotation + toy.zRotation)
+
               new_toy.userData[:id] = rand(2**60).to_s
               new_toy.userData[:templateID] = toy_in_scene.uid
               new_toy.userData[:uniqueID] = rand(2**60).to_s
@@ -298,7 +294,8 @@ class PlayScene < SKScene
                 fadeOut = SKAction.fadeOutWithDuration(0.7)
                 remove = SKAction.removeFromParent()
                 sequence = SKAction.sequence([fadeOut, remove])
-                to_remove.runAction(sequence)
+                #to_remove.runAction(sequence)
+                apply_action_to_toy(to_remove, sequence)
               end
           end
           if send
@@ -333,18 +330,8 @@ class PlayScene < SKScene
     templates = []
     new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
-    partsArray = check_parts(toy_in_scene.template.parts,toy_in_scene.template.center)
+    partsArray = toy_in_scene.template.exploded
     timer = force * TIMER_SCALE
-    # if timer < 1
-    #   fadeOut = SKAction.fadeOutWithDuration(timer)
-    #   remove = SKAction.removeFromParent()
-    #   seq = SKAction.sequence([fadeOut, remove])
-    #   if not DEBUG_EXPLOSIONS
-    #     apply_action_to_toy(toy, seq)
-    #   end
-    #
-    #   return
-    # end
 
     force = scale_force_mass(force, toy.physicsBody.mass)
     partsArray.each do |part|
@@ -426,74 +413,6 @@ class PlayScene < SKScene
   end
 
 
-  # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
-
-  def check_parts(parts,center)
-    circle_parts = parts.select {|x| x.is_a? (CirclePart) }
-    point_parts = parts.select {|x| x.is_a? (PointsPart) }
-    if point_parts.length == 0
-      return parts
-    end
-    point_parts.sort_by { |x| x.points.length * -1 }
-
-    #ensure there is at least 4 parts
-    point_parts.each do |part|
-      if point_parts.length + circle_parts.length > 4
-        break
-      end
-      new_points = []
-      if part.points.length == 2
-        average_point = (part.points[0] + part.points[1]) /2
-        new_points << [part.points[0], average_point]
-        new_points << [average_point, part.points[1]]
-      else
-        half = part.points.length / 2
-        new_points << part.points[0..half]
-        if part.points.length % 2 == 1
-          left_point = (part.points[half] + part.points[half+1]) /2
-          right_point = (part.points[half+1] + part.points[half+2]) /2
-          new_points << part.points[half..part.points.length]
-          new_points[0].push(left_point)
-          new_points[1].insert(0, right_point)
-        else
-          new_points << part.points[half+1..part.points.length]
-        end
-      end
-      point_parts << PointsPart.new(new_points[0], part.colour)
-      point_parts << PointsPart.new(new_points[1], part.colour)
-      point_parts.delete(part)
-    end
-
-    #split if center is close to toy center
-    point_parts.each do |part|
-      #if center of part is close to center of toy split it
-      if (part.center[0]-center[0]).abs < 1 and (part.center[1]-center[1]).abs < 1
-        new_points = []
-        if part.points.length == 2
-          average_point = (part.points[0] + part.points[1]) /2
-          new_points << [part.points[0], average_point]
-          new_points << [average_point, part.points[1]]
-        else
-          half = part.points.length / 2
-          new_points << part.points[0..half]
-          if part.points.length % 2 == 1
-            left_point = (part.points[half] + part.points[half+1]) /2
-            right_point = (part.points[half+1] + part.points[half+2]) /2
-            new_points << part.points[half..part.points.length]
-            new_points[0].push(left_point)
-            new_points[1].insert(0, right_point)
-          else
-            new_points << part.points[half+1..part.points.length]
-          end
-        end
-        point_parts << PointsPart.new(new_points[0], part.colour)
-        point_parts << PointsPart.new(new_points[1], part.colour)
-        point_parts.delete(part)
-      end
-    end
-
-    return point_parts + circle_parts
-  end
 
   def draw_sole_point(context, sole_point)
     sole_point = @points[-1]
@@ -619,7 +538,9 @@ class PlayScene < SKScene
     image = get_image(toy_in_scene)
     toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(image))
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
+    #puts "Position in Creat X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)
+    #puts "Position in Scene X: " + toy.position.x.to_s + ", Y: " + toy.position.y.to_s
     toy.zRotation = -toy_in_scene.angle
     toy.userData = {score: 0, uniqueID: toy_in_scene.uid} #add unique id to allow for single collision
     if toy_in_scene.template.always_travels_forward
@@ -650,6 +571,7 @@ class PlayScene < SKScene
       wheel_node = SKNode.node
       wheel_node.hidden = true
       wheel_node.position = wheel.position
+      #puts "Wheel pos X: " + wheel.position.x.to_s + ", Y: " + wheel.position.y.to_s
       #give the wheel the same name and id as the toy
       wheel_node.name = toy_in_scene.template.identifier
       wheel_node.userData = toy.userData
@@ -724,64 +646,6 @@ class PlayScene < SKScene
     toy
   end
 
-  # Called from Play View Controller in able to preprocess exploded
-  def add_explode_ref(explode_id)
-    # @toy_hash[explode_id].each do |toy|
-    #   #create_explode_toy(toy)
-    # end
-  end
-
-  # Places exploded parts at toy.userData in @toy_hash
-  def create_explode_toy(toy)
-    toy_in_scene = @toys.select {|s| s.template.identifier == toy.name and s.uid == toy.userData[:uniqueID]}.first
-    templates = []
-    new_name = toy.userData[:uniqueID]
-    @toy_hash[new_name] = []
-    partsArray = check_parts(toy_in_scene.template.parts,toy_in_scene.template.center)
-    partsArray.each do |part|
-      #position = centre_part(part, toy.position)
-      templates << ToyTemplate.new([part], new_name)
-      new_toy = ToyInScene.new(templates.last, toy_in_scene.zoom)
-      #new_toy.change_position(view.convertPoint(toy.position, fromScene: self))
-      #displacement = new_toy.centre_parts
-      #new_toy.change_angle(toy_in_scene.angle)
-      new_sprite_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(new_toy.image))
-      if part.is_a? PointsPart
-        #new_sprite_toy.zRotation = toy.zRotation
-        new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
-
-        physics_points = ToyPhysicsBody.new(new_toy.template.parts).convex_hull_for_physics(new_toy.zoom)
-        if physics_points.length == 0
-          new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
-        else
-          path = CGPathCreateMutable()
-          CGPathMoveToPoint(path, nil, *physics_points[0])
-          physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
-          new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
-        end
-
-      elsif part.is_a? CirclePart
-        wheel = new_toy.add_wheels_in_scene(self)[0]
-        new_sprite_toy.hidden = false
-
-        new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
-        body = SKPhysicsBody.bodyWithCircleOfRadius(wheel.radius)
-        new_sprite_toy.physicsBody = body
-      end
-
-      # new_sprite_toy.physicsBody.velocity = toy.physicsBody.velocity
-
-      new_sprite_toy.name = new_name
-      # addChild(new_sprite_toy)
-
-      # new_sprite_toy.physicsBody.send(:apply_force, CGPointMake(force/displacement.x , force/displacement.y))
-      @toy_hash[new_name] << new_sprite_toy
-      # fadeOut = SKAction.fadeOutWithDuration(5.0)
-      # remove = SKAction.removeFromParent()
-      # seq = SKAction.sequence([fadeOut, remove])
-      # new_sprite_toy.runAction(seq)
-    end
-  end
 
   # Called from Play View Controller in able to preprocess create new toys
   # [ID, Displacement.x, displacement.y, zoom, angle]
