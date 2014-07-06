@@ -7,6 +7,6 @@ class Constants
     Right = 2
     Bottom = 3
   end
-  SOUND_NAMES = ['marble_drop.wav', 'here_we_go.wav']
+  SOUND_NAMES = ['marble_drop.wav', 'here_we_go.wav', 'explosion_single_large.mp3']
 
 end

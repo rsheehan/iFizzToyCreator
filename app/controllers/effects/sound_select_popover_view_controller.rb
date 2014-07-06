@@ -76,7 +76,7 @@ class SoundSelectPopoverViewController < UIViewController
 
     cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
 
-    name = Constants::SOUND_NAMES[index].gsub('_',' ').gsub('.wav','')
+    name = Constants::SOUND_NAMES[index].gsub('_',' ').gsub('.wav','').gsub('.mp3','')
 
     cell.textLabel.text = name
     cell.textLabel.userInteractionEnabled = true
