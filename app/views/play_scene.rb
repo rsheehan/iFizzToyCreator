@@ -231,11 +231,9 @@ class PlayScene < SKScene
               delete = true
             when :play_sound
               local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, param.gsub(' ','_')+'.wav'))
-              # BW::Media.play(local_file) do |media_player|
-              #   #do nothing - have to have block for some reason
-              # end
+
               @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
-              @player.numberOfLoops = 1 
+              @player.numberOfLoops = 1
               @player.prepareToPlay
               @player.play
 

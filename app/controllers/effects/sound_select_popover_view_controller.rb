@@ -41,6 +41,7 @@ class SoundSelectPopoverViewController < UIViewController
   end
 
   def select_sound(sender)
+    @player = nil
     @delegate.set_sound(sender.view.text)
   end
 
@@ -52,21 +53,17 @@ class SoundSelectPopoverViewController < UIViewController
       puts('play sound - '+name)
 
       local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, name))
-      BW::Media.play(local_file) do |media_player|
-        #do nothing - have to have block for some reason
-      end
+      @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
+      @player.numberOfLoops = 1
+      @player.prepareToPlay
+      @player.play
     end
 
   end
 
   # Back to the action adder to make a new one.
-  def done
-
-  end
-
-  # Back to the action adder to make a new one.
   def cancel
-    puts('Cancel')
+    @player = nil
     @delegate.close_popover
   end
 
