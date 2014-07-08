@@ -241,7 +241,14 @@ class PlayScene < SKScene
               if not toy.userData[:score]
                 toy.userData[:score] = 0
               end
-              toy.userData[:score] += param
+              case param[1]
+                when "add"
+                  toy.userData[:score] += param[0]
+                when "subtract"
+                  toy.userData[:score] -= param[0]
+                when "set"
+                  toy.userData[:score] = param[0]
+              end
               puts "Toy Score: " + toy.userData[:score].to_s
               @score_actions.each do |score_action|
                 if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score]
