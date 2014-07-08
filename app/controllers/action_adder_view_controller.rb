@@ -475,13 +475,21 @@ class ActionAdderViewController < UIViewController
       when :score_reaches
         #set action
         @score_reaches = number_str.to_i
-
       when :timer
         repeat_time(number_str)
     end
-    enable_action_buttons(false)
-    enable_show_mode_buttons(false)
-    enable_effect_buttons(true)
+    close_popover
+  end
+
+  def submit_score_adder (number, type)
+    action_type, action_param = get_action
+    effect_type = :score_adder
+    effect_param = [number.to_i, type]
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+
+    enable_action_buttons(true)
+    enable_show_mode_buttons(true)
+    enable_effect_buttons(false)
 
     close_popover
   end
@@ -576,14 +584,15 @@ class ActionAdderViewController < UIViewController
   end
 
   def score_adder
-    action_type, action_param = get_action
-    effect_type = :score_adder
-    effect_param = 1
-    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
-    @main_view.secondary_selected = nil
-    enable_action_buttons(true)
-    enable_effect_buttons(false)
-    @main_view.setNeedsDisplay
+    @popover_type = :score_adder
+    content = ScoreAdderActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.setTitle('Enter the change in score')
+    content.delegate = self
+    @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    @popover.delegate = self
+    frame = @effect_buttons[:score_adder].frame
+    frame.origin.x = @effect_button_view.frame.origin.x + frame.origin.x
+    @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
   end
 
 end
