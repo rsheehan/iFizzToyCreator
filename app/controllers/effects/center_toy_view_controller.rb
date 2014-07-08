@@ -15,7 +15,7 @@ class CenterToyViewController < UIViewController
     @diff = center_diff - @toy_origin
     duration = 0.8
     @delay = 0.1
-    lowerAlpha = 0.3
+    lowerAlpha = 0.05
     #transform = CGAffineTransformMakeTranslation(diff.x, diff.y)
     #puts "Diff , X: " + transform.tx.to_s + ", Y: " + transform.ty.to_s
     #@scene_creat@=or_view_controller.main_view.shift_view_by(@diff)
