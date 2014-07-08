@@ -138,6 +138,31 @@ class ToyInScene
     physics_wheels
   end
 
+  def add_flipped_wheels_in_scene(scene, front)
+    # see PlayScene for more debugging info
+    pos_in_scene = scene.view.convertPoint(position, toScene: scene)
+    transform = CGAffineTransformMakeTranslation(*pos_in_scene)
+    transform = CGAffineTransformScale(transform, @zoom, -@zoom)
+    transform = CGAffineTransformRotate(transform, @angle)
+
+    physics_wheels = []
+    @template.parts.each do |part|
+      if part.is_a? CirclePart
+        if front == Constants::Front::Right or front == Constants::Front::Left
+          x0 = -part.position.x
+          y0 = part.position.y
+        else
+          x0 = part.position.x
+          y0 = -part.position.y
+        end
+        transformed_pt = CGPointApplyAffineTransform(CGPointMake(x0,y0), transform)
+        wheel = Wheel.new(transformed_pt, part.radius * zoom) #CGPointMake(x, y), part.radius * zoom)
+        physics_wheels << wheel
+      end
+    end
+    physics_wheels
+  end
+
   def draw(context)
     CGContextSaveGState(context)
     CGContextTranslateCTM(context, *@position)
