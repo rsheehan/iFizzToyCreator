@@ -348,6 +348,8 @@ class ActionAdderViewController < UIViewController
         Language::DELETE
       when :score_adder
         Language::SCORE_ADDER
+      when :play_sound
+        Language::PLAY_SOUND
     end
   end
 

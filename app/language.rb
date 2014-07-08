@@ -47,6 +47,7 @@ class Language
   SOUND         = 'sound'
   DELETE        = 'delete'
   SCORE_ADDER   = 'add score'
+  PLAY_SOUND    = 'play sound'
 
   # Commands
   CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'
