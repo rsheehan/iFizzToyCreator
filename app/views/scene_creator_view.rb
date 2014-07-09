@@ -52,9 +52,11 @@ class SceneCreatorView < CreatorView
         end
         #@truly_selected = @selected = nil
         @delegate.selected_toy = @selected
+        @delegate.start_action_flow
         setNeedsDisplay
       when :toy_selected
         @delegate.selected_toy = @selected
+        @delegate.start_action_flow
       # @truly_selected has been set in ActionAdderViewController
       when :collision
         @current_tool = :grab
@@ -178,15 +180,15 @@ class SceneCreatorView < CreatorView
     setNeedsDisplay
   end
 
-  # A touch in show actions mode
-  def touch_begin_show_actions
-    # Check to see if the touch is near a toy
-    @truly_selected = close_toy(@current_point)
-
-    if @truly_selected
-      @show_action_controller.show_action_list(@truly_selected)
-    end
-  end
+  # # A touch in show actions mode
+  # def touch_begin_show_actions
+  #   # Check to see if the touch is near a toy
+  #   @truly_selected = close_toy(@current_point)
+  #
+  #   if @truly_selected
+  #     @show_action_controller.show_action_list(@truly_selected)
+  #   end
+  # end
 
   # A touch in scene mode
   def touch_begin_scene
@@ -202,11 +204,12 @@ class SceneCreatorView < CreatorView
     end
   end
 
-  # A touch in toys only mode
+  # A touch in toys only mode - (used for action adder)
   def touch_begin_toys_only
     @truly_selected = close_toy(@current_point)
     if @truly_selected
       @selected = @truly_selected
+      @delegate.start_action_flow
       self.mode = :toy_selected
     else
       self.mode = :toys_only
@@ -249,6 +252,7 @@ class SceneCreatorView < CreatorView
       when :grab
         case @mode
           when :toys_only, :scene, :toy_selected
+            @delegate.close_popover
             touch_move_scene(point)
           else
             @current_point = point
@@ -310,6 +314,8 @@ class SceneCreatorView < CreatorView
             touch_end_collision
           when :create_new_toy
             @drag = false
+          when :toy_selected
+            @delegate.reopen_action_flow
         end
       when :circle
         centre = @points[0]
@@ -328,6 +334,7 @@ class SceneCreatorView < CreatorView
       if @truly_selected.is_a?(ToyInScene)
         @toys_in_scene.delete(@truly_selected)
         @toys_in_scene << @truly_selected
+        @delegate.reopen_action_flow
       else
         @strokes.delete(@truly_selected)
         @strokes << @truly_selected

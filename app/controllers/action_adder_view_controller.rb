@@ -459,13 +459,13 @@ class ActionAdderViewController < UIViewController
   end
 
   def popoverControllerShouldDismissPopover(popoverController)
-    if popoverController.contentViewController.is_a?(NumericInputPopOverViewController)
-      return false
-    elsif popoverController.contentViewController.is_a?(RepeatActionViewController)
-      return false
-    elsif popoverController.contentViewController.is_a?(SoundSelectPopoverViewController)
-      return false
-    end
+    # if popoverController.contentViewController.is_a?(NumericInputPopOverViewController)
+    #   return false
+    # elsif popoverController.contentViewController.is_a?(RepeatActionViewController)
+    #   return false
+    # elsif popoverController.contentViewController.is_a?(SoundSelectPopoverViewController)
+    #   return false
+    # end
     true
   end
 
@@ -621,6 +621,92 @@ class ActionAdderViewController < UIViewController
     enable_effect_buttons(false)
     @main_view.setNeedsDisplay
     close_popover
+  end
+
+  #==========
+  # NEw Actions flow
+  #=========
+  def start_action_flow
+    if @popover
+      close_popover
+    end
+    @popoverStack = []
+
+    if not @selected_toy.nil?
+      content = ActionListPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+      content.state = @state
+      content.selected = @selected_toy
+      content.delegate = self
+      show_popover(content)
+    end
+  end
+
+  def reopen_action_flow
+    #if there is a popover visible don't repoen?
+    if (not @popover.isPopoverVisible) and @popoverStack.size > 0
+        content = @popoverStack.last
+        @popover = UIPopoverController.alloc.initWithContentViewController(content)
+        @popover.delegate = self
+        @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+    end
+  end
+
+  def action_flow_back
+    close_popover
+    #remove current popover from stack
+    if @popoverStack.size > 0
+      @popoverStack.pop
+    end
+    if @popoverStack.size > 0
+      content = @popoverStack.last
+      @popover = UIPopoverController.alloc.initWithContentViewController(content)
+      @popover.delegate = self
+      @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+    end
+  end
+
+  def new_action
+    close_popover
+    #show new action popover
+    content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.delegate = self
+    show_popover(content)
+  end
+
+  def makeTrigger(type)
+    reset_action_params
+
+    case type
+      when :touch
+        #show button select
+      when :timer
+        #show timer popover
+      when :collision
+        #show select toy popover
+      when :score_reaches
+        #show score popover
+      when :shake
+        @shake = true
+      when :when_created
+        @when_created = true
+      when :loud_noise
+        @loud_noise = true
+      when :toy_touch
+        @toy_touch = @selected_toy
+      else
+    end
+  end
+
+  def makeEffect(type)
+    puts "Make effect "
+  end
+
+  def show_popover(content)
+    @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    @popover.passthroughViews = [@main_view, @scene_creator_view_controller.view] #not working? should allow dragging while popover open
+    @popover.delegate = self
+    @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+    @popoverStack << content
   end
 
 end
