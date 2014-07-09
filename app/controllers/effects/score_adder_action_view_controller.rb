@@ -92,11 +92,11 @@ class ScoreAdderActionViewController < UIViewController
         puts "Selected: " + @selected.to_s
         case @selected
           when 0
-            @delegate.submit_score_adder(@number_input.text, :add)
+            @delegate.submit_score_adder(@number_input.text, "add")
           when 1
-            @delegate.submit_score_adder(@number_input.text, :subtract)
+            @delegate.submit_score_adder(@number_input.text, "subtract")
           when 2
-            @delegate.submit_score_adder(@number_input.text, :set)
+            @delegate.submit_score_adder(@number_input.text, "set")
         end
       end
     end

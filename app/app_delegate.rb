@@ -56,12 +56,11 @@ class AppDelegate
     true
   end
 
+  # Saving after the app has closed
   def applicationWillResignActive(application)
     @state.save
     while(@state.is_saving)
-
     end
-
   end
 
   # returns with the icon image

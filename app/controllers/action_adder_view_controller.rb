@@ -482,6 +482,9 @@ class ActionAdderViewController < UIViewController
       when :timer
         repeat_time(number_str)
     end
+    enable_action_buttons(false)
+    enable_show_mode_buttons(false)
+    enable_effect_buttons(true)
     close_popover
   end
 

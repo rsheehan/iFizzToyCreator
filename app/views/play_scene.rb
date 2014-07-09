@@ -61,6 +61,7 @@ class PlayScene < SKScene
   end
 
   def add_score_action(action)
+    action[:used] = []
     if @score_actions
       @score_actions << action
     else
@@ -251,15 +252,19 @@ class PlayScene < SKScene
               end
               puts "Toy Score: " + toy.userData[:score].to_s
               @score_actions.each do |score_action|
-                if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score]
+                if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score] and not score_action[:used].include?(toy.userData[:uniqueID])
                   score_action[:action_param] =  [score_action[:action_param][0], toy.userData[:uniqueID]]
+                  if not score_action[:used]
+                    score_action[:used] = []
+                  end
+                  score_action[:used] << toy.userData[:uniqueID]
                   if @actions_to_be_fired
                     @actions_to_be_fired << score_action
                   else
                     @actions_to_be_fired = [score_action]
                   end
                   puts "score action "+ score_action.to_s
-                  toy.userData[:score] = 0
+                  #toy.userData[:score] = 0
                 end
               end
             when :create_new_toy # TODO Adjust to angle of toy
@@ -317,7 +322,7 @@ class PlayScene < SKScene
     if @actions_to_be_fired
       @actions_to_fire += @actions_to_be_fired
     end
-
+    @actions_to_be_fired = []
   end
 
   def scale_force_mass(param, mass)
