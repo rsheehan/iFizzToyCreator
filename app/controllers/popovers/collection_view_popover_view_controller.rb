@@ -9,6 +9,7 @@ class CollectionViewPopoverViewController < UIViewController
 
     ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
     EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound]
+    TOYBUTTON = "ToyButton"
 
     def loadView
       # Do not call super.
@@ -16,7 +17,9 @@ class CollectionViewPopoverViewController < UIViewController
       view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
 
       #default mode value
-      @mode = :actions
+      if @mode.nil?
+        @mode = :actions
+      end
 
       #back button
       @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
@@ -29,7 +32,11 @@ class CollectionViewPopoverViewController < UIViewController
 
       #title
       @title = UILabel.alloc.initWithFrame([[@margin+5,5],[WIDTH-@margin-5,20]])
-      @title.setText('Choose a Trigger')
+      if @title_text
+        @title.setText(@title_text)
+      else
+        @title.setText('Choose a Trigger')
+      end
       @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
       @title.setFont(UIFont.boldSystemFontOfSize(16))
       view.addSubview(@title)
@@ -43,6 +50,7 @@ class CollectionViewPopoverViewController < UIViewController
       @col_view = UICollectionView.alloc.initWithFrame([[0, 35], [WIDTH, WIDTH]], collectionViewLayout: UICollectionViewFlowLayout.alloc.init)
       @col_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
       @col_view.registerClass(ImageCell, forCellWithReuseIdentifier: "ImgCell")
+      @col_view.registerClass(ToyButton, forCellWithReuseIdentifier: TOYBUTTON)
       @col_view.dataSource = self
       @col_view.delegate = self
       view.addSubview(@col_view)
@@ -52,12 +60,22 @@ class CollectionViewPopoverViewController < UIViewController
     end
 
     def setTitle(text)
-      @title.setText(text)
+      @title_text = text
+      if @title
+        @title.setText(text)
+      end
+    end
+
+    # We need this to gain access to the toys.
+    def state=(state)
+      @state = state
     end
 
     # Back to the Select toy screen.
     def back(sender)
-      @state.save
+      if @state
+        @state.save
+      end
       @delegate.action_flow_back
     end
 
@@ -66,6 +84,8 @@ class CollectionViewPopoverViewController < UIViewController
       case @mode
         when :effects
           return EFFECTS.size
+        when :toys
+          @state.toys.length
         else
           return ACTIONS.size
       end
@@ -73,18 +93,23 @@ class CollectionViewPopoverViewController < UIViewController
 
     def collectionView(cv, cellForItemAtIndexPath: index_path)
       item = index_path.row # ignore section as only one
-      image_cell = cv.dequeueReusableCellWithReuseIdentifier("ImgCell", forIndexPath: index_path)
 
       case @mode
         when :effects
-          image_cell.image = UIImage.imageNamed(EFFECTS[item])
-          image_cell.text = name_for_label(EFFECTS[item])
+          cell = cv.dequeueReusableCellWithReuseIdentifier("ImgCell", forIndexPath: index_path)
+          cell.image = UIImage.imageNamed(EFFECTS[item])
+          cell.text = name_for_label(EFFECTS[item])
+        when :toys
+          cell = cv.dequeueReusableCellWithReuseIdentifier("ImgCell", forIndexPath: index_path)
+          @state.toys[item].update_image
+          cell.image = @state.toys[item].image
         else
-          image_cell.image = UIImage.imageNamed(ACTIONS[item])
-          image_cell.text = name_for_label(ACTIONS[item])
+          cell = cv.dequeueReusableCellWithReuseIdentifier("ImgCell", forIndexPath: index_path)
+          cell.image = UIImage.imageNamed(ACTIONS[item])
+          cell.text = name_for_label(ACTIONS[item])
       end
 
-      image_cell
+      cell
     end
 
     # And the methods for the UICollectionViewDelegateFlowLayout protocol.
@@ -94,10 +119,13 @@ class CollectionViewPopoverViewController < UIViewController
       case @mode
         when :effects
           img_size = UIImage.imageNamed(EFFECTS[item]).size
+          CGSizeMake(img_size.width,img_size.height+10)
+        when :toys
+          CGSizeMake(75,75)#@state.toys[item].image.size
         else
           img_size = UIImage.imageNamed(ACTIONS[item]).size
+          CGSizeMake(img_size.width,img_size.height+10)
       end
-      CGSizeMake(img_size.width,img_size.height+10)
     end
 
     def collectionView(cv, layout: layout, insetForSectionAtIndex: section)
@@ -109,9 +137,11 @@ class CollectionViewPopoverViewController < UIViewController
       item = index_path.row
       case @mode
         when :effects
-          @delegate.makeEffect(item)
+          @delegate.makeEffect(EFFECTS[item])
+        when :toys
+          @delegate.chose_toy(item)
         else
-          @delegate.makeTrigger(item)
+          @delegate.makeTrigger(ACTIONS[item])
       end
     end
 

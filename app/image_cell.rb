@@ -6,6 +6,8 @@ class ImageCell < UICollectionViewCell
   def initWithFrame(frame)
     super
     @image_view = UIImageView.alloc.initWithFrame(CGRectMake(0,0,frame.size.width,frame.size.height-15))
+    @image_view.contentMode = UIViewContentModeScaleAspectFit
+    @image_view.clipsToBounds = true
     addSubview(@image_view)
     @text_view = UILabel.alloc.initWithFrame(CGRectMake(0,frame.size.height-10,frame.size.width, 15))
     @text_view.setTextAlignment(UITextAlignmentCenter)
@@ -15,7 +17,7 @@ class ImageCell < UICollectionViewCell
 
   def image=(img)
     @image_view.image = img
-    @image_view.sizeToFit
+    #@image_view.sizeToFit
   end
 
   def text=(text)

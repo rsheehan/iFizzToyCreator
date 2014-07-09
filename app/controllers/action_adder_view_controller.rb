@@ -647,7 +647,7 @@ class ActionAdderViewController < UIViewController
         content = @popoverStack.last
         @popover = UIPopoverController.alloc.initWithContentViewController(content)
         @popover.delegate = self
-        @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+        @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections:  UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     end
   end
 
@@ -661,7 +661,7 @@ class ActionAdderViewController < UIViewController
       content = @popoverStack.last
       @popover = UIPopoverController.alloc.initWithContentViewController(content)
       @popover.delegate = self
-      @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+      @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections:  UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     end
   end
 
@@ -670,42 +670,75 @@ class ActionAdderViewController < UIViewController
     #show new action popover
     content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
     content.delegate = self
+    content.mode = :actions
     show_popover(content)
   end
 
   def makeTrigger(type)
     reset_action_params
-
+    close_popover
+    puts 'make trigger'
     case type
       when :touch
         #show button select
       when :timer
         #show timer popover
+        @popover_type = :timer
+        content = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        show_popover(content)
       when :collision
         #show select toy popover
+        content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        content.mode = :toys
+        content.state = @state
+        content.setTitle('Choose a Toy that this toy will hit')
+        show_popover(content)
       when :score_reaches
         #show score popover
+        @popover_type = :score_reaches
+        content = NumericInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.setTitle('Enter the score that will trigger the event')
+        content.delegate = self
+        show_popover(content)
       when :shake
         @shake = true
+        show_effects_popover
       when :when_created
         @when_created = true
+        show_effects_popover
       when :loud_noise
         @loud_noise = true
+        show_effects_popover
       when :toy_touch
         @toy_touch = @selected_toy
+        show_effects_popover
       else
     end
+  end
+
+  def show_effects_popover
+    content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.delegate = self
+    content.mode = :effects
+    content.setTitle('Choose an Effect')
+    show_popover(content)
   end
 
   def makeEffect(type)
     puts "Make effect "
   end
 
+  def chose_toy(toy)
+
+  end
+
   def show_popover(content)
     @popover = UIPopoverController.alloc.initWithContentViewController(content)
     @popover.passthroughViews = [@main_view, @scene_creator_view_controller.view] #not working? should allow dragging while popover open
     @popover.delegate = self
-    @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+    @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     @popoverStack << content
   end
 
