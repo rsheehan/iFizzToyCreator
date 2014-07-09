@@ -43,6 +43,7 @@ class PlayScene < SKScene
     @paused = true
     @mutex = Mutex.new
     @scores = {}
+    @toys_count = {}
     add_edges
     add_toys
   end
@@ -268,15 +269,16 @@ class PlayScene < SKScene
                 end
               end
             when :create_new_toy # TODO Adjust to angle of toy
+              id = action[:effect_param][:id]
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
-              toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
+              toy_in_scene = @loaded_toys[id].select {|s| s.uid == action[:uid]}.first
               #puts "TIS Pos, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
 
               displacement = CGPointMake(action[:effect_param][:x], action[:effect_param][:y])
-              puts "DisB4 Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
+              #puts "DisB4 Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
               displacement = CGPointApplyAffineTransform(displacement, rotation)
               displacement = CGPointMake(displacement.x, displacement.y * -1)
-              puts "DisAf Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
+              #puts "DisAf Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
               toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
               new_toy = new_toy(toy_in_scene)
 
@@ -300,9 +302,10 @@ class PlayScene < SKScene
                   puts "create action "+ create_action.to_s
                 end
               end
-              @toy_hash[action[:effect_param][:id]] << new_toy
-              while @toy_hash[action[:effect_param][:id]].length > MAX_CREATES
-                to_remove = @toy_hash[action[:effect_param][:id]].shift
+              @toy_hash[id] << new_toy
+              @toys_count[id] = 0 unless @toys_count[id]
+              while @toy_hash[id].length - @toys_count[id] > MAX_CREATES
+                to_remove = @toy_hash[id].delete_at(@toys_count[id])
                 fadeOut = SKAction.fadeOutWithDuration(0.7)
                 remove = SKAction.removeFromParent()
                 sequence = SKAction.sequence([fadeOut, remove])
@@ -536,6 +539,8 @@ class PlayScene < SKScene
       id = toy_in_scene.template.identifier
       @toy_hash[id] = [] unless @toy_hash[id]
       @toy_hash[id] << toy # add the toy (can be multiple toys of the same type)
+      @toys_count[id] = 0 unless @toys_count[id]
+      @toys_count[id] += 1
     end
   end
 
