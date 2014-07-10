@@ -239,6 +239,9 @@ class PlayScene < SKScene
               @player.prepareToPlay
               @player.play
 
+            when :text_bubble
+
+
             when :score_adder
               if not toy.userData[:score]
                 toy.userData[:score] = 0
