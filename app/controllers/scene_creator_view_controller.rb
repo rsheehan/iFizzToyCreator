@@ -139,6 +139,7 @@ class SceneCreatorViewController < UIViewController
   end
 
   def new
+    save_scene
     clear
   end
   
