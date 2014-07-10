@@ -1,7 +1,7 @@
 class CollectionViewPopoverViewController < UIViewController
 
-    attr_writer :delegate, :selected, :mode, :scene_creator_view_controller
-
+    attr_writer :delegate, :selected, :scene_creator_view_controller
+    attr_accessor :mode
     LITTLE_GAP = 10
     BIG_GAP = 40
     WIDTH = 300

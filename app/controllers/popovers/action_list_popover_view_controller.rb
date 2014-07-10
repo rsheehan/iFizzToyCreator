@@ -94,7 +94,7 @@ class ActionListPopoverViewController < UIViewController
     end
 
     #activate edit mode
-    def edit
+    def edit(sender)
       if @table_view.isEditing
         @table_view.setEditing(false, animated: true)
         @edit_button.setTitle("Edit", forState: UIControlStateNormal)
