@@ -178,6 +178,11 @@ class PlayScene < SKScene
       end
     end
 
+    sound_actions = @actions_to_fire.reject { |action| action[:effect_type] != :play_sound }
+    @actions_to_fire.reject! { |action| action[:action_type] == :play_sound }
+    sound_actions << @actions_to_fire
+    @actions_to_fire = sound_actions.flatten
+
     if @check
       puts @toy_hash[@check].last.physicsBody.to_s
     end
