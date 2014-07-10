@@ -580,28 +580,18 @@ class ActionAdderViewController < UIViewController
   end
 
   def play_sound
-    #show popover to select sound to play
-    @popover_type = :play_sound
-    content = SoundSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
-    content.delegate = self
-    @popover = UIPopoverController.alloc.initWithContentViewController(content)
-    @popover.delegate = self
-    @popover.presentPopoverFromRect([[@effect_buttons[:play_sound].frame.origin.x+@effect_button_view.frame.origin.x,@effect_buttons[:play_sound].frame.origin.y],@effect_buttons[:play_sound].frame.size], inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+    # #show popover to select sound to play
+    # @popover_type = :play_sound
+    # content = SoundSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+    # content.delegate = self
+    # @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    # @popover.delegate = self
+    # @popover.presentPopoverFromRect([[@effect_buttons[:play_sound].frame.origin.x+@effect_button_view.frame.origin.x,@effect_buttons[:play_sound].frame.origin.y],@effect_buttons[:play_sound].frame.size], inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
 
 
   end
 
-  def set_sound(sound_name)
-    action_type, action_param = get_action
-    effect_type = :play_sound
-    effect_param = sound_name
-    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
-    @main_view.secondary_selected = nil
-    enable_action_buttons(true)
-    enable_effect_buttons(false)
-    @main_view.setNeedsDisplay
-    close_popover
-  end
+
 
   #==========
   # NEw Actions flow
@@ -613,7 +603,7 @@ class ActionAdderViewController < UIViewController
     @popoverStack = []
     reset_action_params
 
-    if not @selected_toy.nil?
+    if not @selected_toy.nil? and @state.scenes.size > 0
       content = ActionListPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
       content.state = @state
       content.selected = @selected_toy
@@ -624,7 +614,8 @@ class ActionAdderViewController < UIViewController
 
   def reopen_action_flow
     #if there is a popover visible don't repoen?
-    if (not @popover.isPopoverVisible) and @popoverStack.size > 0
+    close_popover
+    if @popoverStack.size > 0
         content = @popoverStack.last
         @popover = UIPopoverController.alloc.initWithContentViewController(content)
         @popover.delegate = self
@@ -719,6 +710,39 @@ class ActionAdderViewController < UIViewController
 
   def makeEffect(type)
     puts "Make effect "
+    close_popover
+    case type
+      when :apply_force
+
+      when :explosion
+
+      when :apply_torque
+
+      when :create_new_toy
+
+      when :delete_effect
+        action_type, action_param = get_action
+        effect_type = :delete_effect
+        effect_param = DELETE_FADE_TIME
+        create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+        action_created
+      when :score_adder
+
+      when :play_sound
+        content = SoundSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        show_popover(content)
+      else
+    end
+  end
+
+  def set_sound(sound_name)
+    close_popover
+    action_type, action_param = get_action
+    effect_type = :play_sound
+    effect_param = sound_name
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    action_created
   end
 
   def chose_toy(toy_index)
@@ -744,6 +768,16 @@ class ActionAdderViewController < UIViewController
     @popover.delegate = self
     @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     @popoverStack << content
+  end
+
+  def action_created
+    #remove popovers from stack until get to action viewer (don't want to allow going back and editing action)
+    while not @popoverStack[-1].is_a?(ActionListPopoverViewController)
+      @popoverStack.pop
+    end
+    #update state?
+    @popoverStack[-1].state = @state
+    reopen_action_flow
   end
 
 end

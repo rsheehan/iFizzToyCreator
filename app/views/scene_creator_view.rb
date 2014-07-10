@@ -52,11 +52,15 @@ class SceneCreatorView < CreatorView
         end
         #@truly_selected = @selected = nil
         @delegate.selected_toy = @selected
-        @delegate.start_action_flow
+        if @delegate.is_a?(ActionAdderViewController)
+          @delegate.start_action_flow
+        end
         setNeedsDisplay
       when :toy_selected
         @delegate.selected_toy = @selected
-        @delegate.start_action_flow
+        if @delegate.is_a?(ActionAdderViewController)
+          @delegate.start_action_flow
+        end
       # @truly_selected has been set in ActionAdderViewController
       when :collision
         @current_tool = :grab
@@ -209,7 +213,9 @@ class SceneCreatorView < CreatorView
     @truly_selected = close_toy(@current_point)
     if @truly_selected
       @selected = @truly_selected
-      @delegate.start_action_flow
+      if @delegate.is_a?(ActionAdderViewController)
+        @delegate.start_action_flow
+      end
       self.mode = :toy_selected
     else
       self.mode = :toys_only
@@ -252,7 +258,9 @@ class SceneCreatorView < CreatorView
       when :grab
         case @mode
           when :toys_only, :scene, :toy_selected
-            @delegate.close_popover
+            if @delegate.is_a?(ActionAdderViewController)
+              @delegate.close_popover
+            end
             touch_move_scene(point)
           else
             @current_point = point
@@ -315,7 +323,9 @@ class SceneCreatorView < CreatorView
           when :create_new_toy
             @drag = false
           when :toy_selected
-            @delegate.reopen_action_flow
+            if @delegate.is_a?(ActionAdderViewController)
+              @delegate.reopen_action_flow
+            end
         end
       when :circle
         centre = @points[0]
@@ -334,7 +344,9 @@ class SceneCreatorView < CreatorView
       if @truly_selected.is_a?(ToyInScene)
         @toys_in_scene.delete(@truly_selected)
         @toys_in_scene << @truly_selected
-        @delegate.reopen_action_flow
+        if @delegate.is_a?(ActionAdderViewController)
+          @delegate.reopen_action_flow
+        end
       else
         @strokes.delete(@truly_selected)
         @strokes << @truly_selected
