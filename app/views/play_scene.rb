@@ -240,7 +240,7 @@ class PlayScene < SKScene
               local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, param.gsub(' ','_')+'.wav'))
 
               @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
-              @player.numberOfLoops = 1
+              @player.numberOfLoops = 0
               @player.prepareToPlay
               @player.play
 
@@ -467,7 +467,7 @@ class PlayScene < SKScene
     @edges.each do |edge|
       case edge
         when CirclePart
-          puts "PlayScene - don't add circles yet"
+          puts "PlayScene"
           body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
           body.dynamic = false
           body.contactTestBitMask = 1
