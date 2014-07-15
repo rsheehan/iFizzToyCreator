@@ -116,7 +116,6 @@ class ScoreAdderActionViewController < UIViewController
 
   def segment_change
     @selected = @segment_control.selectedSegmentIndex
-    puts "Selected Changed to: " + @selected.to_s
   end
 
   def resizeViews

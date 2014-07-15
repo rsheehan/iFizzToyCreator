@@ -245,8 +245,11 @@ class PlayScene < SKScene
               @player.play
 
             when :text_bubble
-
-
+              @label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
+              @label.position = toy.position
+              @label.fontSize = 14
+              @label.text = param
+              addChild(@label)
             when :score_adder
               if not toy.userData[:score]
                 toy.userData[:score] = 0
