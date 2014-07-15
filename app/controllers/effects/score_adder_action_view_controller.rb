@@ -36,8 +36,8 @@ class ScoreAdderActionViewController < UIViewController
     @title.scrollEnabled = false
     view.addSubview(@title)
 
-    segment_controls
-    view.addSubview(segment_controls)
+    sc = segment_controls
+    view.addSubview(sc)
 
     #number input
     @number_input = UITextField.alloc.initWithFrame([[@width/4, 10+@title.frame.size.height],[@width/2,30]])
@@ -109,7 +109,6 @@ class ScoreAdderActionViewController < UIViewController
     @segment_control.insertSegmentWithTitle('Subtract', atIndex: 1, animated: false)
     @segment_control.insertSegmentWithTitle('Set', atIndex: 2, animated: false)
     @segment_control.sizeToFit
-    @segment_control.momentary = FALSE
     @segment_control.selectedSegmentIndex = @selected
     @segment_control.addTarget(self, action: 'segment_change', forControlEvents: UIControlEventValueChanged)
     @segment_control
@@ -117,6 +116,7 @@ class ScoreAdderActionViewController < UIViewController
 
   def segment_change
     @selected = @segment_control.selectedSegmentIndex
+    puts "Selected Changed to: " + @selected.to_s
   end
 
   def resizeViews
@@ -127,9 +127,9 @@ class ScoreAdderActionViewController < UIViewController
     @title.setFont(UIFont.systemFontOfSize(14))
     @title.setFrame([[@margin+5, 5],[@width-@margin-5, text_size.height+10]])
 
-    @segment_control.setFrame([[@width/4, 10+@title.frame.size.height], [@width/2, 30]])
+    @segment_control.setFrame([[@width/6, 10+@title.frame.size.height], [@width*2/3, 30]])
 
-    @number_input.setFrame([[@width/4, 10+@title.frame.size.height + segment_controls.frame.size.height + 10],[@width/2,30]])
+    @number_input.setFrame([[@width/4, 10+@title.frame.size.height + @segment_control.frame.size.height + 10],[@width/2,30]])
 
     @cont_button.setFrame([[5, @number_input.frame.origin.y+@number_input.frame.size.height+5], [@width-10,30]])
 
