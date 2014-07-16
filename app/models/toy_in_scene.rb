@@ -140,12 +140,39 @@ class ToyInScene
 
   def draw(context)
     CGContextSaveGState(context)
-    CGContextTranslateCTM(context, *@position)
+    if @animate_position
+      CGContextTranslateCTM(context, *@animate_position)
+    else
+      CGContextTranslateCTM(context, *@position)
+    end
     CGContextRotateCTM(context, @angle)
     CGContextScaleCTM(context, @zoom/@old_zoom, @zoom/@old_zoom) #if @zoom != @old_zoom
     image_size = CGPointMake(@image.size.width, @image.size.height)
     @image.drawInRect(CGRectMake(*(image_size / -2.0), *image_size))
     CGContextRestoreGState(context)
+  end
+
+  def move_to(point, duration, delay)
+    toy_center = CGPointMake(100, 0)
+    move_diff = point - toy_center
+    diff = move_diff - @position
+    @how_many_times = duration/delay
+    diff_constant_time = diff / @how_many_times
+    @animate_position = @position
+    @position = point
+    @timer = NSTimer.scheduledTimerWithTimeInterval(delay, target: self, selector: "animate:", userInfo: [diff_constant_time, 0], repeats: true)
+  end
+
+  def animate(timer)
+    if timer.userInfo[1] < @how_many_times
+      @animate_position += timer.userInfo[0]
+    else
+      timer.invalidate
+      #@timer = nil
+      @animate_position = nil
+      return
+    end
+    timer.userInfo[1]+=1
   end
 
 end
