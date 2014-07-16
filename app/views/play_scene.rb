@@ -245,10 +245,26 @@ class PlayScene < SKScene
               @player.play
 
             when :text_bubble
-              @label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
+
+              if @label
+                @label.removeFromParent
+              end
+
+              text = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
+              text.position = CGPointMake(0, 0)
+              text.fontSize = 14
+              text.text = param
+              text.fontColor = UIColor.blackColor
+
+              @label = SKShapeNode.alloc.init
+              num = Pointer.new(:float, 2)
+              num[0] = 5
+              bezier = UIBezierPath.bezierPathWithRoundedRect(CGRectMake(-65, -40, 130, 80), cornerRadius: num[0])
+              @label.path = bezier.CGPath
+              @label.fillColor = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+              @label.addChild(text)
               @label.position = toy.position
-              @label.fontSize = 14
-              @label.text = param
+
               addChild(@label)
             when :score_adder
               if not toy.userData[:score]
