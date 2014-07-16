@@ -163,11 +163,7 @@ class ActionAdderViewController < UIViewController
     @action_button_name = button_name
   end
 
-  # sets the time information for the repeat action.
-  def repeat_time(seconds)
-    @repeat_time_secs = seconds
-    puts('Time SET',seconds)
-  end
+
 
   def close_touch_view_controller
     dismissModalViewControllerAnimated(false, completion: nil)
@@ -184,13 +180,13 @@ class ActionAdderViewController < UIViewController
     #@view_mode = @selected_toy ? :toy_selected : :nothing_chosen
   end
 
-  def colliding_toy=(toy)
-    @colliding_toy = toy
-    dismissModalViewControllerAnimated(false, completion: nil)
-    enable_action_buttons(false)
-    enable_show_mode_buttons(false)
-    enable_effect_buttons(true)
-  end
+  # def colliding_toy=(toy)
+  #   @colliding_toy = toy
+  #   dismissModalViewControllerAnimated(false, completion: nil)
+  #   enable_action_buttons(false)
+  #   enable_show_mode_buttons(false)
+  #   enable_effect_buttons(true)
+  # end
 
   def get_action
     if @action_button_name
@@ -201,7 +197,7 @@ class ActionAdderViewController < UIViewController
       action_param = [@repeat_time_secs]
     elsif @colliding_toy
       action_type = :collision
-      action_param = @colliding_toy.template.identifier
+      action_param = @colliding_toy.identifier
     elsif @loud_noise
       action_type = :loud_noise
       action_param = nil
@@ -402,146 +398,95 @@ class ActionAdderViewController < UIViewController
   end
 
   # Adding a repeat event.
-  def timer
-    reset_action_params
-    #disable buttons when showing modal screen
-    enable_show_mode_buttons(false)
+  #def timer
+    # reset_action_params
+    # #disable buttons when showing modal screen
+    # enable_show_mode_buttons(false)
+    #
+    # #create a picker view controller pop up to define how long to repeat for
+    # # repeat_action_view_controller = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    # # repeat_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+    # # repeat_action_view_controller.modalPresentationStyle = UIModalPresentationFormSheet
+    # # repeat_action_view_controller.delegate = self
+    # # presentViewController(repeat_action_view_controller, animated: false, completion: nil)
+    # @popover_type = :timer
+    # content = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
+    # content.delegate = self
+    # @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    # @popover.delegate = self
+    # @popover.presentPopoverFromRect(@action_buttons[:timer].frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
 
-    #create a picker view controller pop up to define how long to repeat for
-    # repeat_action_view_controller = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    # repeat_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-    # repeat_action_view_controller.modalPresentationStyle = UIModalPresentationFormSheet
-    # repeat_action_view_controller.delegate = self
-    # presentViewController(repeat_action_view_controller, animated: false, completion: nil)
-    @popover_type = :timer
-    content = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    content.delegate = self
-    @popover = UIPopoverController.alloc.initWithContentViewController(content)
-    @popover.delegate = self
-    @popover.presentPopoverFromRect(@action_buttons[:timer].frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
-
-  end
+  #end
 
   #adding a collision event
-  def collision
-    reset_action_params
-    #disable buttons when showing modal screen
-    enable_show_mode_buttons(false)
+  # def collision
+  #   # reset_action_params
+  #   # #disable buttons when showing modal screen
+  #   # enable_show_mode_buttons(false)
+  #   #
+  #   # #make a modal to select another toy - must disable selecting same toy?
+  #   # collision_action_view_controller = CollisionActionViewController.alloc.initWithNibName(nil, bundle: nil)
+  #   # collision_action_view_controller.bounds_for_view = @bounds
+  #   # collision_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+  #   # collision_action_view_controller.other_toy = @selected_toy
+  #   # collision_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+  #   # presentViewController(collision_action_view_controller, animated: false, completion: nil)
+  # end
 
-    #make a modal to select another toy - must disable selecting same toy?
-    collision_action_view_controller = CollisionActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    collision_action_view_controller.bounds_for_view = @bounds
-    collision_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
-    collision_action_view_controller.other_toy = @selected_toy
-    collision_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
-    presentViewController(collision_action_view_controller, animated: false, completion: nil)
-  end
+  # def shake
+    # reset_action_params
+    # #store shake and switch to effect
+    # @shake = true
+    # enable_action_buttons(false)
+    # enable_show_mode_buttons(false)
+    # enable_effect_buttons(true)
+  # end
 
-  def shake
-    reset_action_params
-    #store shake and switch to effect
-    @shake = true
-    enable_action_buttons(false)
-    enable_show_mode_buttons(false)
-    enable_effect_buttons(true)
-  end
+  # def score_reaches
+  #   reset_action_params
+  #   #TODO make user select score global or local
+  #   #ask which value it reaches - popup
+  #   #then move on to effect
+  #   @popover_type = :score_reaches
+  #   content = NumericInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+  #   content.setTitle('Enter the score that will trigger the event')
+  #   content.delegate = self
+  #   @popover = UIPopoverController.alloc.initWithContentViewController(content)
+  #   @popover.delegate = self
+  #   @popover.presentPopoverFromRect(@action_buttons[:score_reaches].frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+  # end
 
-  def score_reaches
-    reset_action_params
-    #TODO make user select score global or local
-    #ask which value it reaches - popup
-    #then move on to effect
-    @popover_type = :score_reaches
-    content = NumericInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
-    content.setTitle('Enter the score that will trigger the event')
-    content.delegate = self
-    @popover = UIPopoverController.alloc.initWithContentViewController(content)
-    @popover.delegate = self
-    @popover.presentPopoverFromRect(@action_buttons[:score_reaches].frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
-  end
+  # def popoverControllerShouldDismissPopover(popoverController)
+  #   true
+  # end
 
-  def popoverControllerShouldDismissPopover(popoverController)
-    if popoverController.contentViewController.is_a?(NumericInputPopOverViewController)
-      return false
-    elsif popoverController.contentViewController.is_a?(RepeatActionViewController)
-      return false
-    elsif popoverController.contentViewController.is_a?(SoundSelectPopoverViewController)
-      return false
-    end
-    true
-  end
+  # def when_created
+  #   # reset_action_params
+  #   # #include start?
+  #   # #move straight to effect as have already selected toy
+  #   # @when_created = true
+  #   # enable_action_buttons(false)
+  #   # enable_show_mode_buttons(false)
+  #   # enable_effect_buttons(true)
+  # end
 
-  def close_popover
-    @popover_type = nil
-    @popover.dismissPopoverAnimated(true)
-  end
-
-  def submit_number(number_str)
-    case @popover_type
-      when :score_reaches
-        #set action
-        @score_reaches = number_str.to_i
-      when :timer
-        repeat_time(number_str)
-    end
-    enable_action_buttons(false)
-    enable_show_mode_buttons(false)
-    enable_effect_buttons(true)
-    close_popover
-  end
-
-  def submit_text(text)
-    action_type, action_param = get_action
-    effect_type = :text_bubble
-    effect_param = text
-    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
-
-    enable_action_buttons(true)
-    enable_show_mode_buttons(true)
-    enable_effect_buttons(false)
-    close_popover
-  end
-
-  def submit_score_adder (number, type)
-    action_type, action_param = get_action
-    effect_type = :score_adder
-    effect_param = [number.to_i, type]
-    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
-
-    enable_action_buttons(true)
-    enable_show_mode_buttons(true)
-    enable_effect_buttons(false)
-
-    close_popover
-  end
-
-  def when_created
-    reset_action_params
-    #include start?
-    #move straight to effect as have already selected toy
-    @when_created = true
-    enable_action_buttons(false)
-    enable_show_mode_buttons(false)
-    enable_effect_buttons(true)
-  end
-
-  def loud_noise
-    reset_action_params
-    #store loud noise and switch to effect
-    @loud_noise = true
-    enable_action_buttons(false)
-    enable_show_mode_buttons(false)
-    enable_effect_buttons(true)
-  end
-
-  def toy_touch
-    reset_action_params
-    #store selected toy and switch to effect
-    @toy_touch = @selected_toy
-    enable_action_buttons(false)
-    enable_show_mode_buttons(false)
-    enable_effect_buttons(true)
-  end
+  # def loud_noise
+  #   # reset_action_params
+  #   # #store loud noise and switch to effect
+  #   # @loud_noise = true
+  #   # enable_action_buttons(false)
+  #   # enable_show_mode_buttons(false)
+  #   # enable_effect_buttons(true)
+  # end
+  #
+  # def toy_touch
+  #   # reset_action_params
+  #   # #store selected toy and switch to effect
+  #   # @toy_touch = @selected_toy
+  #   # enable_action_buttons(false)
+  #   # enable_show_mode_buttons(false)
+  #   # enable_effect_buttons(true)
+  # end
 
   #======================
   # Effects
@@ -616,28 +561,222 @@ class ActionAdderViewController < UIViewController
     @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
   end
 
-  def play_sound
-    #show popover to select sound to play
-    @popover_type = :play_sound
-    content = SoundSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+  # def play_sound
+  #   # #show popover to select sound to play
+  #   # @popover_type = :play_sound
+  #   # content = SoundSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+  #   # content.delegate = self
+  #   # @popover = UIPopoverController.alloc.initWithContentViewController(content)
+  #   # @popover.delegate = self
+  #   # @popover.presentPopoverFromRect([[@effect_buttons[:play_sound].frame.origin.x+@effect_button_view.frame.origin.x,@effect_buttons[:play_sound].frame.origin.y],@effect_buttons[:play_sound].frame.size], inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+  #
+  #
+  # end
+
+
+
+  #==========
+  # NEw Actions flow
+  #=========
+  def start_action_flow
+    if @popover
+      close_popover
+    end
+    @popoverStack = []
+    reset_action_params
+
+    if not @selected_toy.nil? and @state.scenes.size > 0
+      content = ActionListPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+      content.state = @state
+      content.selected = @selected_toy
+      content.delegate = self
+      show_popover(content)
+    end
+  end
+
+  def reopen_action_flow
+    #if there is a popover visible don't repoen?
+    close_popover
+    if @popoverStack.size > 0
+        content = @popoverStack.last
+        @popover = UIPopoverController.alloc.initWithContentViewController(content)
+        @popover.delegate = self
+        @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections:  UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
+    end
+  end
+
+  def action_flow_back
+    close_popover
+    #remove current popover from stack
+    if @popoverStack.size > 0
+      @popoverStack.pop
+    end
+    if @popoverStack.size > 0
+      content = @popoverStack.last
+      @popover = UIPopoverController.alloc.initWithContentViewController(content)
+      @popover.delegate = self
+      @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections:  UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
+    end
+  end
+
+  def new_action
+    close_popover
+    #show new action popover
+    content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
     content.delegate = self
-    @popover = UIPopoverController.alloc.initWithContentViewController(content)
-    @popover.delegate = self
-    @popover.presentPopoverFromRect([[@effect_buttons[:play_sound].frame.origin.x+@effect_button_view.frame.origin.x,@effect_buttons[:play_sound].frame.origin.y],@effect_buttons[:play_sound].frame.size], inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+    content.mode = :actions
+    show_popover(content)
+  end
 
+  def makeTrigger(type)
+    reset_action_params
+    close_popover
+    case type
+      when :touch
+        #show button select
+      when :timer
+        #show timer popover
+        @popover_type = :timer
+        content = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        show_popover(content)
+      when :collision
+        #show select toy popover
+        content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        content.mode = :toys
+        content.state = @state
+        content.setTitle('Choose a Toy that this toy will hit')
+        show_popover(content)
+      when :score_reaches
+        #show score popover
+        @popover_type = :score_reaches
+        content = NumericInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.setTitle('Enter the score that will trigger the event')
+        content.delegate = self
+        show_popover(content)
+      when :shake
+        @shake = true
+        show_effects_popover
+      when :when_created
+        @when_created = true
+        show_effects_popover
+      when :loud_noise
+        @loud_noise = true
+        show_effects_popover
+      when :toy_touch
+        @toy_touch = @selected_toy
+        show_effects_popover
+      else
+    end
+  end
 
+  def submit_number(number)
+    case @popover_type
+      when :score_reaches
+        @score_reaches = number
+      when :timer
+        @repeat_time_secs = number
+    end
+    close_popover
+    show_effects_popover
+  end
+
+  def show_effects_popover
+    content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.delegate = self
+    content.mode = :effects
+    content.setTitle('Choose an Effect')
+    show_popover(content)
+  end
+
+  def makeEffect(type)
+    puts "Make effect "
+    close_popover
+    case type
+      when :apply_force
+
+      when :explosion
+
+      when :apply_torque
+
+      when :create_new_toy
+
+      when :delete_effect
+        action_type, action_param = get_action
+        effect_type = :delete_effect
+        effect_param = DELETE_FADE_TIME
+        create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+        action_created
+      when :score_adder
+        content = ScoreAdderActionViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.setTitle('Enter the change in score')
+        content.delegate = self
+        show_popover(content)
+      when :play_sound
+        content = SoundSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        show_popover(content)
+      else
+    end
+  end
+
+  def submit_score_adder(number, type)
+    close_popover
+    action_type, action_param = get_action
+    effect_type = :score_adder
+    effect_param = [number.to_i, type]
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    action_created
   end
 
   def set_sound(sound_name)
+    close_popover
     action_type, action_param = get_action
     effect_type = :play_sound
     effect_param = sound_name
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
-    @main_view.secondary_selected = nil
-    enable_action_buttons(true)
-    enable_effect_buttons(false)
-    @main_view.setNeedsDisplay
-    close_popover
+    action_created
+  end
+
+  def chose_toy(toy_index)
+    #find mode of latest collection popover that was not toy (should be 2nd last)
+    if @popoverStack[-2].is_a?(CollectionViewPopoverViewController)
+      case @popoverStack[-2].mode
+        when :actions
+          #add toy param to action (collision)
+          @colliding_toy = @state.toys[toy_index]
+          close_popover
+          show_effects_popover
+        when :effects
+          #add toy param to effect (create)
+        else
+          #do nothing
+      end
+    end
+  end
+
+  def show_popover(content)
+    @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    @popover.passthroughViews = [@main_view, @scene_creator_view_controller.view] #not working? should allow dragging while popover open
+    @popover.delegate = self
+    @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
+    @popoverStack << content
+  end
+
+  def close_popover
+    @popover_type = nil
+    @popover.dismissPopoverAnimated(true)
+  end
+
+  def action_created
+    #remove popovers from stack until get to action viewer (don't want to allow going back and editing action)
+    while not @popoverStack[-1].is_a?(ActionListPopoverViewController)
+      @popoverStack.pop
+    end
+    #update state?
+    @popoverStack[-1].state = @state
+    reopen_action_flow
   end
 
   def text_bubble
