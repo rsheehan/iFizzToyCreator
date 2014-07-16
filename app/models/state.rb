@@ -133,7 +133,7 @@ class State
       end
     end
     @scenes = scenes
-    @currentscene = scenes.length - 1
+    @currentscene = 0 #scenes.length - 1
   end
 
   def jsonToPart(json_part)
