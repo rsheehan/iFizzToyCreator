@@ -159,7 +159,7 @@ class ToyInScene
     @how_many_times = duration/delay
     diff_constant_time = diff / @how_many_times
     @animate_position = @position
-    @position = point
+    @position = move_diff
     @timer = NSTimer.scheduledTimerWithTimeInterval(delay, target: self, selector: "animate:", userInfo: [diff_constant_time, 0], repeats: true)
   end
 
