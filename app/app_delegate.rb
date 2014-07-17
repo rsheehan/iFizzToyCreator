@@ -36,8 +36,8 @@ class AppDelegate
 
     controllers.each { |controller| controller.bounds_for_view = view_bounds }
     # Now set up my models
-    state = State.new
-    controllers.each { |controller| controller.state = state }
+    @state = State.new
+    controllers.each { |controller| controller.state = @state }
     #toy_creator_view_controller.state = state
 
     tab_bar_controller = UITabBarController.alloc.init
@@ -56,6 +56,12 @@ class AppDelegate
     true
   end
 
+  # Saving after the app has closed
+  def applicationWillResignActive(application)
+    @state.save
+    while(@state.is_saving)
+    end
+  end
 
   # returns with the icon image
   def icon_and_title(controller, title, icon_name)

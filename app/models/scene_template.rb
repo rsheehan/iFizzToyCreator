@@ -18,7 +18,7 @@ class SceneTemplate
     @toys = toys    # each of type ToyInScene
     @edges = edges  # each of type ToyPart - either Circle or Points
     @actions = actions   # each a Hash
-    puts "SceneTemplate actions"
+    #puts "SceneTemplate actions"
     @bounds = bounds
     p actions
     # possibly create an image of the scene for the scene box view

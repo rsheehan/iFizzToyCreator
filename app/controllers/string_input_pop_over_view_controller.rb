@@ -1,4 +1,4 @@
-class ScoreAdderActionViewController < UIViewController
+class StringInputPopOverViewController < UIViewController
 
   attr_reader :text
   attr_writer :delegate
@@ -10,7 +10,6 @@ class ScoreAdderActionViewController < UIViewController
   def loadView
     super
     @width = 300
-    @selected = 0
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
     view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
@@ -34,24 +33,22 @@ class ScoreAdderActionViewController < UIViewController
     @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
     @title.editable = false
     @title.scrollEnabled = false
+    @title.textAlignment = NSTextAlignmentCenter
     view.addSubview(@title)
 
-    segment_controls
-    view.addSubview(segment_controls)
-
-    #number input
-    @number_input = UITextField.alloc.initWithFrame([[@width/4, 10+@title.frame.size.height],[@width/2,30]])
-    @number_input.textAlignment = NSTextAlignmentCenter
-    @number_input.delegate = self
-    @number_input.keyboardType = UIKeyboardTypeNumberPad
-    @number_input.setBackgroundColor(UIColor.whiteColor)
-    @number_input.setText('1')
-    view.addSubview(@number_input)
+    #string input
+    @string_input = UITextField.alloc.initWithFrame([[@width/4, 10+@title.frame.size.height],[@width/2,30]])
+    @string_input.textAlignment = NSTextAlignmentCenter
+    @string_input.delegate = self
+    @string_input.keyboardType = UIKeyboardTypeASCIICapable
+    @string_input.setBackgroundColor(UIColor.whiteColor)
+    @string_input.setText('')
+    view.addSubview(@string_input)
 
     #continue button
     @cont_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
     @cont_button.setTitle('Continue', forState: UIControlStateNormal)
-    @cont_button.frame = [[5, @number_input.frame.origin.y+@number_input.frame.size.height+5], [@width-10,30]]
+    @cont_button.frame = [[5, @string_input.frame.origin.y+@string_input.frame.size.height+5], [@width-10,30]]
     @cont_button.addTarget(self, action: 'continue:', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(@cont_button)
 
@@ -59,8 +56,11 @@ class ScoreAdderActionViewController < UIViewController
   end
 
   def textField(textField, shouldChangeCharactersInRange:range, replacementString:string)
-    nonNumberSet = NSCharacterSet.decimalDigitCharacterSet.invertedSet
-    return ((string.stringByTrimmingCharactersInSet(nonNumberSet).length > 0) or string == '')
+    legalCharSet = NSMutableCharacterSet.characterSetWithCharactersInString(' ')
+    legalCharSet.formUnionWithCharacterSet(NSCharacterSet.alphanumericCharacterSet)
+    trimmedString = string.stringByTrimmingCharactersInSet(legalCharSet.invert)
+    stringEmpty = string == ''
+    return ((trimmedString.length > 0) or stringEmpty)
   end
 
   def setTitle(text)
@@ -87,36 +87,11 @@ class ScoreAdderActionViewController < UIViewController
 
   def continue(sender)
     if @delegate
-      text = @number_input.text
-      if text.to_i > 0
-        puts "Selected: " + @selected.to_s
-        case @selected
-          when 0
-            @delegate.submit_score_adder(@number_input.text, "add")
-          when 1
-            @delegate.submit_score_adder(@number_input.text, "subtract")
-          when 2
-            @delegate.submit_score_adder(@number_input.text, "set")
-        end
+      text = @string_input.text
+      if text.length > 0
+        @delegate.submit_text(@string_input.text)
       end
     end
-  end
-
-  def segment_controls
-    @segment_control = UISegmentedControl.alloc.initWithFrame( CGRectZero)
-    @segment_control.segmentedControlStyle = UISegmentedControlStyleBar
-    @segment_control.insertSegmentWithTitle('Add', atIndex: 0, animated: false)
-    @segment_control.insertSegmentWithTitle('Subtract', atIndex: 1, animated: false)
-    @segment_control.insertSegmentWithTitle('Set', atIndex: 2, animated: false)
-    @segment_control.sizeToFit
-    @segment_control.momentary = FALSE
-    @segment_control.selectedSegmentIndex = @selected
-    @segment_control.addTarget(self, action: 'segment_change', forControlEvents: UIControlEventValueChanged)
-    @segment_control
-  end
-
-  def segment_change
-    @selected = @segment_control.selectedSegmentIndex
   end
 
   def resizeViews
@@ -127,11 +102,9 @@ class ScoreAdderActionViewController < UIViewController
     @title.setFont(UIFont.systemFontOfSize(14))
     @title.setFrame([[@margin+5, 5],[@width-@margin-5, text_size.height+10]])
 
-    @segment_control.setFrame([[@width/4, 10+@title.frame.size.height], [@width/2, 30]])
+    @string_input.setFrame([[@width/4, 10+@title.frame.size.height],[@width/2,30]])
 
-    @number_input.setFrame([[@width/4, 10+@title.frame.size.height + segment_controls.frame.size.height + 10],[@width/2,30]])
-
-    @cont_button.setFrame([[5, @number_input.frame.origin.y+@number_input.frame.size.height+5], [@width-10,30]])
+    @cont_button.setFrame([[5, @string_input.frame.origin.y+@string_input.frame.size.height+5], [@width-10,30]])
 
     self.preferredContentSize = [@width, @cont_button.frame.origin.y+@cont_button.frame.size.height+5]
     self.view.setNeedsLayout

@@ -6,7 +6,7 @@ class ActionAdderViewController < UIViewController
   # toy:, action_type:, action_param:, effect_type:, effect_param:
 
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
-  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound]
+  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble]
   MODES = [:show_actions,:show_properties]
 
   FORCE_SCALE = 250
@@ -404,6 +404,8 @@ class ActionAdderViewController < UIViewController
         Language::SCORE_ADDER
       when :play_sound
         Language::PLAY_SOUND
+      when :text_bubble
+        Language::TEXT_BUBBLE
     end
   end
 
@@ -892,6 +894,22 @@ class ActionAdderViewController < UIViewController
     #update state?
     @popoverStack[-1].state = @state
     reopen_action_flow
+  end
+
+  def text_bubble
+    @popover_type = :text_bubble
+    content = StringInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.delegate = self
+    content.setTitle("What does the Fox say?")
+
+    @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    @popover.delegate = self
+
+    position = @selected_toy.position
+    size = @selected_toy.image.size
+
+    frame = CGRectMake(position.x - size.width/2, position.y - size.height/2, size.width, size.height)
+    @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
   end
 
 end

@@ -55,6 +55,10 @@ class State
     #save
   end
 
+  def is_saving
+    return (not @thread.nil?)
+  end
+
   def save
     if @thread.nil?
       @thread = Thread.new {
@@ -77,6 +81,9 @@ class State
   end
 
   def load
+    if not @thread.nil?
+      puts "Saving before loading?"
+    end
     @thread = "lock"
     paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
     documents_path = paths.objectAtIndex(0) # Get the docs directory
@@ -121,7 +128,7 @@ class State
     scenes = []
     if json_scenes
       json_scenes.each do |json_scene|
-        puts 'processing scene'
+        #puts 'processing scene'
         scenes << jsonToScene(json_scene)
       end
     end
