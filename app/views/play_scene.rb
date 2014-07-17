@@ -240,25 +240,68 @@ class PlayScene < SKScene
               local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, param.gsub(' ','_')+'.wav'))
 
               @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
-              @player.numberOfLoops = 1
+              @player.numberOfLoops = 0
               @player.prepareToPlay
               @player.play
 
             when :text_bubble
 
+              if @label
+                @label.removeFromParent
+              end
 
+              text = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
+              text.position = CGPointMake(0, 0)
+              text.fontSize = 14
+              text.text = param
+              text.fontColor = UIColor.blackColor
+
+              @label = SKShapeNode.alloc.init
+              num = Pointer.new(:float, 2)
+              num[0] = 5
+              bezier = UIBezierPath.bezierPathWithRoundedRect(CGRectMake(-65, -40, 130, 80), cornerRadius: num[0])
+              @label.path = bezier.CGPath
+              @label.fillColor = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+              @label.addChild(text)
+              @label.position = toy.position
+
+              addChild(@label)
             when :score_adder
               if not toy.userData[:score]
                 toy.userData[:score] = 0
               end
+              label_colour = nil
               case param[1]
                 when "add"
                   toy.userData[:score] += param[0]
+                  label_colour = UIColor.greenColor
                 when "subtract"
                   toy.userData[:score] -= param[0]
+                  label_colour = UIColor.redColor
                 when "set"
                   toy.userData[:score] = param[0]
+                  label_colour = UIColor.yellowColor
               end
+
+              label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
+              label.position = toy.position + CGPointMake(-20, 0)
+              label.fontSize = 18
+              label.text = toy.userData[:score].to_s
+              label.fontColor = label_colour
+
+              addChild(label)
+
+              action_duration = 1.0
+              groupActions = []
+              groupActions << SKAction.moveByX(10, y: 0, duration: action_duration)
+              groupActions << SKAction.scaleBy(7, duration: action_duration)
+              groupActions << SKAction.fadeOutWithDuration(action_duration)
+
+              actions = SKAction.group(groupActions)
+              actions = SKAction.sequence([actions, SKAction.removeFromParent])
+
+              label.runAction(actions)
+
               puts "Toy Score: " + toy.userData[:score].to_s
               @score_actions.each do |score_action|
                 if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score] and not score_action[:used].include?(toy.userData[:uniqueID])
@@ -467,7 +510,7 @@ class PlayScene < SKScene
     @edges.each do |edge|
       case edge
         when CirclePart
-          puts "PlayScene - don't add circles yet"
+          puts "PlayScene"
           body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
           body.dynamic = false
           body.contactTestBitMask = 1
