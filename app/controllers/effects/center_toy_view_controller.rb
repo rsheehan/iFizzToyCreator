@@ -41,7 +41,7 @@ class CenterToyViewController < UIViewController
     #@scene_creator_view_controller.main_view.shift_view_by(@diff*-1)
     #@selected.change_position(@toy_origin)
     @popover.dismissPopoverAnimated(true)
-    @selected.move_to(@toy_origin, @duration, @delay)
+    @selected.move_to(@toy_origin + CGPointMake(100, 0), @duration, @delay)
     @timer = NSTimer.scheduledTimerWithTimeInterval(@delay, target: self, selector: "animate:", userInfo: [@delta_alpha*-1, 0], repeats: true)
 
   end
