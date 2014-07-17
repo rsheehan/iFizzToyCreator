@@ -191,6 +191,8 @@ class ActionListPopoverViewController < UIViewController
     action_cell ||= ActionCell.alloc.initWithStyle(UITableViewCellStyleValue1, reuseIdentifier: @reuseIdentifier)
 
     action = @toy_actions[item]
+
+    action_cell.action_text = action[:action_type].gsub('_', ' ')
     #action image
     case action[:action_type]
       when :collision
@@ -211,10 +213,44 @@ class ActionListPopoverViewController < UIViewController
         action_cell.object_image = textImage
       when :button
         action_cell.action_image = UIImage.imageNamed("touch.png")
+        action_cell.action_text = 'tap'
         action_cell.object_image = UIImage.imageNamed(action[:action_param]+ ".png")
+      when :score_reaches
+        action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
+        textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
+        action_cell.object_image = textImage
+      when :shake, :when_created, :loud_noise, :toy_touch
+        action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
+      else
     end
 
     action_cell.effect_image = UIImage.imageNamed(action[:effect_type]+".png")
+    action_cell.effect_text = action[:effect_type].gsub('_',' ')
+
+    case action[:effect_type]
+      when :apply_force
+        #draw arrow in direction
+      when :explosion
+        #draw circle with size
+      when :apply_torque
+        #draw arrow with direction in circle
+      when :create_new_toy
+        #draw toy
+        #set object to be the toy image of the identifier in actionparam
+        @state.toys.each do |toy|
+          if toy.identifier == action[:effect_param][:id]
+            action_cell.param_image = toy.image
+            break
+          end
+        end
+      when :delete_effect
+        #nothing
+      when :score_adder
+        #show how score is changed
+      when :play_sound
+        #show sound name? button to play sound?
+      else
+    end
 
     action_cell
 

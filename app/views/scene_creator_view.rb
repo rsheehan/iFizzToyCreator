@@ -8,7 +8,7 @@ class SceneCreatorView < CreatorView
 # @truly_selected is a stroke/toy which is currently being touched by the user
 # @selected is a stroke/toy which was touched and is now hilighted
   attr_writer :selected, :secondary_selected, :show_action_controller
-  attr_reader :actions
+  attr_reader :actions, :delegate
   attr_accessor :alpha_view
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)

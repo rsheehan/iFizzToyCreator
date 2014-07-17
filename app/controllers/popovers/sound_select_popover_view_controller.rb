@@ -55,6 +55,8 @@ class SoundSelectPopoverViewController < UIViewController
 
   def select_sound(sender)
     @player = nil
+    #add extension on end
+    text = sender.view.text.gsub(' ', '_')
     @delegate.set_sound(sender.view.text)
   end
 

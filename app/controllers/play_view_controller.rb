@@ -37,20 +37,20 @@ class PlayViewController < UIViewController
     puts AVAudioSession.sharedInstance.to_s
 
     AVAudioSession.sharedInstance.requestRecordPermission(lambda do |granted|
-        if granted
-          puts "Microphone is enabled.."
-        else
-          puts "Microphone is disabled.."
+      if granted
+        puts "Microphone is enabled.."
+      else
+        puts "Microphone is disabled.."
 
-          Dispatch::Queue.main.async do
-                UIAlertView.alloc.initWithTitle("Microphone Access Denied",
-                                                message:"This app requires access to your device's Microphone.\n\nPlease enable Microphone access for this app in Settings / Privacy / Microphone",
-                                                delegate:nil,
-                                                cancelButtonTitle:"Dismiss",
-                                                otherButtonTitles:nil).show
-          end
+        Dispatch::Queue.main.async do
+          UIAlertView.alloc.initWithTitle("Microphone Access Denied",
+                                          message:"This app requires access to your device's Microphone.\n\nPlease enable Microphone access for this app in Settings / Privacy / Microphone",
+                                          delegate:nil,
+                                          cancelButtonTitle:"Dismiss",
+                                          otherButtonTitles:nil).show
         end
-      end)
+      end
+    end)
 
     audioSession = AVAudioSession.sharedInstance
     audioSession.setCategory(AVAudioSessionCategoryPlayAndRecord, error:nil)
@@ -269,8 +269,8 @@ class PlayViewController < UIViewController
   def button_action(sender)
     # find the correct action and submit it for firing
     #puts "button: #{sender}"
-        # pass the actions through to the scene for its update method to use
-        @play_scene.add_actions_for_update(@button_actions[sender])
+    # pass the actions through to the scene for its update method to use
+    @play_scene.add_actions_for_update(@button_actions[sender])
   end
 
   def perform_action(timer)

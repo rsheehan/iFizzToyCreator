@@ -9,7 +9,7 @@ class ImageCell < UICollectionViewCell
     @image_view.contentMode = UIViewContentModeScaleAspectFit
     @image_view.clipsToBounds = true
     addSubview(@image_view)
-    @text_view = UILabel.alloc.initWithFrame(CGRectMake(0,frame.size.height-10,frame.size.width, 15))
+    @text_view = UILabel.alloc.initWithFrame(CGRectMake(0,frame.size.height-15,frame.size.width, 15))
     @text_view.setTextAlignment(UITextAlignmentCenter)
     @text_view.setFont(UIFont.systemFontOfSize(14))
     addSubview(@text_view)
