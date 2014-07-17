@@ -37,11 +37,11 @@ class CenterToyViewController < UIViewController
     @scene_creator_view_controller.refresh
   end
 
-  def viewDidDisappear(animated)
+  def viewWillDisappear(animated)
     #@scene_creator_view_controller.main_view.shift_view_by(@diff*-1)
     #@selected.change_position(@toy_origin)
     @popover.dismissPopoverAnimated(true)
-    @selected.move_to(@toy_origin, @duration, @delay)
+    @selected.move_to(@toy_origin + CGPointMake(100, 0), @duration, @delay)
     @timer = NSTimer.scheduledTimerWithTimeInterval(@delay, target: self, selector: "animate:", userInfo: [@delta_alpha*-1, 0], repeats: true)
 
   end
@@ -49,7 +49,7 @@ class CenterToyViewController < UIViewController
   def animate(timer)
     if timer.userInfo[1] < @how_many_times
       # @selected.change_position(@selected.position + timer.userInfo[0])
-      @scene_creator_view_controller.main_view.alpha_view -= timer.userInfo[1]
+      @scene_creator_view_controller.main_view.alpha_view -= timer.userInfo[0]
     else
       timer.invalidate
       #@timer = nil

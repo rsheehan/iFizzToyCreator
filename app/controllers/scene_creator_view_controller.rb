@@ -105,15 +105,22 @@ class SceneCreatorViewController < UIViewController
     scene.toys.each do |toy|
       @main_view.add_toy(toy)
       #add toy's actions to scene
-      toy.template.actions.each do |action|
-        @main_view.add_action(action)
-      end
+      add_all_toy_actions(toy.template)
     end
     #update id
     @id = scene.identifier
     @state.currentscene = scene_index
     close_toybox
     grab
+  end
+
+  def add_all_toy_actions(toy)
+    toy.actions.each do |action|
+      @main_view.add_action(action)
+      if action[:effect_type] == :create_new_toy
+        add_all_toy_actions((@state.toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first)
+      end
+    end
   end
 
   # Called when the view disappears.
