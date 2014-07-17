@@ -649,10 +649,12 @@ class ActionAdderViewController < UIViewController
     @popover = UIPopoverController.alloc.initWithContentViewController(content)
     @popover.delegate = self
 
-    position = @selected_toy.position
-    size = @selected_toy.image.size
-
-    frame = CGRectMake(position.x - size.width/2, position.y - size.height/2, size.width, size.height)
+    # position = @selected_toy.position
+    # size = @selected_toy.image.size
+    #
+    # frame = CGRectMake(position.x - size.width/2, position.y - size.height/2, size.width, size.height)
+    frame = @effect_buttons[:text_bubble].frame
+    frame.origin.x = @effect_button_view.frame.origin.x + frame.origin.x
     @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
   end
 

@@ -64,7 +64,8 @@ class State
       @thread = Thread.new {
       paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
       documents_path = paths.objectAtIndex(0) # Get the docs directory
-      file_path = documents_path.stringByAppendingPathComponent('state') # Add the file name
+      file_name = 'temp' + Time.now.to_s
+      file_path = documents_path.stringByAppendingPathComponent(file_name) # Add the file name
       puts "Writing image to #{file_path}"
       writeStream = NSOutputStream.outputStreamToFileAtPath(file_path, append: false)
       if writeStream
@@ -74,6 +75,8 @@ class State
         puts "saved #{bytes} bytes"
         writeStream.close
       end
+      state_file_path = documents_path.stringByAppendingPathComponent('state')
+      File.rename(file_path, state_file_path)
       @thread = nil
       }
     end
@@ -133,7 +136,7 @@ class State
       end
     end
     @scenes = scenes
-    @currentscene = scenes.length - 1
+    @currentscene = 0 #scenes.length - 1
   end
 
   def jsonToPart(json_part)

@@ -54,7 +54,7 @@ class SoundSelectPopoverViewController < UIViewController
 
       local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, name))
       @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
-      @player.numberOfLoops = 1
+      @player.numberOfLoops = 0
       @player.prepareToPlay
       @player.play
     end
