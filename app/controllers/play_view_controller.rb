@@ -271,12 +271,12 @@ class PlayViewController < UIViewController
     #puts "button: #{sender}"
         # pass the actions through to the scene for its update method to use
         @play_scene.add_actions_for_update(@button_actions[sender])
-                                                                                                                                                     end
-
-    def perform_action(timer)
-      puts(timer)
-      puts(timer.userInfo)
-      @play_scene.add_actions_for_update([timer.userInfo])
-    end
-
   end
+
+  def perform_action(timer)
+    puts(timer)
+    puts(timer.userInfo)
+    @play_scene.add_actions_for_update([timer.userInfo])
+  end
+
+end
