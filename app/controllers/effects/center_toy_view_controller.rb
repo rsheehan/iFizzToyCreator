@@ -22,8 +22,8 @@ class CenterToyViewController < UIViewController
     @selected.move_to(@main_view.center, @duration, @delay)
 
     @how_many_times = @duration/@delay
-    delta_alpha = (1-lowerAlpha) / @how_many_times
-    @timer = NSTimer.scheduledTimerWithTimeInterval(@delay, target: self, selector: "animate:", userInfo: [delta_alpha, 0], repeats: true)
+    @delta_alpha = (1-lowerAlpha) / @how_many_times
+    @timer = NSTimer.scheduledTimerWithTimeInterval(@delay, target: self, selector: "animate:", userInfo: [@delta_alpha, 0], repeats: true)
 
     content = TextPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
     content.setTitle(@popover_title)
