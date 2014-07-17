@@ -7,7 +7,7 @@ class PlayScene < SKScene
   attr_accessor :edges # ToyParts - either CirclePart or PointsPart
   attr_reader :loaded_toys # ToyInScene not put into play straight away
   attr_reader :mutex
-  attr_writer :scores
+  attr_writer :scores, :delegate
 
   TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
@@ -244,6 +244,8 @@ class PlayScene < SKScene
               @player.prepareToPlay
               @player.play
 
+            when :scene_shift
+              @delegate.scene_shift(param)
             when :text_bubble
 
               if @label
@@ -794,5 +796,9 @@ class PlayScene < SKScene
   def paused= (value)
     @paused = value
   end
+
+  # def delegate= (controler)
+  #   @delegate = controler
+  # end
 
 end

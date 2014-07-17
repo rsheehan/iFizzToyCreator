@@ -89,8 +89,15 @@ class PlayViewController < UIViewController
   end
 
   def viewDidAppear(animated)
-    update_play_scene
+    update_play_scene(@state.scenes[@state.currentscene])
     self.becomeFirstResponder
+  end
+
+  def scene_shift(scene_id)
+    scenes = @state.scenes.select {|scene| scene.identifier == scene_id}
+    if not scenes.empty?
+      update_play_scene(scenes.first)
+    end
   end
 
   def viewWillDisappear(animated)
@@ -118,23 +125,23 @@ class PlayViewController < UIViewController
   end
 
 
-  def update_play_scene
+  def update_play_scene(scene)
     return unless @play_view # this is because of the orientation bug being worked around in app_delegate
     @play_scene = PlayScene.alloc.initWithSize(@play_view.frame.size)
     @play_scene.physicsWorld.contactDelegate = @play_scene
-
+    @play_scene.delegate = self
     # this is purely for development only uses the first scene
 
     # add the toys to the scene
-    @play_scene.toys = @state.scenes[@state.currentscene].toys
+    @play_scene.toys = scene.toys
     # add the edges to the scene
-    @play_scene.edges = @state.scenes[@state.currentscene].edges
+    @play_scene.edges = scene.edges #@state.scenes[@state.currentscene].edges
     # also go through the actions checking for button actions and enabling the buttons
     @button_actions.each_key do |button|
       @button_actions[button] = []
     end
     disableButtons
-    actions = @state.scenes[@state.currentscene].actions
+    actions = scene.actions
     actions.each do |action|
       case action[:action_type]
         when :button
@@ -203,7 +210,8 @@ class PlayViewController < UIViewController
   end
 
   def reset
-    update_play_scene
+
+    update_play_scene(@state.scenes[@state.currentscene])
   end
 
   # The sides are left for user interactions to the running scenes
