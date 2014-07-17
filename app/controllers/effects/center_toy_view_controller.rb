@@ -37,7 +37,7 @@ class CenterToyViewController < UIViewController
     @scene_creator_view_controller.refresh
   end
 
-  def viewDidDisappear(animated)
+  def viewWillDisappear(animated)
     #@scene_creator_view_controller.main_view.shift_view_by(@diff*-1)
     #@selected.change_position(@toy_origin)
     @popover.dismissPopoverAnimated(true)
@@ -49,7 +49,7 @@ class CenterToyViewController < UIViewController
   def animate(timer)
     if timer.userInfo[1] < @how_many_times
       # @selected.change_position(@selected.position + timer.userInfo[0])
-      @scene_creator_view_controller.main_view.alpha_view -= timer.userInfo[1]
+      @scene_creator_view_controller.main_view.alpha_view -= timer.userInfo[0]
     else
       timer.invalidate
       #@timer = nil
