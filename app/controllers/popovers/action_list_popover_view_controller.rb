@@ -183,6 +183,77 @@ class ActionListPopoverViewController < UIViewController
     newImage
   end
 
+  def drawForce(vector, inImage:image)
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+    rect = CGRectMake(image.size.width/9, image.size.height/2.75, image.size.width, image.size.height)
+    UIColor.blackColor.set
+    #text.drawInRect(CGRectIntegral(rect), withFont:font)
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    newImage
+  end
+
+  def drawRotation(radians, inImage:image)
+    #radians between -2pi and +2pi, -ve = clockwise
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+
+    context = UIGraphicsGetCurrentContext()
+    radius = image.size.width/4
+
+    # dpoint = point - center
+    # radians = (Math::PI - (Math.atan2(dpoint.y,dpoint.x)*-1))
+    # clockwise = true
+
+    puts "draw rotation Degrees: " + (radians*180/Math::PI).to_s
+
+    UIColor.redColor.set
+    if(radians > 0)
+      CGContextAddArc(context, image.size.width/2, image.size.height/2, radius, Math::PI, radians+Math::PI, 0)
+    else
+      CGContextAddArc(context, image.size.width/2, image.size.height/2, radius, Math::PI, radians+Math::PI, 1)
+    end
+    CGContextSetLineWidth(context, 8)
+    CGContextStrokePath(context)
+
+    draw_rotate_circle_arrow(context, CGPointMake(image.size.width/2,image.size.height/2), radius, radians-Math::PI, radians > 0)
+
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    newImage
+
+  end
+
+  def draw_rotate_circle_arrow(context,center, length, angle, clockwise)
+
+    arrow_points = []
+    if not clockwise
+      arrow_points << CGPointMake(- 15, 0) << CGPointMake(0, -18.75)
+      arrow_points << CGPointMake(15, 0)
+    else
+      arrow_points << CGPointMake(- 15, 0) << CGPointMake(0, 18.75)
+      arrow_points << CGPointMake(15, 0)
+    end
+
+    arrow_transform_pointer = Pointer.new(CGAffineTransform.type)
+    arrow_transform_pointer[0] = CGAffineTransformMakeTranslation( center.x, center.y)
+    arrow_transform_pointer[0] = CGAffineTransformRotate(arrow_transform_pointer[0], angle)
+    arrow_transform_pointer[0] = CGAffineTransformTranslate(arrow_transform_pointer[0],length, 0)
+
+    path = CGPathCreateMutable()
+    CGPathMoveToPoint(path, arrow_transform_pointer, length, 0)
+
+    arrow_points.each do |point|
+      CGPathAddLineToPoint(path, arrow_transform_pointer, point.x, point.y)
+    end
+    CGContextAddPath(context, path)
+    CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
+    CGContextDrawPath(context, KCGPathFill)
+  end
+
   def tableView(tv, cellForRowAtIndexPath: index_path)
     item = index_path.row # ignore section as only one
 
@@ -234,6 +305,8 @@ class ActionListPopoverViewController < UIViewController
         #draw circle with size
       when :apply_torque
         #draw arrow with direction in circle
+        rotImage = drawRotation(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
+        action_cell.param_image = rotImage
       when :create_new_toy
         #draw toy
         #set object to be the toy image of the identifier in actionparam
@@ -247,6 +320,8 @@ class ActionListPopoverViewController < UIViewController
         #nothing
       when :score_adder
         #show how score is changed
+        textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
+        action_cell.object_image = textImage
       when :play_sound
         #show sound name? button to play sound?
       else

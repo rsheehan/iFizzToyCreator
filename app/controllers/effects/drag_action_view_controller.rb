@@ -17,11 +17,6 @@ class DragActionViewController < CenterToyViewController
     @popover_title = "Force"
     @popover_instr = Language::TOUCH_FORCE
 
-    # command_label = UILabel.alloc.initWithFrame([[0, @bounds.size.height], [@bounds.size.width, 768 - @bounds.size.height]])
-    # command_label.backgroundColor = Constants::GOLD
-    # command_label.text = Language::TOUCH_FORCE
-    # command_label.textAlignment = NSTextAlignmentCenter
-    # view.addSubview(command_label)
   end
 
   def bounds_for_view=(bounds)
