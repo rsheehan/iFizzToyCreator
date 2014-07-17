@@ -49,6 +49,7 @@ class Language
   SCORE_ADDER   = 'add score'
   PLAY_SOUND    = 'play sound'
   TEXT_BUBBLE   = 'text bubble'
+  SCENE_SHIFT   = 'scene shift'
 
   # Commands
   CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'
