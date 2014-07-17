@@ -14,6 +14,10 @@ class ActionAdderViewController < UIViewController
   ROTATION_SCALE = 2
   DELETE_FADE_TIME = 0.4 # seconds
 
+  TOP = 10
+  MIDDLE = 281
+  BOTTOM = 552
+  LEFT = 10
 
   attr_writer :state, :scene_creator_view_controller, :play_view_controller
   #attr_reader :selected_toy
@@ -30,18 +34,17 @@ class ActionAdderViewController < UIViewController
 
     #create a show actions button
     # Add the mode buttons
-
-
     location_of_action = [95, 0]
     size_of_action = [@bounds.size.width - 190, @bounds.size.height]
 
-    action_bounds = CGRectMake(0, 0, 95, @bounds.size.height)
-    @action_button_view = button_view(action_bounds)
-    @action_buttons = buttons(ACTIONS, @action_button_view)
-    effect_bounds = CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height)
-    @effect_button_view = button_view(effect_bounds)
-    @effect_buttons = buttons(EFFECTS, @effect_button_view)
-    @action_button_name = nil
+    # action_bounds = CGRectMake(0, 0, 95, @bounds.size.height)
+    # @action_button_view = button_view(action_bounds)
+    # @action_buttons = buttons(ACTIONS, @action_button_view)
+    # effect_bounds = CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height)
+    # @effect_button_view = button_view(effect_bounds)
+    # @effect_buttons = buttons(EFFECTS, @effect_button_view)
+    # @action_button_name = nil
+    setup_sides
 
     @main_view = @scene_creator_view_controller.main_view
     @main_view.add_delegate(self)
@@ -66,6 +69,17 @@ class ActionAdderViewController < UIViewController
     @main_view.mode = :toys_only # only toys can be selected
     view.addSubview(@main_view)
     super # MUST BE CALLED
+
+    #add popover to prompt to select a toy
+    if @popover.nil?
+      @main_view.selected = nil
+      content = TextPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+      content.setTitle('Tap a toy to begin')
+      content.delegate = self
+      @popover = UIPopoverController.alloc.initWithContentViewController(content)
+      @popover.delegate = self
+      @popover.presentPopoverFromRect(CGRectMake(@main_view.center.x-5,@main_view.frame.origin.y,10,1) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionUp, animated:true)
+    end
     #if @view_mode == :nothing_chosen
     #enable_action_buttons(false)
     #enable_effect_buttons(false)
@@ -73,33 +87,79 @@ class ActionAdderViewController < UIViewController
     #self.selected_toy = nil
   end
 
-  def button_view(frame)
-    button_scrollview = UIScrollView.alloc.initWithFrame(frame)
-    button_scrollview.backgroundColor = UIColor.darkGrayColor
-    button_scrollview
+  # The sides are left for user interactions to the running scenes
+  def setup_sides
+    @left_panel = UIView.alloc.initWithFrame(CGRectMake(0, 0, 95, @bounds.size.height))
+    @left_panel.setBackgroundColor(UIColor.grayColor)
+    @left_top_button =    setup_game_button([LEFT, TOP], @left_panel)
+    @left_middle_button = setup_game_button([LEFT, MIDDLE], @left_panel)
+    @left_bottom_button = setup_game_button([LEFT, BOTTOM], @left_panel,)
+    view.addSubview(@left_panel)
+    @right_panel = UIView.alloc.initWithFrame(CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height))
+    @right_panel.setBackgroundColor(UIColor.grayColor)
+    @right_top_button =    setup_game_button([LEFT, TOP], @right_panel)
+    @right_middle_button = setup_game_button([LEFT, MIDDLE], @right_panel)
+    @right_bottom_button = setup_game_button([LEFT, BOTTOM], @right_panel)
+    view.addSubview(@right_panel)
   end
 
-  # Add buttons.
-  def buttons(button_names, button_view)
-    buttons = {}
-    position = [10, 10]
-    button_names.each do |button_name|
-      button = setup_button(button_name, position, button_view)
-      buttons[button_name] = button
-      position[1] += CGRectGetHeight(button.frame) + 3
-      label = UILabel.alloc.initWithFrame([[0, position[1]], [95, 10]])
-      label.font = UIFont.systemFontOfSize(12)
-      label.textColor = UIColor.whiteColor
-      label.text = name_for_label(button_name)
-      label.textAlignment = NSTextAlignmentCenter
-      button_view.addSubview(label)
-      position[1] += CGRectGetHeight(label.frame) + 8
-    end
-    button_view.setContentSize(CGSizeMake(95,position[1]))
-    view.addSubview(button_view)
-    buttons
+  def setup_game_button(position, panel)
+    button = UIButton.buttonWithType(UIButtonTypeCustom)
+    button.setImage(UIImage.imageNamed('side_button'), forState: UIControlStateNormal)
+    button.setImage(UIImage.imageNamed('side_button_selected'), forState: UIControlStateHighlighted)
+    button.sizeToFit
+    button.frame = [position, button.frame.size]
+    button.addTarget(self, action: 'selected_button:', forControlEvents: UIControlEventTouchUpInside)
+    button.enabled = false
+    panel.addSubview(button)
+    button
   end
 
+  def disableButtons
+    @left_bottom_button.enabled = false
+    @left_middle_button.enabled = false
+    @left_top_button.enabled = false
+    @right_bottom_button.enabled = false
+    @right_middle_button.enabled = false
+    @right_top_button.enabled = false
+  end
+
+  def enableButtons
+    @left_bottom_button.enabled = true
+    @left_middle_button.enabled = true
+    @left_top_button.enabled    = true
+    @right_bottom_button.enabled = true
+    @right_middle_button.enabled = true
+    @right_top_button.enabled    = true
+  end
+
+  # def button_view(frame)
+  #   button_scrollview = UIScrollView.alloc.initWithFrame(frame)
+  #   button_scrollview.backgroundColor = UIColor.darkGrayColor
+  #   button_scrollview
+  # end
+
+  # # Add buttons.
+  # def buttons(button_names, button_view)
+  #   buttons = {}
+  #   position = [10, 10]
+  #   button_names.each do |button_name|
+  #     button = setup_button(button_name, position, button_view)
+  #     buttons[button_name] = button
+  #     position[1] += CGRectGetHeight(button.frame) + 3
+  #     label = UILabel.alloc.initWithFrame([[0, position[1]], [95, 10]])
+  #     label.font = UIFont.systemFontOfSize(12)
+  #     label.textColor = UIColor.whiteColor
+  #     label.text = name_for_label(button_name)
+  #     label.textAlignment = NSTextAlignmentCenter
+  #     button_view.addSubview(label)
+  #     position[1] += CGRectGetHeight(label.frame) + 8
+  #   end
+  #   button_view.setContentSize(CGSizeMake(95,position[1]))
+  #   view.addSubview(button_view)
+  #   buttons
+  # end
+  #
   def setup_button(image_name, position, super_view)
     button = UIButton.buttonWithType(UIButtonTypeCustom)
     button.setImage(UIImage.imageNamed(image_name), forState: UIControlStateNormal)
@@ -141,10 +201,10 @@ class ActionAdderViewController < UIViewController
     end
   end
 
-  def enable_action_buttons(enable)
-    @action_button_view.backgroundColor = enable ? Constants::GOLD : UIColor::darkGrayColor
-    @action_buttons.each { |name, button| button.enabled = enable }
-  end
+  # def enable_action_buttons(enable)
+  #   @action_button_view.backgroundColor = enable ? Constants::GOLD : UIColor::darkGrayColor
+  #   @action_buttons.each { |name, button| button.enabled = enable }
+  # end
 
   def enable_show_mode_buttons(enable)
     if @show_properties_btn
@@ -153,30 +213,28 @@ class ActionAdderViewController < UIViewController
     end
   end
 
-  def enable_effect_buttons(enable)
-    @effect_button_view.backgroundColor = enable ? Constants::GOLD : UIColor::darkGrayColor
-    @effect_buttons.each { |name, button| button.enabled = enable }
-  end
+  # def enable_effect_buttons(enable)
+  #   @effect_button_view.backgroundColor = enable ? Constants::GOLD : UIColor::darkGrayColor
+  #   @effect_buttons.each { |name, button| button.enabled = enable }
+  # end
 
   # Gets the button information for the action.
-  def action_button_name=(button_name)
-    @action_button_name = button_name
-  end
-
-
+  # def action_button_name=(button_name)
+  #   @action_button_name = button_name
+  # end
 
   def close_touch_view_controller
     dismissModalViewControllerAnimated(false, completion: nil)
-    enable_action_buttons(false)
+    # enable_action_buttons(false)
     enable_show_mode_buttons(false)
-    enable_effect_buttons(true)
+    # enable_effect_buttons(true)
   end
 
   def selected_toy=(toy)
     @selected_toy = toy
-    enable_action_buttons(@selected_toy)
+    # enable_action_buttons(@selected_toy)
     enable_show_mode_buttons(@selected_toy)
-    enable_effect_buttons(false)
+    # enable_effect_buttons(false)
     #@view_mode = @selected_toy ? :toy_selected : :nothing_chosen
   end
 
@@ -536,28 +594,28 @@ class ActionAdderViewController < UIViewController
     presentViewController(toybox_view_controller, animated: true, completion: nil)
   end
 
-  def delete_effect
-    action_type, action_param = get_action
-    effect_type = :delete_effect
-    effect_param = DELETE_FADE_TIME
-    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
-    @main_view.secondary_selected = nil
-    enable_action_buttons(true)
-    enable_effect_buttons(false)
-    @main_view.setNeedsDisplay
-  end
+  # def delete_effect
+  #   action_type, action_param = get_action
+  #   effect_type = :delete_effect
+  #   effect_param = DELETE_FADE_TIME
+  #   create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+  #   @main_view.secondary_selected = nil
+  #   enable_action_buttons(true)
+  #   enable_effect_buttons(false)
+  #   @main_view.setNeedsDisplay
+  # end
 
-  def score_adder
-    @popover_type = :score_adder
-    content = ScoreAdderActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    content.setTitle('Enter the change in score')
-    content.delegate = self
-    @popover = UIPopoverController.alloc.initWithContentViewController(content)
-    @popover.delegate = self
-    frame = @effect_buttons[:score_adder].frame
-    frame.origin.x = @effect_button_view.frame.origin.x + frame.origin.x
-    @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
-  end
+  # def score_adder
+  #   @popover_type = :score_adder
+  #   content = ScoreAdderActionViewController.alloc.initWithNibName(nil, bundle: nil)
+  #   content.setTitle('Enter the change in score')
+  #   content.delegate = self
+  #   @popover = UIPopoverController.alloc.initWithContentViewController(content)
+  #   @popover.delegate = self
+  #   frame = @effect_buttons[:score_adder].frame
+  #   frame.origin.x = @effect_button_view.frame.origin.x + frame.origin.x
+  #   @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
+  # end
 
   # def play_sound
   #   # #show popover to select sound to play
@@ -590,6 +648,10 @@ class ActionAdderViewController < UIViewController
       content.delegate = self
       show_popover(content)
     end
+  end
+
+  def popoverController(pop, willRepositionPopoverToRect:rect, inView:view)
+    puts "pop repo"
   end
 
   def reopen_action_flow
@@ -632,6 +694,12 @@ class ActionAdderViewController < UIViewController
     case type
       when :touch
         #show button select
+        @popover_type = :button
+        content = ButtonSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        show_popover(content)
+        @popover.passthroughViews += [@left_panel, @right_panel]
+        enableButtons
       when :timer
         #show timer popover
         @popover_type = :timer
@@ -669,6 +737,28 @@ class ActionAdderViewController < UIViewController
     end
   end
 
+  def selected_button(sender)
+    close_popover
+    disableButtons
+    case sender
+      when @left_top_button
+        @action_button_name = :left_top
+      when @left_middle_button
+        @action_button_name = :left_middle
+      when @left_bottom_button
+        @action_button_name = :left_bottom
+      when @right_top_button
+        @action_button_name = :right_top
+      when @right_middle_button
+        @action_button_name = :right_middle
+      when @right_bottom_button
+        @action_button_name = :right_bottom
+      else
+        puts 'Idk what button that was..'
+    end
+    show_effects_popover
+  end
+
   def submit_number(number)
     case @popover_type
       when :score_reaches
@@ -693,13 +783,33 @@ class ActionAdderViewController < UIViewController
     close_popover
     case type
       when :apply_force
-
+        drag_action_view_controller = DragActionViewController.alloc.initWithNibName(nil, bundle: nil)
+        drag_action_view_controller.bounds_for_view = @bounds
+        drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+        drag_action_view_controller.selected = @selected_toy
+        drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+        presentViewController(drag_action_view_controller, animated: false, completion: nil)
       when :explosion
-
+        drag_action_view_controller = ExplosionActionViewController.alloc.initWithNibName(nil, bundle: nil)
+        drag_action_view_controller.bounds_for_view = @bounds
+        drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+        drag_action_view_controller.selected = @selected_toy
+        drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+        presentViewController(drag_action_view_controller, animated: false, completion: nil)
       when :apply_torque
-
+        drag_action_view_controller = RotationActionViewController.alloc.initWithNibName(nil, bundle: nil)
+        drag_action_view_controller.bounds_for_view = @bounds
+        drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+        drag_action_view_controller.selected = @selected_toy
+        drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+        presentViewController(drag_action_view_controller, animated: false, completion: nil)
       when :create_new_toy
-
+        toybox_view_controller = ToyBoxViewController.alloc.initWithNibName(nil, bundle: nil)
+        toybox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+        toybox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
+        toybox_view_controller.delegate = self
+        toybox_view_controller.state = @state
+        presentViewController(toybox_view_controller, animated: true, completion: nil)
       when :delete_effect
         action_type, action_param = get_action
         effect_type = :delete_effect
@@ -755,6 +865,7 @@ class ActionAdderViewController < UIViewController
   end
 
   def show_popover(content)
+    #if already showing, change rather than create new?
     @popover = UIPopoverController.alloc.initWithContentViewController(content)
     @popover.passthroughViews = [@main_view, @scene_creator_view_controller.view] #not working? should allow dragging while popover open
     @popover.delegate = self
@@ -765,6 +876,12 @@ class ActionAdderViewController < UIViewController
   def close_popover
     @popover_type = nil
     @popover.dismissPopoverAnimated(true)
+    disableButtons
+  end
+
+  def change_popover(content)
+    @popover.contentViewController = content
+    @popoverStack << content
   end
 
   def action_created

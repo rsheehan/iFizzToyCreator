@@ -55,6 +55,8 @@ class SoundSelectPopoverViewController < UIViewController
 
   def select_sound(sender)
     @player = nil
+    #add extension on end
+    text = sender.view.text.gsub(' ', '_')
     @delegate.set_sound(sender.view.text)
   end
 
@@ -67,7 +69,7 @@ class SoundSelectPopoverViewController < UIViewController
 
       local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, name))
       @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
-      @player.numberOfLoops = 1
+      @player.numberOfLoops = 0
       @player.prepareToPlay
       @player.play
     end
