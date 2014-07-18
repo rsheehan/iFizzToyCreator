@@ -42,6 +42,8 @@ class ActionListPopoverViewController < UIViewController
     separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
     self.view.layer.addSublayer(separator)
 
+
+
     #make table view filled with all actions that have selected as the toy
     if @toy_actions.size > 3
       tvHeight = 280
@@ -49,7 +51,7 @@ class ActionListPopoverViewController < UIViewController
       tvHeight = 80 * @toy_actions.size
     end
 
-    @table_view = UITableView.alloc.initWithFrame([[0, 35], [WIDTH, tvHeight]])
+    @table_view = UITableView.alloc.initWithFrame([[0, 45], [WIDTH, tvHeight]])
     @table_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
     @table_view.dataSource = self
     @table_view.delegate = self
@@ -59,7 +61,7 @@ class ActionListPopoverViewController < UIViewController
 
     #setup new action button
     @action_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-    @action_button.frame = [ [0, @table_view.frame.size.height+40], [WIDTH/2,20]]
+    @action_button.frame = [ [0, @table_view.frame.size.height+50], [WIDTH/2,20]]
     @action_button.setTitle("New Action", forState: UIControlStateNormal)
     @action_button.addTarget(self, action: 'new_action:', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(@action_button)
@@ -67,10 +69,25 @@ class ActionListPopoverViewController < UIViewController
     #setup edit button
     @edit_mode = false
     @edit_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-    @edit_button.frame = CGRectMake(WIDTH/2,@table_view.frame.size.height+40, WIDTH/2,20)
+    @edit_button.frame = CGRectMake(WIDTH/2,@table_view.frame.size.height+50, WIDTH/2,20)
     @edit_button.setTitle("Edit", forState: UIControlStateNormal)
     @edit_button.addTarget(self, action: 'edit:', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(@edit_button)
+
+    #labels
+    @trigger_label = UILabel.alloc.initWithFrame([[0,30],[WIDTH/4,15]])
+    @trigger_label.setText('Trigger')
+    @trigger_label.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+    @trigger_label.setFont(UIFont.boldSystemFontOfSize(14))
+    @trigger_label.textAlignment = UITextAlignmentCenter
+    view.addSubview(@trigger_label)
+    #effect label
+    @effect_label = UILabel.alloc.initWithFrame([[2*WIDTH/4,30],[WIDTH/4,15]])
+    @effect_label.setText('Effect')
+    @effect_label.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+    @effect_label.setFont(UIFont.boldSystemFontOfSize(14))
+    @effect_label.textAlignment = UITextAlignmentCenter
+    view.addSubview(@effect_label)
 
     self.preferredContentSize = [WIDTH, @edit_button.frame.origin.y+@edit_button.frame.size.height+5]
 
@@ -98,9 +115,9 @@ class ActionListPopoverViewController < UIViewController
         tvHeight = 80 * @toy_actions.size
       end
 
-      @table_view.setFrame([[0, 35], [WIDTH, tvHeight]])
-      @action_button.setFrame([ [0, @table_view.frame.size.height+40], [WIDTH/2,20]])
-      @edit_button.setFrame(CGRectMake(WIDTH/2,@table_view.frame.size.height+40, WIDTH/2,20))
+      @table_view.setFrame([[0, 45], [WIDTH, tvHeight]])
+      @action_button.setFrame([ [0, @table_view.frame.size.height+50], [WIDTH/2,20]])
+      @edit_button.setFrame(CGRectMake(WIDTH/2,@table_view.frame.size.height+50, WIDTH/2,20))
       self.preferredContentSize = [WIDTH, @edit_button.frame.origin.y+@edit_button.frame.size.height+5]
     end
   end
