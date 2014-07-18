@@ -25,6 +25,21 @@ class SceneTemplate
     @image = create_image(0.35)
   end
 
+  def add_actions(actions)
+    if actions.kind_of?(Array)
+      actions.each do |action|
+        if !@actions.include?(action)
+          @actions << action
+        end
+      end
+    else
+      if !@actions.include?(actions)
+        @actions << actions
+      end
+    end
+    @actions.flatten!
+  end
+
   # Turns the SceneTemplate into json compatible data.
   def to_json_compatible
     json_scene = {}

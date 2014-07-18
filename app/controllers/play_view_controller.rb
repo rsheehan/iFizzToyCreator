@@ -89,7 +89,7 @@ class PlayViewController < UIViewController
   end
 
   def viewDidAppear(animated)
-    update_play_scene(@state.scenes[@state.currentscene])
+    update_play_scene
     self.becomeFirstResponder
   end
 
@@ -125,13 +125,13 @@ class PlayViewController < UIViewController
   end
 
 
-  def update_play_scene(scene)
+  def update_play_scene(scene=@state.scenes[@state.currentscene])
     return unless @play_view # this is because of the orientation bug being worked around in app_delegate
     @play_scene = PlayScene.alloc.initWithSize(@play_view.frame.size)
     @play_scene.physicsWorld.contactDelegate = @play_scene
     @play_scene.delegate = self
     # this is purely for development only uses the first scene
-
+    @state.load_scene_actions(scene)
     # add the toys to the scene
     @play_scene.toys = scene.toys
     # add the edges to the scene
@@ -210,8 +210,7 @@ class PlayViewController < UIViewController
   end
 
   def reset
-
-    update_play_scene(@state.scenes[@state.currentscene])
+    update_play_scene
   end
 
   # The sides are left for user interactions to the running scenes

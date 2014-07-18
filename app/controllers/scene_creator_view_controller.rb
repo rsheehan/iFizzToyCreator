@@ -105,8 +105,9 @@ class SceneCreatorViewController < UIViewController
     scene.toys.each do |toy|
       @main_view.add_toy(toy)
       #add toy's actions to scene
-      add_all_toy_actions(toy.template)
     end
+    @state.load_scene_actions(scene)
+    @main_view.add_action(scene.actions)
     #update id
     @id = scene.identifier
     @state.currentscene = scene_index
@@ -114,14 +115,14 @@ class SceneCreatorViewController < UIViewController
     grab
   end
 
-  def add_all_toy_actions(toy)
-    toy.actions.each do |action|
-      @main_view.add_action(action)
-      if action[:effect_type] == :create_new_toy
-        add_all_toy_actions((@state.toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first)
-      end
-    end
-  end
+  # def add_all_toy_actions(toy)
+  #   toy.actions.each do |action|
+  #     @main_view.add_action(action)
+  #     if action[:effect_type] == :create_new_toy
+  #       add_all_toy_actions((@state.toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first)
+  #     end
+  #   end
+  # end
 
   # Called when the view disappears.
   def viewWillDisappear(animated)

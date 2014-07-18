@@ -90,6 +90,7 @@ class SceneCreatorView < CreatorView
   def add_action(action)
     if !@actions.include?(action)
       @actions << action
+      @actions.flatten!
     end
   end
 
