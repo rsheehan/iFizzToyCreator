@@ -138,6 +138,12 @@ class State
       readStream.close
       convert_from_json_compatible(json_state) if json_state
     end
+    files = Dir.entries(documents_path)
+    files.each do |file_name|
+      if not file_name.match('temp').nil?
+        File.delete(documents_path.stringByAppendingPathComponent(file_name))
+      end
+    end
     @thread = nil
   end
 
