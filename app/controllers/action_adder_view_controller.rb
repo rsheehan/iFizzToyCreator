@@ -240,6 +240,7 @@ class ActionAdderViewController < UIViewController
   # When this is received the action info is complete.
   def force=(force_vector)
     action_type, action_param = get_action
+    puts "Force: X: " + force_vector.x.to_s + ", Y: " + force_vector.y.to_s
     effect_type = :apply_force
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
@@ -629,8 +630,6 @@ class ActionAdderViewController < UIViewController
     @popover = UIPopoverController.alloc.initWithContentViewController(content)
     @popover.delegate = self
     @popover.presentPopoverFromRect([[@effect_buttons[:play_sound].frame.origin.x+@effect_button_view.frame.origin.x,@effect_buttons[:play_sound].frame.origin.y],@effect_buttons[:play_sound].frame.size], inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
-
-
   end
 
   def set_sound(sound_name)
