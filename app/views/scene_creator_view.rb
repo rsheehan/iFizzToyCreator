@@ -392,7 +392,6 @@ class SceneCreatorView < CreatorView
 
   # [ID, Displacement.x, displacement.y, zoom, angle]
   def end_create_toy
-    @delegate.close_modal_view
     results = {}
     results[:id] = @selected.template.identifier
     disp = @secondary_selected.position - @selected.position
@@ -404,6 +403,7 @@ class SceneCreatorView < CreatorView
     @secondary_selected = nil
     @delegate.selected_toy = @selected
     @delegate.create_new_toy = results
+    @delegate.close_modal_view
   end
 
   # Called when the touch ends for a collision toy selection.

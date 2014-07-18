@@ -54,9 +54,8 @@ class ActionListPopoverViewController < UIViewController
     @table_view.dataSource = self
     @table_view.delegate = self
     @table_view.rowHeight = 80
-    view.addSubview(@table_view)
 
-    #bottomSeparator?
+    view.addSubview(@table_view)
 
     #setup new action button
     @action_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
@@ -183,12 +182,124 @@ class ActionListPopoverViewController < UIViewController
     newImage
   end
 
+
+
+
+
+  def tableView(tv, cellForRowAtIndexPath: index_path)
+    item = index_path.row # ignore section as only one
+
+    @reuseIdentifier ||= "cell"
+    action_cell = @table_view.dequeueReusableCellWithIdentifier(@reuseIdentifier)
+    action_cell ||= ActionCell.alloc.initWithStyle(UITableViewCellStyleValue1, reuseIdentifier: @reuseIdentifier)
+
+    action_cell.selectionStyle = UITableViewCellSelectionStyleNone
+    action = @toy_actions[item]
+
+    action_cell.action_text = action[:action_type].gsub('_', ' ')
+    #action image
+    case action[:action_type]
+      when :collision
+        action_cell.action_image = UIImage.imageNamed("collision.png")
+        #set object to be the toy image of the identifier in actionparam
+        @state.toys.each do |toy|
+          if toy.identifier == action[:action_param]
+            action_cell.object_image = toy.image
+            break
+          end
+        end
+
+      when :timer
+        action_cell.action_image = UIImage.imageNamed("timer.png")
+        # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
+        #show how often in object view
+        textImage = drawText(action[:action_param][0].to_s.rjust(2, "0") + ':' + action[:action_param][1].to_s.rjust(2, "0"), inImage:UIImage.imageNamed("empty.png") )
+        action_cell.object_image = textImage
+      when :button
+        action_cell.action_image = UIImage.imageNamed("touch.png")
+        action_cell.action_text = 'tap'
+        action_cell.object_image = UIImage.imageNamed(action[:action_param]+ ".png")
+      when :score_reaches
+        action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
+        textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
+        action_cell.object_image = textImage
+      when :shake, :when_created, :loud_noise, :toy_touch
+        action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
+      else
+    end
+
+    action_cell.effect_image = UIImage.imageNamed(action[:effect_type]+".png")
+    action_cell.effect_text = action[:effect_type].gsub('_',' ')
+
+    case action[:effect_type]
+      when :apply_force
+        #draw arrow in direction
+        forceImage = drawForce(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
+        action_cell.param_image = forceImage
+      when :explosion
+        #draw circle with size
+        expImage = drawExplosion(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
+        action_cell.param_image = expImage
+      when :apply_torque
+        #draw arrow with direction in circle
+        rotImage = drawRotation(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
+        action_cell.param_image = rotImage
+      when :create_new_toy
+        #draw toy
+        #set object to be the toy image of the identifier in actionparam
+        @state.toys.each do |toy|
+          if toy.identifier == action[:effect_param][:id]
+            action_cell.param_image = toy.image
+            break
+          end
+        end
+      when :delete_effect
+        #nothing
+      when :score_adder
+        #show how score is changed
+        textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
+        action_cell.object_image = textImage
+      when :play_sound
+        #show sound name? button to play sound?
+      else
+    end
+
+    action_cell
+
+  end
+
+  def tableView(tv, didSelectRowAtIndexPath: index_path)
+    item = index_path.row
+    puts "Selected row "
+  end
+
   def drawForce(vector, inImage:image)
     UIGraphicsBeginImageContext(image.size)
     image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
-    rect = CGRectMake(image.size.width/9, image.size.height/2.75, image.size.width, image.size.height)
-    UIColor.blackColor.set
-    #text.drawInRect(CGRectIntegral(rect), withFont:font)
+    context = UIGraphicsGetCurrentContext()
+
+    # max  x and y 500?
+    draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
+
+    puts "img= "+image.size.width.to_s+", "+image.size.height.to_s
+    puts "vector= "+vector.x.to_s+', '+vector.y.to_s
+    puts "point= "+(((vector.x+500)/1000)*image.size.width).to_s+','+ (((vector.y+500)/1000)*image.size.height).to_s
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    newImage
+  end
+
+  def drawExplosion(magnitude, inImage:image)
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+    context = UIGraphicsGetCurrentContext()
+
+    # max  x and y 500?
+    draw_force_circle(context,CGPointMake(image.size.width/2, image.size.height/2),(magnitude/52000)*image.size.width/2)
+
+    puts "mag= "+magnitude.to_s
+
     newImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
 
@@ -202,12 +313,6 @@ class ActionListPopoverViewController < UIViewController
 
     context = UIGraphicsGetCurrentContext()
     radius = image.size.width/4
-
-    # dpoint = point - center
-    # radians = (Math::PI - (Math.atan2(dpoint.y,dpoint.x)*-1))
-    # clockwise = true
-
-    puts "draw rotation Degrees: " + (radians*180/Math::PI).to_s
 
     UIColor.redColor.set
     if(radians > 0)
@@ -254,90 +359,47 @@ class ActionListPopoverViewController < UIViewController
     CGContextDrawPath(context, KCGPathFill)
   end
 
-  def tableView(tv, cellForRowAtIndexPath: index_path)
-    item = index_path.row # ignore section as only one
+  def draw_force_arrow(context, start, finish)
+    CGContextSetLineWidth(context, 8)
+    arrow_size = 15
 
-    @reuseIdentifier ||= "cell"
-    action_cell = @table_view.dequeueReusableCellWithIdentifier(@reuseIdentifier)
-    action_cell ||= ActionCell.alloc.initWithStyle(UITableViewCellStyleValue1, reuseIdentifier: @reuseIdentifier)
-
-    action = @toy_actions[item]
-
-    action_cell.action_text = action[:action_type].gsub('_', ' ')
-    #action image
-    case action[:action_type]
-      when :collision
-        action_cell.action_image = UIImage.imageNamed("collision.png")
-        #set object to be the toy image of the identifier in actionparam
-        @state.toys.each do |toy|
-          if toy.identifier == action[:action_param]
-            action_cell.object_image = toy.image
-            break
-          end
-        end
-
-      when :timer
-        action_cell.action_image = UIImage.imageNamed("timer.png")
-        # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
-        #show how often in object view
-        textImage = drawText(action[:action_param][0].to_s.rjust(2, "0") + ':' + action[:action_param][1].to_s.rjust(2, "0"), inImage:UIImage.imageNamed("empty.png") )
-        action_cell.object_image = textImage
-      when :button
-        action_cell.action_image = UIImage.imageNamed("touch.png")
-        action_cell.action_text = 'tap'
-        action_cell.object_image = UIImage.imageNamed(action[:action_param]+ ".png")
-      when :score_reaches
-        action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
-        textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
-        action_cell.object_image = textImage
-      when :shake, :when_created, :loud_noise, :toy_touch
-        action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
-      else
+    dx = finish.x - start.x
+    dy = finish.y - start.y
+    combined = dx.abs + dy.abs
+    length = Math.hypot(dx, dy)
+    if length < arrow_size
+      length = arrow_size
+      dx = length * (dx/combined)
+      dy = length * (dy/combined)
     end
+    arrow_points = []
+    arrow_points << CGPointMake(0, -5) << CGPointMake(length - arrow_size, -5) << CGPointMake(length - arrow_size, -12)
+    arrow_points << CGPointMake(length, 0)
+    arrow_points << CGPointMake(length - arrow_size, 12) << CGPointMake(length - arrow_size, 5) << CGPointMake(0, 5)
 
-    action_cell.effect_image = UIImage.imageNamed(action[:effect_type]+".png")
-    action_cell.effect_text = action[:effect_type].gsub('_',' ')
+    cosine = dx / length
+    sine = dy / length
 
-    case action[:effect_type]
-      when :apply_force
-        #draw arrow in direction
-      when :explosion
-        #draw circle with size
-      when :apply_torque
-        #draw arrow with direction in circle
-        rotImage = drawRotation(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
-        action_cell.param_image = rotImage
-      when :create_new_toy
-        #draw toy
-        #set object to be the toy image of the identifier in actionparam
-        @state.toys.each do |toy|
-          if toy.identifier == action[:effect_param][:id]
-            action_cell.param_image = toy.image
-            break
-          end
-        end
-      when :delete_effect
-        #nothing
-      when :score_adder
-        #show how score is changed
-        textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
-        action_cell.object_image = textImage
-      when :play_sound
-        #show sound name? button to play sound?
-      else
+    arrow_transform_pointer = Pointer.new(CGAffineTransform.type)
+    arrow_transform_pointer[0] = CGAffineTransform.new(cosine, sine, -sine, cosine, start.x, start.y)
+
+    path = CGPathCreateMutable()
+    CGPathMoveToPoint(path, arrow_transform_pointer, 0, 0)
+    arrow_points.each do |point|
+      CGPathAddLineToPoint(path, arrow_transform_pointer, point.x, point.y)
     end
-
-    action_cell
-
+    CGContextAddPath(context, path)
+    CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
+    CGContextDrawPath(context, KCGPathFill)
   end
 
-  def tableView(tv, didSelectRowAtIndexPath: index_path)
-    item = index_path.row
-    puts "Selected row "
+  def draw_force_circle(context, center, radius)
+    rectangle = CGRectMake(center.x - radius, center.y - radius, radius*2, radius*2)
+    CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
+    CGContextSetFillColorWithColor(context,UIColor.redColor.CGColor)
+    CGContextSetLineWidth(context, 5)
+    CGContextAddEllipseInRect(context, rectangle)
+    CGContextFillPath(context)
   end
-
-  # def tableView(tableView, titleForHeaderInSection:section)
-  #   return "   Trigger                        Object                          Effect"
-  # end
 
 end

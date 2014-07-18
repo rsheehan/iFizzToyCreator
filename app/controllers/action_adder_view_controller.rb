@@ -720,12 +720,13 @@ class ActionAdderViewController < UIViewController
         drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
         presentViewController(drag_action_view_controller, animated: false, completion: nil)
       when :create_new_toy
-        toybox_view_controller = ToyBoxViewController.alloc.initWithNibName(nil, bundle: nil)
-        toybox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-        toybox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
-        toybox_view_controller.delegate = self
-        toybox_view_controller.state = @state
-        presentViewController(toybox_view_controller, animated: true, completion: nil)
+        #show select toy popover
+        content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        content.mode = :toys
+        content.state = @state
+        content.setTitle('Choose the Toy that will be created')
+        show_popover(content)
       when :delete_effect
         action_type, action_param = get_action
         effect_type = :delete_effect
@@ -774,6 +775,14 @@ class ActionAdderViewController < UIViewController
           show_effects_popover
         when :effects
           #add toy param to effect (create)
+          close_popover
+          drag_action_view_controller = CreateActionViewController.alloc.initWithNibName(nil, bundle: nil)
+          drag_action_view_controller.bounds_for_view = @bounds
+          drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+          drag_action_view_controller.selected = @selected_toy
+          drag_action_view_controller.new_toy = ToyInScene.new(@state.toys[toy_index])
+          drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+          presentViewController(drag_action_view_controller, animated: false, completion: nil)
         else
           #do nothing
       end
