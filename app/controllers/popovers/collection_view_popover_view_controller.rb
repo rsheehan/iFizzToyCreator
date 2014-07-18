@@ -8,7 +8,7 @@ class CollectionViewPopoverViewController < UIViewController
     MAX_HEIGHT = 500
 
     ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
-    EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound]
+    EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble, :scene_shift]
     TOYBUTTON = "ToyButton"
 
     def loadView
@@ -91,6 +91,7 @@ class CollectionViewPopoverViewController < UIViewController
       end
     end
 
+    # Setting up individual buttons in the view
     def collectionView(cv, cellForItemAtIndexPath: index_path)
       item = index_path.row # ignore section as only one
 
@@ -183,6 +184,10 @@ class CollectionViewPopoverViewController < UIViewController
           Language::SCORE_ADDER
         when :play_sound
           Language::PLAY_SOUND
+        when :text_bubble
+          Language::TEXT_BUBBLE
+        when :scene_shift
+          Language::SCENE_SHIFT
       end
     end
 
