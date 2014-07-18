@@ -71,7 +71,9 @@ class ActionAdderViewController < UIViewController
     super # MUST BE CALLED
 
     #add popover to prompt to select a toy
-    if @popover.nil?
+    if not @selected_toy.nil?
+      start_action_flow
+    else
       @main_view.selected = nil
       content = TextPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
       content.setTitle('Tap a toy to begin')
@@ -804,7 +806,9 @@ class ActionAdderViewController < UIViewController
     @popover = UIPopoverController.alloc.initWithContentViewController(content)
     @popover.passthroughViews = [@main_view, @scene_creator_view_controller.view] #not working? should allow dragging while popover open
     @popover.delegate = self
-    @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
+    viewy = self.view
+    frame = CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size)
+    @popover.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     @popoverStack << content
   end
 
