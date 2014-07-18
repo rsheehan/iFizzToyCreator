@@ -54,9 +54,8 @@ class ActionListPopoverViewController < UIViewController
     @table_view.dataSource = self
     @table_view.delegate = self
     @table_view.rowHeight = 80
-    view.addSubview(@table_view)
 
-    #bottomSeparator?
+    view.addSubview(@table_view)
 
     #setup new action button
     @action_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
@@ -183,6 +182,10 @@ class ActionListPopoverViewController < UIViewController
     newImage
   end
 
+
+
+
+
   def tableView(tv, cellForRowAtIndexPath: index_path)
     item = index_path.row # ignore section as only one
 
@@ -190,6 +193,7 @@ class ActionListPopoverViewController < UIViewController
     action_cell = @table_view.dequeueReusableCellWithIdentifier(@reuseIdentifier)
     action_cell ||= ActionCell.alloc.initWithStyle(UITableViewCellStyleValue1, reuseIdentifier: @reuseIdentifier)
 
+    action_cell.selectionStyle = UITableViewCellSelectionStyleNone
     action = @toy_actions[item]
 
     action_cell.action_text = action[:action_type].gsub('_', ' ')
@@ -230,10 +234,16 @@ class ActionListPopoverViewController < UIViewController
     case action[:effect_type]
       when :apply_force
         #draw arrow in direction
+        forceImage = drawForce(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
+        action_cell.param_image = forceImage
       when :explosion
         #draw circle with size
+        expImage = drawExplosion(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
+        action_cell.param_image = expImage
       when :apply_torque
         #draw arrow with direction in circle
+        rotImage = drawRotation(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
+        action_cell.param_image = rotImage
       when :create_new_toy
         #draw toy
         #set object to be the toy image of the identifier in actionparam
@@ -247,6 +257,8 @@ class ActionListPopoverViewController < UIViewController
         #nothing
       when :score_adder
         #show how score is changed
+        textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
+        action_cell.object_image = textImage
       when :play_sound
         #show sound name? button to play sound?
       else
@@ -261,8 +273,133 @@ class ActionListPopoverViewController < UIViewController
     puts "Selected row "
   end
 
-  # def tableView(tableView, titleForHeaderInSection:section)
-  #   return "   Trigger                        Object                          Effect"
-  # end
+  def drawForce(vector, inImage:image)
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+    context = UIGraphicsGetCurrentContext()
+
+    # max  x and y 500?
+    draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
+
+    puts "img= "+image.size.width.to_s+", "+image.size.height.to_s
+    puts "vector= "+vector.x.to_s+', '+vector.y.to_s
+    puts "point= "+(((vector.x+500)/1000)*image.size.width).to_s+','+ (((vector.y+500)/1000)*image.size.height).to_s
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    newImage
+  end
+
+  def drawExplosion(magnitude, inImage:image)
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+    context = UIGraphicsGetCurrentContext()
+
+    # max  x and y 500?
+    draw_force_circle(context,CGPointMake(image.size.width/2, image.size.height/2),(magnitude/52000)*image.size.width/2)
+
+    puts "mag= "+magnitude.to_s
+
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    newImage
+  end
+
+  def drawRotation(radians, inImage:image)
+    #radians between -2pi and +2pi, -ve = clockwise
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+
+    context = UIGraphicsGetCurrentContext()
+    radius = image.size.width/4
+
+    UIColor.redColor.set
+    if(radians > 0)
+      CGContextAddArc(context, image.size.width/2, image.size.height/2, radius, Math::PI, radians+Math::PI, 0)
+    else
+      CGContextAddArc(context, image.size.width/2, image.size.height/2, radius, Math::PI, radians+Math::PI, 1)
+    end
+    CGContextSetLineWidth(context, 8)
+    CGContextStrokePath(context)
+
+    draw_rotate_circle_arrow(context, CGPointMake(image.size.width/2,image.size.height/2), radius, radians-Math::PI, radians > 0)
+
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    newImage
+
+  end
+
+  def draw_rotate_circle_arrow(context,center, length, angle, clockwise)
+
+    arrow_points = []
+    if not clockwise
+      arrow_points << CGPointMake(- 15, 0) << CGPointMake(0, -18.75)
+      arrow_points << CGPointMake(15, 0)
+    else
+      arrow_points << CGPointMake(- 15, 0) << CGPointMake(0, 18.75)
+      arrow_points << CGPointMake(15, 0)
+    end
+
+    arrow_transform_pointer = Pointer.new(CGAffineTransform.type)
+    arrow_transform_pointer[0] = CGAffineTransformMakeTranslation( center.x, center.y)
+    arrow_transform_pointer[0] = CGAffineTransformRotate(arrow_transform_pointer[0], angle)
+    arrow_transform_pointer[0] = CGAffineTransformTranslate(arrow_transform_pointer[0],length, 0)
+
+    path = CGPathCreateMutable()
+    CGPathMoveToPoint(path, arrow_transform_pointer, length, 0)
+
+    arrow_points.each do |point|
+      CGPathAddLineToPoint(path, arrow_transform_pointer, point.x, point.y)
+    end
+    CGContextAddPath(context, path)
+    CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
+    CGContextDrawPath(context, KCGPathFill)
+  end
+
+  def draw_force_arrow(context, start, finish)
+    CGContextSetLineWidth(context, 8)
+    arrow_size = 15
+
+    dx = finish.x - start.x
+    dy = finish.y - start.y
+    combined = dx.abs + dy.abs
+    length = Math.hypot(dx, dy)
+    if length < arrow_size
+      length = arrow_size
+      dx = length * (dx/combined)
+      dy = length * (dy/combined)
+    end
+    arrow_points = []
+    arrow_points << CGPointMake(0, -5) << CGPointMake(length - arrow_size, -5) << CGPointMake(length - arrow_size, -12)
+    arrow_points << CGPointMake(length, 0)
+    arrow_points << CGPointMake(length - arrow_size, 12) << CGPointMake(length - arrow_size, 5) << CGPointMake(0, 5)
+
+    cosine = dx / length
+    sine = dy / length
+
+    arrow_transform_pointer = Pointer.new(CGAffineTransform.type)
+    arrow_transform_pointer[0] = CGAffineTransform.new(cosine, sine, -sine, cosine, start.x, start.y)
+
+    path = CGPathCreateMutable()
+    CGPathMoveToPoint(path, arrow_transform_pointer, 0, 0)
+    arrow_points.each do |point|
+      CGPathAddLineToPoint(path, arrow_transform_pointer, point.x, point.y)
+    end
+    CGContextAddPath(context, path)
+    CGContextSetFillColorWithColor(context, UIColor.redColor.CGColor)
+    CGContextDrawPath(context, KCGPathFill)
+  end
+
+  def draw_force_circle(context, center, radius)
+    rectangle = CGRectMake(center.x - radius, center.y - radius, radius*2, radius*2)
+    CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
+    CGContextSetFillColorWithColor(context,UIColor.redColor.CGColor)
+    CGContextSetLineWidth(context, 5)
+    CGContextAddEllipseInRect(context, rectangle)
+    CGContextFillPath(context)
+  end
 
 end
