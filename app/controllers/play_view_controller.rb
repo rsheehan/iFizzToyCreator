@@ -93,13 +93,6 @@ class PlayViewController < UIViewController
     self.becomeFirstResponder
   end
 
-  def scene_shift(scene_id)
-    scenes = @state.scenes.select {|scene| scene.identifier == scene_id}
-    if not scenes.empty?
-      update_play_scene(scenes.first)
-    end
-  end
-
   def viewWillDisappear(animated)
     @timers.each do |timer|
       timer.invalidate
@@ -284,6 +277,29 @@ class PlayViewController < UIViewController
     puts(timer)
     puts(timer.userInfo)
     @play_scene.add_actions_for_update([timer.userInfo])
+  end
+
+  def scene_shift(scene_id)
+    scenes = @state.scenes.select {|scene| scene.identifier == scene_id}
+    if not scenes.empty?
+      update_play_scene(scenes.first)
+    end
+  end
+
+  def create_label(string, frame)
+    if not @label.nil?
+      @label.dismissPopoverAnimated(true)
+      #remove label first
+    end
+    textpopover = PlayPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+    textpopover.delegate = self
+    textpopover.setInstruction(string)
+    @label = UIPopoverController.alloc.initWithContentViewController(textpopover)
+    @label.passthroughViews = [] #not working? should allow dragging while popover open
+    @label.delegate = self
+    viewy = self.view
+    @label.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
+
   end
 
 end

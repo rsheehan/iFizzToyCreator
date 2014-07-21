@@ -746,7 +746,10 @@ class ActionAdderViewController < UIViewController
         content.delegate = self
         show_popover(content)
       when :text_bubble
-
+        content = StringInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        content.setTitle("What does the Fox say?")
+        show_popover(content)
       when :scene_shift
         scene_box_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
         scene_box_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -772,6 +775,14 @@ class ActionAdderViewController < UIViewController
     action_type, action_param = get_action
     effect_type = :play_sound
     effect_param = sound_name
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    action_created
+  end
+
+  def submit_text(text)
+    action_type, action_param = get_action
+    effect_type = :text_bubble
+    effect_param = text
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     action_created
   end
@@ -831,33 +842,6 @@ class ActionAdderViewController < UIViewController
     #update state?
     @popoverStack[-1].state = @state
     reopen_action_flow
-  end
-
-  def text_bubble
-    @popover_type = :text_bubble
-    content = StringInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
-    content.delegate = self
-    content.setTitle("What does the Fox say?")
-
-    @popover = UIPopoverController.alloc.initWithContentViewController(content)
-    @popover.delegate = self
-
-    # position = @selected_toy.position
-    # size = @selected_toy.image.size
-    #
-    # frame = CGRectMake(position.x - size.width/2, position.y - size.height/2, size.width, size.height)
-    frame = @effect_buttons[:text_bubble].frame
-    frame.origin.x = @effect_button_view.frame.origin.x + frame.origin.x
-    @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
-  end
-
-  def scene_shift
-    scene_box_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
-    scene_box_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-    scene_box_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
-    scene_box_view_controller.delegate = self
-    scene_box_view_controller.state = @state
-    presentViewController(scene_box_view_controller, animated: true, completion: nil)
   end
 
 end
