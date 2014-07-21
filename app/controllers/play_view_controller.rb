@@ -295,11 +295,10 @@ class PlayViewController < UIViewController
     textpopover.delegate = self
     textpopover.setInstruction(string)
     @label = UIPopoverController.alloc.initWithContentViewController(textpopover)
-    @label.passthroughViews = [] #not working? should allow dragging while popover open
+    @label.passthroughViews = [@play_view] #not working? should allow dragging while popover open
     @label.delegate = self
     viewy = self.view
-    @label.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
-
+    @label.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionDown, animated:true)
   end
 
 end
