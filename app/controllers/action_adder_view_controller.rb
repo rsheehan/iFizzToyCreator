@@ -71,7 +71,9 @@ class ActionAdderViewController < UIViewController
     super # MUST BE CALLED
 
     #add popover to prompt to select a toy
-    if @popover.nil?
+    if not @selected_toy.nil?
+      start_action_flow
+    else
       @main_view.selected = nil
       content = TextPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
       content.setTitle('Tap a toy to begin')
@@ -294,6 +296,7 @@ class ActionAdderViewController < UIViewController
   # When this is received the action info is complete.
   def force=(force_vector)
     action_type, action_param = get_action
+    puts "Force: X: " + force_vector.x.to_s + ", Y: " + force_vector.y.to_s
     effect_type = :apply_force
     effect_param = force_vector * FORCE_SCALE
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
@@ -706,19 +709,19 @@ class ActionAdderViewController < UIViewController
         drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
         presentViewController(drag_action_view_controller, animated: false, completion: nil)
       when :explosion
-        drag_action_view_controller = ExplosionActionViewController.alloc.initWithNibName(nil, bundle: nil)
-        drag_action_view_controller.bounds_for_view = @bounds
-        drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
-        drag_action_view_controller.selected = @selected_toy
-        drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
-        presentViewController(drag_action_view_controller, animated: false, completion: nil)
+        explosion_action_view_controller = ExplosionActionViewController.alloc.initWithNibName(nil, bundle: nil)
+        explosion_action_view_controller.bounds_for_view = @bounds
+        explosion_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+        explosion_action_view_controller.selected = @selected_toy
+        explosion_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+        presentViewController(explosion_action_view_controller, animated: false, completion: nil)
       when :apply_torque
-        drag_action_view_controller = RotationActionViewController.alloc.initWithNibName(nil, bundle: nil)
-        drag_action_view_controller.bounds_for_view = @bounds
-        drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
-        drag_action_view_controller.selected = @selected_toy
-        drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
-        presentViewController(drag_action_view_controller, animated: false, completion: nil)
+        torque_action_view_controller = RotationActionViewController.alloc.initWithNibName(nil, bundle: nil)
+        torque_action_view_controller.bounds_for_view = @bounds
+        torque_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
+        torque_action_view_controller.selected = @selected_toy
+        torque_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
+        presentViewController(torque_action_view_controller, animated: false, completion: nil)
       when :create_new_toy
         #show select toy popover
         content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
@@ -742,6 +745,15 @@ class ActionAdderViewController < UIViewController
         content = SoundSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
         show_popover(content)
+      when :text_bubble
+
+      when :scene_shift
+        scene_box_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
+        scene_box_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
+        scene_box_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
+        scene_box_view_controller.delegate = self
+        scene_box_view_controller.state = @state
+        presentViewController(scene_box_view_controller, animated: true, completion: nil)
       else
     end
   end
@@ -794,7 +806,9 @@ class ActionAdderViewController < UIViewController
     @popover = UIPopoverController.alloc.initWithContentViewController(content)
     @popover.passthroughViews = [@main_view, @scene_creator_view_controller.view] #not working? should allow dragging while popover open
     @popover.delegate = self
-    @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
+    viewy = self.view
+    frame = CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size)
+    @popover.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     @popoverStack << content
   end
 

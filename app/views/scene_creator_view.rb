@@ -52,9 +52,9 @@ class SceneCreatorView < CreatorView
         end
         #@truly_selected = @selected = nil
         @delegate.selected_toy = @selected
-        if @delegate.is_a?(ActionAdderViewController)
-          @delegate.start_action_flow
-        end
+        # if @delegate.is_a?(ActionAdderViewController)
+        #   @delegate.start_action_flow
+        # end
         setNeedsDisplay
       when :toy_selected
         @delegate.selected_toy = @selected
@@ -90,6 +90,7 @@ class SceneCreatorView < CreatorView
   def add_action(action)
     if !@actions.include?(action)
       @actions << action
+      @actions.flatten!
     end
   end
 

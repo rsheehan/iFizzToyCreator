@@ -35,6 +35,43 @@ class State
     #save
   end
 
+  def load_scene_actions(pos)
+    if pos.is_a? SceneTemplate
+      scene = pos
+    else
+      scene = @scenes[pos]
+    end
+    actions = []
+    scene.toys.each do |toy|
+      actions << return_toy_actions(toy.template)
+    end
+    actions.flatten!
+    scene.add_actions(actions)
+  end
+
+  def return_toy_actions(toy, completed=[])
+    if completed.include?(toy.identifier)
+      return []
+    else
+      completed << toy.identifier
+    end
+    actions = toy.actions
+    toy.actions.each do |action|
+      if action[:effect_type] == :create_new_toy
+        create_toy = (@toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first
+        puts "Found Created Toy"
+        create_actions = return_toy_actions(create_toy, completed)
+        create_actions.each do |creaction|
+          if !actions.include?(creaction)
+               actions << creaction
+          end
+        end
+      end
+    end
+    actions.flatten!
+    actions
+  end
+
   # Adds a scene and saves the updated state.
   def add_scene(scene)
     replaced = nil
@@ -100,6 +137,12 @@ class State
       #puts "error value (not necessarily an error) #{error[0].localizedDescription}"
       readStream.close
       convert_from_json_compatible(json_state) if json_state
+    end
+    files = Dir.entries(documents_path)
+    files.each do |file_name|
+      if not file_name.match('temp').nil?
+        File.delete(documents_path.stringByAppendingPathComponent(file_name))
+      end
     end
     @thread = nil
   end
