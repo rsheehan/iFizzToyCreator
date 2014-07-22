@@ -70,7 +70,7 @@ class State
     toy.actions.each do |action|
       if action[:effect_type] == :create_new_toy
         create_toy = (@toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first
-        puts "Found Created Toy"
+        #puts "Found Created Toy"
         create_actions = return_toy_actions(create_toy, completed)
         create_actions.each do |creaction|
           if !actions.include?(creaction)

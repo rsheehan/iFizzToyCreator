@@ -58,11 +58,13 @@ class ActionAdderViewController < UIViewController
   end
 
   def viewDidAppear(animated)
+    @button_toys = {}
     @main_view.change_label_text_to(Language::ACTION_ADDER)
     @main_view.add_delegate(self)
     @main_view.mode = :toys_only # only toys can be selected
     view.addSubview(@main_view)
     super # MUST BE CALLED
+    setup_sides
 
     #add popover to prompt to select a toy
     if not @selected_toy.nil?
@@ -97,6 +99,20 @@ class ActionAdderViewController < UIViewController
     #self.selected_toy = nil
   end
 
+  def reload_button_image_hash
+    @button_toys = {}
+    @state.scenes[@state.currentscene].actions.each do |action|
+      if action[:action_type] == :button
+        @state.toys.each do |toy|
+          if toy.identifier == action[:toy]
+            add_toy_to_button(toy,action[:action_param])
+          end
+        end
+      end
+    end
+
+  end
+
   # The sides are left for user interactions to the running scenes
   def setup_sides
     @left_panel = UIView.alloc.initWithFrame(CGRectMake(0, 0, 95, @bounds.size.height))
@@ -115,6 +131,7 @@ class ActionAdderViewController < UIViewController
   end
 
   def show_sides
+    reload_button_image_hash
     @left_panel.hidden = false
     @right_panel.hidden = false
   end
@@ -317,52 +334,37 @@ class ActionAdderViewController < UIViewController
     @state.save
   end
 
-  def add_toy_to_button(toy, button)
-    puts 'adding toy to '+ button.to_s
+  def add_toy_to_button(toy, button_name)
+    puts 'adding toy to '+ button_name.to_s
     if toy.is_a?(ToyInScene)
       toy = toy.template
     end
 
-    case button
+    button = nil
+    case button_name
       when :left_top, 'left_top'
-        @button_toys[@left_top_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@left_top_button] << toy
-        #update image
-        @left_top_button.setImage(get_btn_image_with_toys(@button_toys[@left_top_button]), forState: UIControlStateNormal)
-        @left_top_button.setImage(get_sel_btn_image_with_toys(@button_toys[@left_top_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @left_top_button
       when :left_middle, 'left_middle'
-        @button_toys[@left_middle_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@left_middle_button] << toy
-        #update image
-        @left_middle_button.setImage(get_btn_image_with_toys(@button_toys[@left_middle_button]), forState: UIControlStateNormal)
-        @left_middle_button.setImage(get_sel_btn_image_with_toys(@button_toys[@left_middle_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @left_middle_button
       when :left_bottom, 'left_bottom'
-        @button_toys[@left_bottom_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@left_bottom_button] << toy
-        #update image
-        @left_bottom_button.setImage(get_btn_image_with_toys(@button_toys[@left_bottom_button]), forState: UIControlStateNormal)
-        @left_bottom_button.setImage(get_sel_btn_image_with_toys(@button_toys[@left_bottom_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @left_bottom_button
       when :right_top, 'right_top'
-        @button_toys[@right_top_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@right_top_button] << toy
-        #update image
-        @right_top_button.setImage(get_btn_image_with_toys(@button_toys[@right_top_button]), forState: UIControlStateNormal)
-        @right_top_button.setImage(get_sel_btn_image_with_toys(@button_toys[@right_top_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @right_top_button
       when :right_middle, 'right_middle'
-        @button_toys[@right_middle_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@right_middle_button] << toy
-        #update image
-        @right_middle_button.setImage(get_btn_image_with_toys(@button_toys[@right_middle_button]), forState: UIControlStateNormal)
-        @right_middle_button.setImage(get_sel_btn_image_with_toys(@button_toys[@right_middle_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @right_middle_button
       when :right_bottom, 'right_bottom'
-        @button_toys[@right_bottom_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@right_bottom_button] << toy
-        #update image
-        @right_bottom_button.setImage(get_btn_image_with_toys(@button_toys[@right_bottom_button]), forState: UIControlStateNormal)
-        @right_bottom_button.setImage(get_sel_btn_image_with_toys(@button_toys[@right_bottom_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @right_bottom_button
       else
         puts 'Idk what button that was..'
     end
+    if @button_toys[button].nil?
+      @button_toys[button] = []
+    end
+    @button_toys[button].delete_if {|t| t.identifier == toy.identifier }
+    @button_toys[button] << toy
+    #update image
+    button.setImage(get_btn_image_with_toys(@button_toys[button]), forState: UIControlStateNormal)
+    button.setImage(get_sel_btn_image_with_toys(@button_toys[button]), forState: UIControlStateSelected) rescue puts 'rescued'
   end
 
   def get_btn_image_with_toys(toys)
