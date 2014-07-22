@@ -20,7 +20,7 @@ class PlayViewController < UIViewController
     @play_view.showsDrawCount = true
     @play_view.showsNodeCount = true
     @play_view.showsFPS = true
-    @play_view.showsPhysics = true
+    #@play_view.showsPhysics = true
     view.addSubview(@play_view)
     @play_view.showsPhysics = true
     @button_actions = {} # keys = buttons, values = list of actions for that button
@@ -94,6 +94,10 @@ class PlayViewController < UIViewController
   end
 
   def viewWillDisappear(animated)
+    remove_actions
+  end
+
+  def remove_actions
     @timers.each do |timer|
       timer.invalidate
     end
@@ -133,6 +137,7 @@ class PlayViewController < UIViewController
     @button_actions.each_key do |button|
       @button_actions[button] = []
     end
+    remove_actions
     disableButtons
     actions = scene.actions
     actions.each do |action|
