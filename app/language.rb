@@ -32,11 +32,11 @@ class Language
   COLLISION     = 'collision'
   REPEAT        = 'timer'     # Repeat?
   HOLD          = 'hold'
-  SCORE_REACHES = 'when score reaches'
-  WHEN_CREATED  = 'when created'
+  SCORE_REACHES = 'score reaches'
+  WHEN_CREATED  = 'created'
   SHAKE         = 'shake'
   LOUD_NOISE    = 'loud noise'
-  TOY_TOUCH    = 'tap toy'
+  TOY_TOUCH     = 'tap toy'
 
   # Effect Names
   FORCE         = 'force'
@@ -46,10 +46,10 @@ class Language
   TRANSITION    = 'transition'
   SOUND         = 'sound'
   DELETE        = 'delete'
-  SCORE_ADDER   = 'add score'
-  PLAY_SOUND    = 'play sound'
-  TEXT_BUBBLE   = 'text bubble'
-  SCENE_SHIFT   = 'scene shift'
+  SCORE_ADDER   = 'score'
+  PLAY_SOUND    = 'sound'
+  TEXT_BUBBLE   = 'text'
+  SCENE_SHIFT   = 'scene'
 
   # Commands
   CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'
