@@ -13,15 +13,30 @@ class RepeatActionViewController < UIViewController
 
     view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
 
-    @close_button = UIButton.buttonWithType(UIButtonTypeCustom)
-    @close_button.setImage(UIImage.imageNamed(:cross2), forState: UIControlStateNormal)
-    @close_button.frame = [[5, 5], [20,20]]
-    @close_button.addTarget(self, action: 'cancel', forControlEvents: UIControlEventTouchUpInside)
+    #back button
+    @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
+    @back_button.setImage(UIImage.imageNamed(:back_arrow), forState: UIControlStateNormal)
+    @back_button.frame = [[5, 5], [20,20]]
+    @back_button.addTarget(self, action: 'back:', forControlEvents: UIControlEventTouchUpInside)
+    view.addSubview(@back_button)
 
-    @margin = @close_button.frame.size.width
+    @margin = @back_button.frame.size.width
+
+    #title
+    @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,20]])
+    @title.setText('Timer Trigger')
+    @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+    @title.setFont(UIFont.boldSystemFontOfSize(16))
+    view.addSubview(@title)
+
+    #title separator
+    separator = CALayer.layer
+    separator.frame = CGRectMake(5, 29.0, @width, 1.0)
+    separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
+    self.view.layer.addSublayer(separator)
 
     #picker for time
-    picker_view = UIPickerView.alloc.initWithFrame([[0,0],[@width,216]])
+    picker_view = UIPickerView.alloc.initWithFrame([[0,35],[@width,150]])
     picker_view.dataSource = self
     picker_view.delegate = self
     picker_view.selectRow(30001, inComponent: 0, animated: false)
@@ -49,27 +64,21 @@ class RepeatActionViewController < UIViewController
     done_button.addTarget(self, action: 'done', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(done_button)
 
-    view.addSubview(@close_button)
-    # cancel_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-    # cancel_button.setTitle('Cancel', forState: UIControlStateNormal)
-    # cancel_button.frame = [[0,picker_view.frame.origin.y+picker_view.frame.size.height+5],[@width/2,20]]
-    # cancel_button.addTarget(self, action: 'cancel', forControlEvents: UIControlEventTouchUpInside)
-    # view.addSubview(cancel_button)
-    @selected_secs = 1;
+    @selected_secs = 1
 
     self.preferredContentSize = [@width, done_button.frame.origin.y+done_button.frame.size.height+5]
   end
 
   # Back to the action adder to make a new one.
   def done
-    puts('repeat every '+ @selected_secs+' s')
+    puts('repeat every '+ @selected_secs.to_s+' s')
     @delegate.submit_number(@selected_secs)
   end
 
   # Back to the action adder to make a new one.
-  def cancel
+  def back(sender)
     puts('Cancel')
-    @delegate.close_popover
+    @delegate.action_flow_back
   end
 
   def pickerView(pickerView, numberOfRowsInComponent:component)

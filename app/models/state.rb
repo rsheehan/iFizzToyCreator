@@ -35,6 +35,54 @@ class State
     #save
   end
 
+  def load_scene_actions(pos)
+    if pos.is_a? SceneTemplate
+      scene = pos
+    else
+      scene = @scenes[pos]
+    end
+    actions = get_actions_from_toys(scene.toys)
+    scene.add_actions(actions)
+  end
+
+  def get_actions_from_toys(toys)
+    actions = []
+    checked = []
+    toys.each do |toy|
+      actions << return_toy_actions(toy, checked)
+    end
+    actions.flatten!
+    actions
+  end
+
+  def return_toy_actions(in_toy, completed=[])
+    if in_toy.is_a? ToyInScene
+      toy = in_toy.template
+    else
+      toy = in_toy
+    end
+    if completed.include?(toy.identifier)
+      return []
+    else
+      completed << toy.identifier
+    end
+    actions = toy.actions
+    toy.actions.each do |action|
+      if action[:effect_type] == :create_new_toy
+        create_toy = (@toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first
+        #puts "Found Created Toy"
+        create_actions = return_toy_actions(create_toy, completed)
+        create_actions.each do |creaction|
+          if !actions.include?(creaction)
+               actions << creaction
+          end
+        end
+      end
+    end
+    actions.flatten!
+    actions
+  end
+
   # Adds a scene and saves the updated state.
   def add_scene(scene)
     replaced = nil
@@ -100,6 +148,12 @@ class State
       #puts "error value (not necessarily an error) #{error[0].localizedDescription}"
       readStream.close
       convert_from_json_compatible(json_state) if json_state
+    end
+    files = Dir.entries(documents_path)
+    files.each do |file_name|
+      if not file_name.match('temp').nil?
+        File.delete(documents_path.stringByAppendingPathComponent(file_name))
+      end
     end
     @thread = nil
   end
@@ -239,7 +293,8 @@ class State
     end
 
     unless toys.empty? and edges.empty?
-      scene = SceneTemplate.new(toys, edges, [], id, CGRectMake(0,0,0,0))
+      actions = get_actions_from_toys(toys)
+      scene = SceneTemplate.new(toys, edges, actions, id, CGRectMake(0,0,0,0))
       scene
     end
   end

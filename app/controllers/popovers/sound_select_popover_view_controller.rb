@@ -12,24 +12,37 @@ class SoundSelectPopoverViewController < UIViewController
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
     view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
 
-    @close_button = UIButton.buttonWithType(UIButtonTypeCustom)
-    @close_button.setImage(UIImage.imageNamed(:cross2), forState: UIControlStateNormal)
-    @close_button.frame = [[5, 5], [20,20]]
-    @close_button.addTarget(self, action: 'cancel', forControlEvents: UIControlEventTouchUpInside)
+    #back button
+    @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
+    @back_button.setImage(UIImage.imageNamed(:back_arrow), forState: UIControlStateNormal)
+    @back_button.frame = [[5, 5], [20,20]]
+    @back_button.addTarget(self, action: 'back:', forControlEvents: UIControlEventTouchUpInside)
+    view.addSubview(@back_button)
 
-    @margin = @close_button.frame.size.width
+    @margin = @back_button.frame.size.width
 
-    #title view
-    title_view = UILabel.alloc.initWithFrame([[@margin+10,0],[@width-@margin-5,25]])
-    title_view.setFont(UIFont.systemFontOfSize(20))
-    title_view.text = 'Choose Sound'
-    title_view.backgroundColor = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
-    title_view.textAlignment = NSTextAlignmentLeft
-    view.addSubview(title_view)
+    #title
+    @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,20]])
+    @title.setText('Choose Sound')
+    @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+    @title.setFont(UIFont.boldSystemFontOfSize(16))
+    view.addSubview(@title)
+
+    #title separator
+    separator = CALayer.layer
+    separator.frame = CGRectMake(5, 29.0, @width, 1.0)
+    separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
+    self.view.layer.addSublayer(separator)
+
+    #make table view filled with all actions that have selected as the toy
+    if Constants::SOUND_NAMES.length > 3
+      tvHeight = 160
+    else
+      tvHeight = 45 * Constants::SOUND_NAMES.length
+    end
 
     #table view for sound
-    @table_view = UITableView.alloc.initWithFrame([[0, title_view.frame.size.height+title_view.frame.origin.y+5],
-                                                   [@width, @height-(title_view.frame.size.height+title_view.frame.origin.y+5)]])
+    @table_view = UITableView.alloc.initWithFrame([[0, 35], [@width, tvHeight]])
     @table_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
     @table_view.dataSource = self
     @table_view.delegate = self
@@ -37,11 +50,13 @@ class SoundSelectPopoverViewController < UIViewController
     view.addSubview(@table_view)
     view.addSubview(@close_button)
 
-    self.preferredContentSize = [@width, @height]
+    self.preferredContentSize = [@width, @table_view.frame.size.height+@table_view.frame.origin.y]
   end
 
   def select_sound(sender)
     @player = nil
+    #add extension on end
+    text = sender.view.text.gsub(' ', '_')
     @delegate.set_sound(sender.view.text)
   end
 
@@ -62,9 +77,9 @@ class SoundSelectPopoverViewController < UIViewController
   end
 
   # Back to the action adder to make a new one.
-  def cancel
+  def back(sender)
     @player = nil
-    @delegate.close_popover
+    @delegate.action_flow_back
   end
 
   def tableView(tv, numberOfRowsInSection: section)

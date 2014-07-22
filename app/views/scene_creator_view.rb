@@ -8,7 +8,7 @@ class SceneCreatorView < CreatorView
 # @truly_selected is a stroke/toy which is currently being touched by the user
 # @selected is a stroke/toy which was touched and is now hilighted
   attr_writer :selected, :secondary_selected, :show_action_controller
-  attr_reader :actions
+  attr_reader :actions, :delegate
   attr_accessor :alpha_view
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
@@ -52,9 +52,15 @@ class SceneCreatorView < CreatorView
         end
         #@truly_selected = @selected = nil
         @delegate.selected_toy = @selected
+        # if @delegate.is_a?(ActionAdderViewController)
+        #   @delegate.start_action_flow
+        # end
         setNeedsDisplay
       when :toy_selected
         @delegate.selected_toy = @selected
+        if @delegate.is_a?(ActionAdderViewController)
+          @delegate.start_action_flow
+        end
       # @truly_selected has been set in ActionAdderViewController
       when :collision
         @current_tool = :grab
@@ -84,6 +90,7 @@ class SceneCreatorView < CreatorView
   def add_action(action)
     if !@actions.include?(action)
       @actions << action
+      @actions.flatten!
     end
   end
 
@@ -178,15 +185,15 @@ class SceneCreatorView < CreatorView
     setNeedsDisplay
   end
 
-  # A touch in show actions mode
-  def touch_begin_show_actions
-    # Check to see if the touch is near a toy
-    @truly_selected = close_toy(@current_point)
-
-    if @truly_selected
-      @show_action_controller.show_action_list(@truly_selected)
-    end
-  end
+  # # A touch in show actions mode
+  # def touch_begin_show_actions
+  #   # Check to see if the touch is near a toy
+  #   @truly_selected = close_toy(@current_point)
+  #
+  #   if @truly_selected
+  #     @show_action_controller.show_action_list(@truly_selected)
+  #   end
+  # end
 
   # A touch in scene mode
   def touch_begin_scene
@@ -202,11 +209,14 @@ class SceneCreatorView < CreatorView
     end
   end
 
-  # A touch in toys only mode
+  # A touch in toys only mode - (used for action adder)
   def touch_begin_toys_only
     @truly_selected = close_toy(@current_point)
     if @truly_selected
       @selected = @truly_selected
+      if @delegate.is_a?(ActionAdderViewController)
+        @delegate.start_action_flow
+      end
       self.mode = :toy_selected
     else
       self.mode = :toys_only
@@ -249,6 +259,9 @@ class SceneCreatorView < CreatorView
       when :grab
         case @mode
           when :toys_only, :scene, :toy_selected
+            if @delegate.is_a?(ActionAdderViewController)
+              @delegate.close_popover
+            end
             touch_move_scene(point)
           else
             @current_point = point
@@ -310,6 +323,10 @@ class SceneCreatorView < CreatorView
             touch_end_collision
           when :create_new_toy
             @drag = false
+          when :toy_selected
+            if @delegate.is_a?(ActionAdderViewController)
+              @delegate.reopen_action_flow
+            end
         end
       when :circle
         centre = @points[0]
@@ -328,6 +345,9 @@ class SceneCreatorView < CreatorView
       if @truly_selected.is_a?(ToyInScene)
         @toys_in_scene.delete(@truly_selected)
         @toys_in_scene << @truly_selected
+        if @delegate.is_a?(ActionAdderViewController)
+          @delegate.reopen_action_flow
+        end
       else
         @strokes.delete(@truly_selected)
         @strokes << @truly_selected
@@ -373,7 +393,6 @@ class SceneCreatorView < CreatorView
 
   # [ID, Displacement.x, displacement.y, zoom, angle]
   def end_create_toy
-    @delegate.close_modal_view
     results = {}
     results[:id] = @selected.template.identifier
     disp = @secondary_selected.position - @selected.position
@@ -385,6 +404,7 @@ class SceneCreatorView < CreatorView
     @secondary_selected = nil
     @delegate.selected_toy = @selected
     @delegate.create_new_toy = results
+    @delegate.close_modal_view
   end
 
   # Called when the touch ends for a collision toy selection.
