@@ -146,6 +146,10 @@ class PlayViewController < UIViewController
           button = enable_button(action[:action_param])
           #add_action_to_button
           @button_actions[button] << action
+          #update image
+          button.setImage(get_btn_image_with_actions(@button_actions[button],false), forState: UIControlStateNormal)
+          button.setImage(get_btn_image_with_actions(@button_actions[button],true), forState: UIControlStateSelected) rescue puts 'rescued'
+
         when :timer
           puts("Action",action)
           @timers << NSTimer.scheduledTimerWithTimeInterval(action[:action_param][0], target: self, selector: "perform_action:", userInfo: action, repeats: true)
@@ -239,6 +243,64 @@ class PlayViewController < UIViewController
     button.enabled = false
     panel.addSubview(button)
     button
+  end
+
+  def get_btn_image_with_actions(actions, selected)
+    if selected
+      image = UIImage.imageNamed('side_button_selected')
+    else
+      image = UIImage.imageNamed('side_button')
+    end
+
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+    context = UIGraphicsGetCurrentContext()
+
+    #show all toys equally spaced
+    actions.each_with_index { |action, index|
+      toy = nil
+      @state.toys.each do |t|
+        if t.identifier == action[:toy]
+          toy = t
+        end
+      end
+      if index < 2 or (index == 2 and actions.size == 3)
+        rect = CGRectMake(0, index*image.size.height/[actions.size,3].min, image.size.width, image.size.height/[actions.size,3].min)
+        aspect = toy.image.size.width / toy.image.size.height
+        if (rect.size.width / aspect <= rect.size.height)
+          rect.size = CGSizeMake(rect.size.width, rect.size.width/aspect)
+        else
+          rect.size = CGSizeMake(rect.size.height * aspect, rect.size.height)
+        end
+        toy.image.drawInRect(rect)
+
+      elsif index ==  2 and actions.size > 3
+        #draw ... in third rect?
+        rect = CGRectMake(0, 2*image.size.height/[actions.size,3].min, image.size.width, image.size.height/[actions.size,3].min)
+        puts 'img size = '+image.size.width.to_s+ ", "+image.size.height.to_s
+        puts 'draw dots in - 0,'+ (2*image.size.height/[actions.size,3].min).to_s+',' +image.size.width.to_s+','+ (image.size.height/[actions.size,3].min).to_s
+        draw_dots_in_rect(context, rect)
+      end
+    }
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+    newImage
+  end
+
+  def draw_dots_in_rect(context, rect)
+    height = rect.size.height
+    width = rect.size.width
+    x = rect.origin.x
+    y = rect.origin.y
+    centers = [ CGPointMake(x+width/4,y+height/2),CGPointMake(x+2*width/4,y+height/2),CGPointMake(x+3*width/4,y+height/2)]
+    radius = [height/4, width/16].min
+
+    centers.each do |center|
+      rectangle = CGRectMake(center.x - radius, center.y - radius, radius*2, radius*2)
+      CGContextSetFillColorWithColor(context,UIColor.blackColor.CGColor)
+      CGContextAddEllipseInRect(context, rectangle)
+      CGContextFillPath(context)
+    end
   end
 
   def disableButtons

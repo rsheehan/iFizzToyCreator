@@ -37,13 +37,7 @@ class ActionAdderViewController < UIViewController
     location_of_action = [95, 0]
     size_of_action = [@bounds.size.width - 190, @bounds.size.height]
 
-    # action_bounds = CGRectMake(0, 0, 95, @bounds.size.height)
-    # @action_button_view = button_view(action_bounds)
-    # @action_buttons = buttons(ACTIONS, @action_button_view)
-    # effect_bounds = CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height)
-    # @effect_button_view = button_view(effect_bounds)
-    # @effect_buttons = buttons(EFFECTS, @effect_button_view)
-    # @action_button_name = nil
+    @button_toys = {}
     setup_sides
 
     @main_view = @scene_creator_view_controller.main_view
@@ -82,6 +76,20 @@ class ActionAdderViewController < UIViewController
       @popover.delegate = self
       @popover.presentPopoverFromRect(CGRectMake(@main_view.center.x-5,@main_view.frame.origin.y,10,1) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionUp, animated:true)
     end
+
+    #load all button actions to button images?
+    if @left_top_button
+      @state.scenes[@state.currentscene].actions.each do |action|
+        if action[:action_type] == :button
+          @state.toys.each do |toy|
+            if toy.identifier == action[:toy]
+              add_toy_to_button(toy,action[:action_param])
+            end
+          end
+        end
+      end
+    end
+
     #if @view_mode == :nothing_chosen
     #enable_action_buttons(false)
     #enable_effect_buttons(false)
@@ -103,6 +111,17 @@ class ActionAdderViewController < UIViewController
     @right_middle_button = setup_game_button([LEFT, MIDDLE], @right_panel)
     @right_bottom_button = setup_game_button([LEFT, BOTTOM], @right_panel)
     view.addSubview(@right_panel)
+    hide_sides
+  end
+
+  def show_sides
+    @left_panel.hidden = false
+    @right_panel.hidden = false
+  end
+
+  def hide_sides
+    @left_panel.hidden = true
+    @right_panel.hidden = true
   end
 
   def setup_game_button(position, panel)
@@ -111,6 +130,7 @@ class ActionAdderViewController < UIViewController
     button.setImage(UIImage.imageNamed('side_button_selected'), forState: UIControlStateHighlighted)
     button.sizeToFit
     button.frame = [position, button.frame.size]
+    @button_toys[button] = []
     button.addTarget(self, action: 'selected_button:', forControlEvents: UIControlEventTouchUpInside)
     button.enabled = false
     panel.addSubview(button)
@@ -135,33 +155,6 @@ class ActionAdderViewController < UIViewController
     @right_top_button.enabled    = true
   end
 
-  # def button_view(frame)
-  #   button_scrollview = UIScrollView.alloc.initWithFrame(frame)
-  #   button_scrollview.backgroundColor = UIColor.darkGrayColor
-  #   button_scrollview
-  # end
-
-  # # Add buttons.
-  # def buttons(button_names, button_view)
-  #   buttons = {}
-  #   position = [10, 10]
-  #   button_names.each do |button_name|
-  #     button = setup_button(button_name, position, button_view)
-  #     buttons[button_name] = button
-  #     position[1] += CGRectGetHeight(button.frame) + 3
-  #     label = UILabel.alloc.initWithFrame([[0, position[1]], [95, 10]])
-  #     label.font = UIFont.systemFontOfSize(12)
-  #     label.textColor = UIColor.whiteColor
-  #     label.text = name_for_label(button_name)
-  #     label.textAlignment = NSTextAlignmentCenter
-  #     button_view.addSubview(label)
-  #     position[1] += CGRectGetHeight(label.frame) + 8
-  #   end
-  #   button_view.setContentSize(CGSizeMake(95,position[1]))
-  #   view.addSubview(button_view)
-  #   buttons
-  # end
-  #
   def setup_button(image_name, position, super_view)
     button = UIButton.buttonWithType(UIButtonTypeCustom)
     button.setImage(UIImage.imageNamed(image_name), forState: UIControlStateNormal)
@@ -203,11 +196,6 @@ class ActionAdderViewController < UIViewController
     end
   end
 
-  # def enable_action_buttons(enable)
-  #   @action_button_view.backgroundColor = enable ? Constants::GOLD : UIColor::darkGrayColor
-  #   @action_buttons.each { |name, button| button.enabled = enable }
-  # end
-
   def enable_show_mode_buttons(enable)
     if @show_properties_btn
       @show_actions_btn.enabled = enable;
@@ -215,38 +203,15 @@ class ActionAdderViewController < UIViewController
     end
   end
 
-  # def enable_effect_buttons(enable)
-  #   @effect_button_view.backgroundColor = enable ? Constants::GOLD : UIColor::darkGrayColor
-  #   @effect_buttons.each { |name, button| button.enabled = enable }
-  # end
-
-  # Gets the button information for the action.
-  # def action_button_name=(button_name)
-  #   @action_button_name = button_name
-  # end
-
   def close_touch_view_controller
     dismissModalViewControllerAnimated(false, completion: nil)
-    # enable_action_buttons(false)
     enable_show_mode_buttons(false)
-    # enable_effect_buttons(true)
   end
 
   def selected_toy=(toy)
     @selected_toy = toy
-    # enable_action_buttons(@selected_toy)
     enable_show_mode_buttons(@selected_toy)
-    # enable_effect_buttons(false)
-    #@view_mode = @selected_toy ? :toy_selected : :nothing_chosen
   end
-
-  # def colliding_toy=(toy)
-  #   @colliding_toy = toy
-  #   dismissModalViewControllerAnimated(false, completion: nil)
-  #   enable_action_buttons(false)
-  #   enable_show_mode_buttons(false)
-  #   enable_effect_buttons(true)
-  # end
 
   def get_action
     if @action_button_name
@@ -342,10 +307,136 @@ class ActionAdderViewController < UIViewController
               effect_type: effect_type, effect_param: effect_param}
     @scene_creator_view_controller.main_view.add_action(action)
     toy.template.actions << action
+    #if button - add image to button
+    if action_type == :button
+      add_toy_to_button(toy,action_param)
+    end
     #save actions
     @main_view.secondary_selected = nil
     @main_view.setNeedsDisplay
     @state.save
+  end
+
+  def add_toy_to_button(toy, button)
+    puts 'adding toy to '+ button.to_s
+    if toy.is_a?(ToyInScene)
+      toy = toy.template
+    end
+
+    case button
+      when :left_top, 'left_top'
+        @button_toys[@left_top_button].delete_if {|t| t.identifier == toy.identifier }
+        @button_toys[@left_top_button] << toy
+        #update image
+        @left_top_button.setImage(get_btn_image_with_toys(@button_toys[@left_top_button]), forState: UIControlStateNormal)
+        @left_top_button.setImage(get_sel_btn_image_with_toys(@button_toys[@left_top_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+      when :left_middle, 'left_middle'
+        @button_toys[@left_middle_button].delete_if {|t| t.identifier == toy.identifier }
+        @button_toys[@left_middle_button] << toy
+        #update image
+        @left_middle_button.setImage(get_btn_image_with_toys(@button_toys[@left_middle_button]), forState: UIControlStateNormal)
+        @left_middle_button.setImage(get_sel_btn_image_with_toys(@button_toys[@left_middle_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+      when :left_bottom, 'left_bottom'
+        @button_toys[@left_bottom_button].delete_if {|t| t.identifier == toy.identifier }
+        @button_toys[@left_bottom_button] << toy
+        #update image
+        @left_bottom_button.setImage(get_btn_image_with_toys(@button_toys[@left_bottom_button]), forState: UIControlStateNormal)
+        @left_bottom_button.setImage(get_sel_btn_image_with_toys(@button_toys[@left_bottom_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+      when :right_top, 'right_top'
+        @button_toys[@right_top_button].delete_if {|t| t.identifier == toy.identifier }
+        @button_toys[@right_top_button] << toy
+        #update image
+        @right_top_button.setImage(get_btn_image_with_toys(@button_toys[@right_top_button]), forState: UIControlStateNormal)
+        @right_top_button.setImage(get_sel_btn_image_with_toys(@button_toys[@right_top_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+      when :right_middle, 'right_middle'
+        @button_toys[@right_middle_button].delete_if {|t| t.identifier == toy.identifier }
+        @button_toys[@right_middle_button] << toy
+        #update image
+        @right_middle_button.setImage(get_btn_image_with_toys(@button_toys[@right_middle_button]), forState: UIControlStateNormal)
+        @right_middle_button.setImage(get_sel_btn_image_with_toys(@button_toys[@right_middle_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+      when :right_bottom, 'right_bottom'
+        @button_toys[@right_bottom_button].delete_if {|t| t.identifier == toy.identifier }
+        @button_toys[@right_bottom_button] << toy
+        #update image
+        @right_bottom_button.setImage(get_btn_image_with_toys(@button_toys[@right_bottom_button]), forState: UIControlStateNormal)
+        @right_bottom_button.setImage(get_sel_btn_image_with_toys(@button_toys[@right_bottom_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+      else
+        puts 'Idk what button that was..'
+    end
+  end
+
+  def get_btn_image_with_toys(toys)
+    image = UIImage.imageNamed('side_button')
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+    context = UIGraphicsGetCurrentContext()
+
+    #show all toys equally spaced
+    toys.each_with_index { |toy, index|
+      if index < 2 or (index == 2 and toys.size == 3)
+        rect = CGRectMake(0, index*image.size.height/[toys.size,3].min, image.size.width, image.size.height/[toys.size,3].min)
+        aspect = toy.image.size.width / toy.image.size.height
+        if (rect.size.width / aspect <= rect.size.height)
+          rect.size = CGSizeMake(rect.size.width, rect.size.width/aspect)
+        else
+          rect.size = CGSizeMake(rect.size.height * aspect, rect.size.height)
+        end
+        toy.image.drawInRect(rect)
+
+      elsif index ==  2 and toys.size > 3
+        #draw ... in third rect?
+        rect = CGRectMake(0, 2*image.size.height/[toys.size,3].min, image.size.width, image.size.height/[toys.size,3].min)
+        puts 'img size = '+image.size.width.to_s+ ", "+image.size.height.to_s
+        puts 'draw dots in - 0,'+ (2*image.size.height/[toys.size,3].min).to_s+',' +image.size.width.to_s+','+ (image.size.height/[toys.size,3].min).to_s
+        draw_dots_in_rect(context, rect)
+      end
+    }
+
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    newImage
+  end
+
+  def draw_dots_in_rect(context, rect)
+    height = rect.size.height
+    width = rect.size.width
+    x = rect.origin.x
+    y = rect.origin.y
+    centers = [ CGPointMake(x+width/4,y+height/2),CGPointMake(x+2*width/4,y+height/2),CGPointMake(x+3*width/4,y+height/2)]
+    radius = [height/4, width/16].min
+
+    centers.each do |center|
+      rectangle = CGRectMake(center.x - radius, center.y - radius, radius*2, radius*2)
+      CGContextSetFillColorWithColor(context,UIColor.blackColor.CGColor)
+      CGContextAddEllipseInRect(context, rectangle)
+      CGContextFillPath(context)
+    end
+
+  end
+
+  def get_sel_btn_image_with_toys(toys)
+    image = UIImage.imageNamed('side_button_selected')
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+    context = UIGraphicsGetCurrentContext()
+
+    #show all toys equally spaced
+    toys.each_with_index { |toy, index|
+      if index < 2 or (index == 2 and toys.size == 3)
+        rect = CGRectMake(0, index*image.size.height/[toys.size,3].min, image.size.width, image.size.height/[toys.size,3].min)
+        toy.image.drawInRect(rect)
+      elsif index ==  2
+        #draw ... in third rect?
+        rect = CGRectMake(0, 3*image.size.height/[toys.size,3].min, image.size.width, image.size.height/[toys.size,3].min)
+        draw_dots_in_rect(context, rect)
+      end
+    }
+
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    newImage
   end
 
   # Called when undo state might change.
@@ -435,121 +526,6 @@ class ActionAdderViewController < UIViewController
     dismissModalViewControllerAnimated(true, completion: nil)
   end
 
-  # def create_toy_action_viewer (toy)
-  #   drag_action_view_controller = CreateActionViewController.alloc.initWithNibName(nil, bundle: nil)
-  #   drag_action_view_controller.bounds_for_view = @bounds
-  #   #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-  #   drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
-  #   drag_action_view_controller.selected = @selected_toy
-  #   drag_action_view_controller.new_toy = toy
-  #   #drag_action_view_controller.delegate = self
-  #   #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
-  #   drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
-  #   presentViewController(drag_action_view_controller, animated: false, completion: nil)
-  # end
-
-  #======================
-  # Actions
-  #======================
-
-  # Adding a touch event.
-  def touch
-    reset_action_params
-    touch_action_view_controller = TouchActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    touch_action_view_controller.bounds_for_view = @bounds
-    touch_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-    touch_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
-    touch_action_view_controller.delegate = self
-    presentViewController(touch_action_view_controller, animated: false, completion: nil)
-  end
-
-  #======================
-  # Effects
-  #======================
-
-  # Show the force to apply.
-  def apply_force
-    drag_action_view_controller = DragActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    drag_action_view_controller.bounds_for_view = @bounds
-    #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-    drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
-    drag_action_view_controller.selected = @selected_toy
-    #drag_action_view_controller.delegate = self
-    #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
-    drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
-    presentViewController(drag_action_view_controller, animated: false, completion: nil)
-  end
-
-  def apply_torque
-    drag_action_view_controller = RotationActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    drag_action_view_controller.bounds_for_view = @bounds
-    #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-    drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
-    drag_action_view_controller.selected = @selected_toy
-    #drag_action_view_controller.delegate = self
-    #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
-    drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
-    presentViewController(drag_action_view_controller, animated: false, completion: nil)
-  end
-
-  def explosion
-    drag_action_view_controller = ExplosionActionViewController.alloc.initWithNibName(nil, bundle: nil)
-    drag_action_view_controller.bounds_for_view = @bounds
-    #drag_action_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-    drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
-    drag_action_view_controller.selected = @selected_toy
-    #drag_action_view_controller.delegate = self
-    #@scene_creator_view_controller.main_view.truly_selected = @saved_selected_toy
-    drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
-    presentViewController(drag_action_view_controller, animated: false, completion: nil)
-  end
-
-  def create_new_toy
-    toybox_view_controller = ToyBoxViewController.alloc.initWithNibName(nil, bundle: nil)
-    toybox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-    toybox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
-    toybox_view_controller.delegate = self
-    toybox_view_controller.state = @state
-    presentViewController(toybox_view_controller, animated: true, completion: nil)
-  end
-
-  # def delete_effect
-  #   action_type, action_param = get_action
-  #   effect_type = :delete_effect
-  #   effect_param = DELETE_FADE_TIME
-  #   create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
-  #   @main_view.secondary_selected = nil
-  #   enable_action_buttons(true)
-  #   enable_effect_buttons(false)
-  #   @main_view.setNeedsDisplay
-  # end
-
-  # def score_adder
-  #   @popover_type = :score_adder
-  #   content = ScoreAdderActionViewController.alloc.initWithNibName(nil, bundle: nil)
-  #   content.setTitle('Enter the change in score')
-  #   content.delegate = self
-  #   @popover = UIPopoverController.alloc.initWithContentViewController(content)
-  #   @popover.delegate = self
-  #   frame = @effect_buttons[:score_adder].frame
-  #   frame.origin.x = @effect_button_view.frame.origin.x + frame.origin.x
-  #   @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
-  # end
-
-  # def play_sound
-  #   # #show popover to select sound to play
-  #   # @popover_type = :play_sound
-  #   # content = SoundSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
-  #   # content.delegate = self
-  #   # @popover = UIPopoverController.alloc.initWithContentViewController(content)
-  #   # @popover.delegate = self
-  #   # @popover.presentPopoverFromRect([[@effect_buttons[:play_sound].frame.origin.x+@effect_button_view.frame.origin.x,@effect_buttons[:play_sound].frame.origin.y],@effect_buttons[:play_sound].frame.size], inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
-  #
-  #
-  # end
-
-
-
   #==========
   # NEw Actions flow
   #=========
@@ -619,6 +595,7 @@ class ActionAdderViewController < UIViewController
         show_popover(content)
         @popover.passthroughViews += [@left_panel, @right_panel]
         enableButtons
+        show_sides
       when :timer
         #show timer popover
         @popover_type = :timer
@@ -659,6 +636,7 @@ class ActionAdderViewController < UIViewController
   def selected_button(sender)
     close_popover
     disableButtons
+    hide_sides
     case sender
       when @left_top_button
         @action_button_name = :left_top
@@ -827,6 +805,7 @@ class ActionAdderViewController < UIViewController
     @popover_type = nil
     @popover.dismissPopoverAnimated(true)
     disableButtons
+    hide_sides
   end
 
   def change_popover(content)
