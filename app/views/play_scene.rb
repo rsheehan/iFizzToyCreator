@@ -341,7 +341,7 @@ class PlayScene < SKScene
               displacement = CGPointMake(action[:effect_param][:x], action[:effect_param][:y])
               #puts "DisB4 Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
               displacement = CGPointApplyAffineTransform(displacement, rotation)
-              displacement = CGPointMake(displacement.x, displacement.y * -1)
+              displacement = CGPointMake(displacement.x, displacement.y)
               #puts "DisAf Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
               toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
               new_toy = new_toy(toy_in_scene)
