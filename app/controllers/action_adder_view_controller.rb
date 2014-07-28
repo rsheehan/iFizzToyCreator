@@ -64,7 +64,6 @@ class ActionAdderViewController < UIViewController
     @main_view.mode = :toys_only # only toys can be selected
     view.addSubview(@main_view)
     super # MUST BE CALLED
-    setup_sides
 
     #add popover to prompt to select a toy
     if not @selected_toy.nil?
@@ -81,15 +80,7 @@ class ActionAdderViewController < UIViewController
 
     #load all button actions to button images?
     if @left_top_button
-      @state.scenes[@state.currentscene].actions.each do |action|
-        if action[:action_type] == :button
-          @state.toys.each do |toy|
-            if toy.identifier == action[:toy]
-              add_toy_to_button(toy,action[:action_param])
-            end
-          end
-        end
-      end
+      reload_button_image_hash
     end
 
     #if @view_mode == :nothing_chosen
@@ -101,6 +92,8 @@ class ActionAdderViewController < UIViewController
 
   def reload_button_image_hash
     @button_toys = {}
+    #setup_sides
+    draw_all_buttons
     @state.scenes[@state.currentscene].actions.each do |action|
       if action[:action_type] == :button
         @state.toys.each do |toy|
@@ -110,7 +103,21 @@ class ActionAdderViewController < UIViewController
         end
       end
     end
+  end
 
+  def draw_all_buttons
+    all_buttons = [@left_panel.subviews, @right_panel.subviews].flatten
+    all_buttons.each do |button|
+      draw_button(button)
+    end
+  end
+
+  def draw_button(button)
+    if @button_toys[button].nil?
+      @button_toys[button] = []
+    end
+    button.setImage(get_btn_image_with_toys(@button_toys[button]), forState: UIControlStateNormal)
+    button.setImage(get_sel_btn_image_with_toys(@button_toys[button]), forState: UIControlStateSelected) rescue puts 'rescued'
   end
 
   # The sides are left for user interactions to the running scenes
@@ -596,8 +603,8 @@ class ActionAdderViewController < UIViewController
         content.delegate = self
         show_popover(content)
         @popover.passthroughViews += [@left_panel, @right_panel]
-        enableButtons
         show_sides
+        enableButtons
       when :timer
         #show timer popover
         @popover_type = :timer
