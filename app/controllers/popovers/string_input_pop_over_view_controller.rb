@@ -58,6 +58,7 @@ class StringInputPopOverViewController < UIViewController
   def textField(textField, shouldChangeCharactersInRange:range, replacementString:string)
     legalCharSet = NSMutableCharacterSet.characterSetWithCharactersInString(' ')
     legalCharSet.formUnionWithCharacterSet(NSCharacterSet.alphanumericCharacterSet)
+    legalCharSet.formUnionWithCharacterSet(NSCharacterSet.punctuationCharacterSet)
     trimmedString = string.stringByTrimmingCharactersInSet(legalCharSet.invert)
     stringEmpty = string == ''
     return ((trimmedString.length > 0) or stringEmpty)
