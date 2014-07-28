@@ -14,9 +14,7 @@ class ActionCell < UITableViewCell
     x_space = (width - 4*img_size)/5
     y_space = (height-img_size-15)/2
 
-    self.contentView.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
     self.backgroundView = UIView.alloc.init
-    self.backgroundView.backgroundColor = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
     @action_image_view = UIImageView.alloc.initWithFrame(CGRectMake(boundsX+x_space,             boundsY+y_space,img_size,img_size))
     @object_image_view = UIImageView.alloc.initWithFrame(CGRectMake(boundsX+2*x_space+img_size,  boundsY+y_space,img_size,img_size))
     @effect_image_view = UIImageView.alloc.initWithFrame(CGRectMake(boundsX+3*x_space+2*img_size,boundsY+y_space,img_size,img_size))
@@ -36,12 +34,14 @@ class ActionCell < UITableViewCell
     self.contentView.addSubview(@effect_image_view)
     self.contentView.addSubview(@param_image_view)
 
-    @action_text_view = UILabel.alloc.initWithFrame(CGRectMake(boundsX+x_space, boundsY+y_space+img_size, img_size, 15))
+    @action_text_view = UILabel.alloc.initWithFrame(CGRectMake(boundsX, boundsY+y_space+img_size, img_size+2*x_space, 15))
     @action_text_view.setTextAlignment(UITextAlignmentCenter)
+    # @action_text_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.5, alpha: 1.0)
     @action_text_view.setFont(UIFont.systemFontOfSize(14))
     addSubview(@action_text_view)
-    @effect_text_view = UILabel.alloc.initWithFrame(CGRectMake(boundsX+3*x_space+2*img_size,boundsY+y_space+img_size,img_size, 15))
+    @effect_text_view = UILabel.alloc.initWithFrame(CGRectMake(boundsX+2*x_space+2*img_size,boundsY+y_space+img_size,img_size+2*x_space, 15))
     @effect_text_view.setTextAlignment(UITextAlignmentCenter)
+    # @effect_text_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.5, alpha: 1.0)
     @effect_text_view.setFont(UIFont.systemFontOfSize(14))
     addSubview(@effect_text_view)
 
@@ -91,8 +91,8 @@ class ActionCell < UITableViewCell
     @effect_image_view.frame =(CGRectMake(boundsX+3*x_space+2*img_size,boundsY+y_space,img_size,img_size))
     @param_image_view.frame = (CGRectMake(boundsX+4*x_space+3*img_size,boundsY+y_space,img_size,img_size))
 
-    @action_text_view.frame = CGRectMake(boundsX+x_space, boundsY+y_space+img_size, img_size, 15)
-    @effect_text_view.frame = CGRectMake(boundsX+3*x_space+2*img_size,boundsY+y_space+img_size,img_size, 15)
+    @action_text_view.frame = CGRectMake(boundsX, boundsY+y_space+img_size, img_size+2*x_space, 15)
+    @effect_text_view.frame = CGRectMake(boundsX+2*x_space+2*img_size,boundsY+y_space+img_size,img_size+2*x_space, 15)
 
   end
 

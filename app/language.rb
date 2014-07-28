@@ -6,6 +6,12 @@ class Language
   ADD_ACTIONS   = 'Add actions'
   PLAY          = 'Play'
 
+  #popover titles
+  ACTIONS         = 'Actions'
+  PROPERTIES      = 'Properties'
+  TRIGGER         = 'Trigger'
+  EFFECT          = 'Effect'
+
   # View labels
   TOY_MAKER       = 'Toy Maker'
   SCENE_MAKER     = 'Scene Maker'
@@ -50,6 +56,12 @@ class Language
   PLAY_SOUND    = 'play sound'
   TEXT_BUBBLE   = 'text bubble'
   SCENE_SHIFT   = 'scene shift'
+
+  #Property names
+  CAN_ROTATE    = 'Can Rotate'
+  STUCK         = 'Stuck'
+  FRONT         = 'Front'
+  ALWAYS_TRAVELS_FORWARD = 'Always Travels Forward'
 
   # Commands
   CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'
