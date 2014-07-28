@@ -164,18 +164,13 @@ class ActionListPopoverViewController < UIViewController
   # The methods to implement the UICollectionViewDataSource protocol.
 
   def tableView(tv, commitEditingStyle: style, forRowAtIndexPath: index_path)
+    puts "Index Path: " + index_path.to_s
     tv.beginUpdates
     tv.deleteRowsAtIndexPaths([index_path], withRowAnimation: UITableViewRowAnimationAutomatic)
     #delete action
     item = index_path.row
-    #remove from scene
-    @state.scenes[@state.currentscene].actions.delete_if { |action|
-      action == @toy_actions.at(item)
-    }
+
     #remove from toy
-    @selected.template.actions.delete_if { |action|
-      action == @toy_actions.at(item)
-    }
     @toy_actions.delete_at(item)
     tv.endUpdates
     #resize?
@@ -183,7 +178,10 @@ class ActionListPopoverViewController < UIViewController
   end
 
   def tableView(tv, numberOfRowsInSection: section)
-    @toy_actions.length
+    if section == 0
+      return @toy_actions.length
+    end
+    return 0
   end
 
   def drawText(text, inImage:image)
