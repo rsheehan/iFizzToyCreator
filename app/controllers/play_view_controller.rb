@@ -20,7 +20,7 @@ class PlayViewController < UIViewController
     @play_view.showsDrawCount = true
     @play_view.showsNodeCount = true
     @play_view.showsFPS = true
-    @play_view.showsPhysics = true
+    #@play_view.showsPhysics = true
     view.addSubview(@play_view)
     @play_view.showsPhysics = true
     @button_actions = {} # keys = buttons, values = list of actions for that button
@@ -93,14 +93,11 @@ class PlayViewController < UIViewController
     self.becomeFirstResponder
   end
 
-  def scene_shift(scene_id)
-    scenes = @state.scenes.select {|scene| scene.identifier == scene_id}
-    if not scenes.empty?
-      update_play_scene(scenes.first)
-    end
+  def viewWillDisappear(animated)
+    remove_actions
   end
 
-  def viewWillDisappear(animated)
+  def remove_actions
     @timers.each do |timer|
       timer.invalidate
     end
@@ -140,6 +137,7 @@ class PlayViewController < UIViewController
     @button_actions.each_key do |button|
       @button_actions[button] = []
     end
+    remove_actions
     disableButtons
     actions = scene.actions
     actions.each do |action|
@@ -346,6 +344,28 @@ class PlayViewController < UIViewController
     puts(timer)
     puts(timer.userInfo)
     @play_scene.add_actions_for_update([timer.userInfo])
+  end
+
+  def scene_shift(scene_id)
+    scenes = @state.scenes.select {|scene| scene.identifier == scene_id}
+    if not scenes.empty?
+      update_play_scene(scenes.first)
+    end
+  end
+
+  def create_label(string, frame)
+    if not @label.nil?
+      @label.dismissPopoverAnimated(true)
+      #remove label first
+    end
+    textpopover = PlayPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+    textpopover.delegate = self
+    textpopover.setInstruction(string)
+    @label = UIPopoverController.alloc.initWithContentViewController(textpopover)
+    @label.passthroughViews = [@play_view] #not working? should allow dragging while popover open
+    @label.delegate = self
+    viewy = self.view
+    @label.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionDown, animated:true)
   end
 
 end

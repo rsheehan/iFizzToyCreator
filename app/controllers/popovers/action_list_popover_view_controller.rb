@@ -52,12 +52,12 @@ class ActionListPopoverViewController < UIViewController
   def viewWillAppear(animated)
     #reload actions and resize?
     if @state and @selected and @toy_actions
-      @toy_actions = []
-      @state.scenes[@state.currentscene].actions.each do |action|
-        if action[:toy] == @selected.template.identifier
-          @toy_actions << action
-        end
-      end
+      @toy_actions = @selected.template.actions
+      # @state.scenes[@state.currentscene].actions.each do |action|
+      #   if action[:toy] == @selected.template.identifier
+      #     @toy_actions << action
+      #   end
+      # end
     end
     @table_view.reloadData
     resizeTV

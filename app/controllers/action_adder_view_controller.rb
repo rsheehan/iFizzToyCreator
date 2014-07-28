@@ -58,11 +58,13 @@ class ActionAdderViewController < UIViewController
   end
 
   def viewDidAppear(animated)
+    @button_toys = {}
     @main_view.change_label_text_to(Language::ACTION_ADDER)
     @main_view.add_delegate(self)
     @main_view.mode = :toys_only # only toys can be selected
     view.addSubview(@main_view)
     super # MUST BE CALLED
+    setup_sides
 
     #add popover to prompt to select a toy
     if not @selected_toy.nil?
@@ -97,6 +99,20 @@ class ActionAdderViewController < UIViewController
     #self.selected_toy = nil
   end
 
+  def reload_button_image_hash
+    @button_toys = {}
+    @state.scenes[@state.currentscene].actions.each do |action|
+      if action[:action_type] == :button
+        @state.toys.each do |toy|
+          if toy.identifier == action[:toy]
+            add_toy_to_button(toy,action[:action_param])
+          end
+        end
+      end
+    end
+
+  end
+
   # The sides are left for user interactions to the running scenes
   def setup_sides
     @left_panel = UIView.alloc.initWithFrame(CGRectMake(0, 0, 95, @bounds.size.height))
@@ -115,6 +131,7 @@ class ActionAdderViewController < UIViewController
   end
 
   def show_sides
+    reload_button_image_hash
     @left_panel.hidden = false
     @right_panel.hidden = false
   end
@@ -317,52 +334,37 @@ class ActionAdderViewController < UIViewController
     @state.save
   end
 
-  def add_toy_to_button(toy, button)
-    puts 'adding toy to '+ button.to_s
+  def add_toy_to_button(toy, button_name)
+    puts 'adding toy to '+ button_name.to_s
     if toy.is_a?(ToyInScene)
       toy = toy.template
     end
 
-    case button
+    button = nil
+    case button_name
       when :left_top, 'left_top'
-        @button_toys[@left_top_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@left_top_button] << toy
-        #update image
-        @left_top_button.setImage(get_btn_image_with_toys(@button_toys[@left_top_button]), forState: UIControlStateNormal)
-        @left_top_button.setImage(get_sel_btn_image_with_toys(@button_toys[@left_top_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @left_top_button
       when :left_middle, 'left_middle'
-        @button_toys[@left_middle_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@left_middle_button] << toy
-        #update image
-        @left_middle_button.setImage(get_btn_image_with_toys(@button_toys[@left_middle_button]), forState: UIControlStateNormal)
-        @left_middle_button.setImage(get_sel_btn_image_with_toys(@button_toys[@left_middle_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @left_middle_button
       when :left_bottom, 'left_bottom'
-        @button_toys[@left_bottom_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@left_bottom_button] << toy
-        #update image
-        @left_bottom_button.setImage(get_btn_image_with_toys(@button_toys[@left_bottom_button]), forState: UIControlStateNormal)
-        @left_bottom_button.setImage(get_sel_btn_image_with_toys(@button_toys[@left_bottom_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @left_bottom_button
       when :right_top, 'right_top'
-        @button_toys[@right_top_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@right_top_button] << toy
-        #update image
-        @right_top_button.setImage(get_btn_image_with_toys(@button_toys[@right_top_button]), forState: UIControlStateNormal)
-        @right_top_button.setImage(get_sel_btn_image_with_toys(@button_toys[@right_top_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @right_top_button
       when :right_middle, 'right_middle'
-        @button_toys[@right_middle_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@right_middle_button] << toy
-        #update image
-        @right_middle_button.setImage(get_btn_image_with_toys(@button_toys[@right_middle_button]), forState: UIControlStateNormal)
-        @right_middle_button.setImage(get_sel_btn_image_with_toys(@button_toys[@right_middle_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @right_middle_button
       when :right_bottom, 'right_bottom'
-        @button_toys[@right_bottom_button].delete_if {|t| t.identifier == toy.identifier }
-        @button_toys[@right_bottom_button] << toy
-        #update image
-        @right_bottom_button.setImage(get_btn_image_with_toys(@button_toys[@right_bottom_button]), forState: UIControlStateNormal)
-        @right_bottom_button.setImage(get_sel_btn_image_with_toys(@button_toys[@right_bottom_button]), forState: UIControlStateSelected) rescue puts 'rescued'
+        button = @right_bottom_button
       else
         puts 'Idk what button that was..'
     end
+    if @button_toys[button].nil?
+      @button_toys[button] = []
+    end
+    @button_toys[button].delete_if {|t| t.identifier == toy.identifier }
+    @button_toys[button] << toy
+    #update image
+    button.setImage(get_btn_image_with_toys(@button_toys[button]), forState: UIControlStateNormal)
+    button.setImage(get_sel_btn_image_with_toys(@button_toys[button]), forState: UIControlStateSelected) rescue puts 'rescued'
   end
 
   def get_btn_image_with_toys(toys)
@@ -724,7 +726,10 @@ class ActionAdderViewController < UIViewController
         content.delegate = self
         show_popover(content)
       when :text_bubble
-
+        content = StringInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        content.setTitle("What does the Fox say?")
+        show_popover(content)
       when :scene_shift
         scene_box_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
         scene_box_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -750,6 +755,14 @@ class ActionAdderViewController < UIViewController
     action_type, action_param = get_action
     effect_type = :play_sound
     effect_param = sound_name
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    action_created
+  end
+
+  def submit_text(text)
+    action_type, action_param = get_action
+    effect_type = :text_bubble
+    effect_param = text
     create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
     action_created
   end
@@ -810,33 +823,6 @@ class ActionAdderViewController < UIViewController
     #update state?
     @popoverStack[-1].state = @state
     reopen_action_flow
-  end
-
-  def text_bubble
-    @popover_type = :text_bubble
-    content = StringInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
-    content.delegate = self
-    content.setTitle("What does the Fox say?")
-
-    @popover = UIPopoverController.alloc.initWithContentViewController(content)
-    @popover.delegate = self
-
-    # position = @selected_toy.position
-    # size = @selected_toy.image.size
-    #
-    # frame = CGRectMake(position.x - size.width/2, position.y - size.height/2, size.width, size.height)
-    frame = @effect_buttons[:text_bubble].frame
-    frame.origin.x = @effect_button_view.frame.origin.x + frame.origin.x
-    @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionAny, animated:true)
-  end
-
-  def scene_shift
-    scene_box_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
-    scene_box_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
-    scene_box_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
-    scene_box_view_controller.delegate = self
-    scene_box_view_controller.state = @state
-    presentViewController(scene_box_view_controller, animated: true, completion: nil)
   end
 
 end

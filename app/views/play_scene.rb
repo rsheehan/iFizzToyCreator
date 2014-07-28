@@ -186,6 +186,7 @@ class PlayScene < SKScene
     if @check
       puts @toy_hash[@check].last.physicsBody.to_s
     end
+
     @actions_to_fire.each do |action|
       toy_id = action[:toy]
       toys = @toy_hash[toy_id] # all toys of the correct type
@@ -211,12 +212,14 @@ class PlayScene < SKScene
           delete = false
           send = false
           case effect
+
             when :apply_force
               # make force relative to the toy
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               param = CGPointApplyAffineTransform(param, rotation)
               send = true
               effect = "applyForce"
+
             when :explosion
               #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
               @mutex.synchronize do
@@ -226,16 +229,19 @@ class PlayScene < SKScene
                 end
               end
               delete = true
+
             when :apply_torque
               param *= toy.size.width/2
               effect = "applyTorque"
               send = true
+
             when :delete_effect
               fadeOut = SKAction.fadeOutWithDuration(param)
               remove = SKAction.removeFromParent()
               sequence = SKAction.sequence([fadeOut, remove])
               toy.runAction(sequence)
               delete = true
+
             when :play_sound
               local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, param.gsub(' ','_')+'.wav'))
 
@@ -246,28 +252,33 @@ class PlayScene < SKScene
 
             when :scene_shift
               @delegate.scene_shift(param)
-            when :text_bubble
 
+            when :text_bubble
+              position = view.convertPoint(toy.position, fromScene: self)
+              position -= CGPointMake(-20, 20)
+              frame = CGRectMake(*position, 40, 40)
+              @delegate.create_label(param, frame)
               if @label
                 @label.removeFromParent
               end
 
-              text = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
-              text.position = CGPointMake(0, 0)
-              text.fontSize = 14
-              text.text = param
-              text.fontColor = UIColor.blackColor
+              # text = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
+              # text.position = CGPointMake(0, 0)
+              # text.fontSize = 14
+              # text.text = param
+              # text.fontColor = UIColor.blackColor
 
               @label = SKShapeNode.alloc.init
               num = Pointer.new(:float, 2)
               num[0] = 5
-              bezier = UIBezierPath.bezierPathWithRoundedRect(CGRectMake(-65, -40, 130, 80), cornerRadius: num[0])
+              bezier = UIBezierPath.bezierPathWithRoundedRect(CGRectMake(-20, -20, 40, 40), cornerRadius: num[0])
               @label.path = bezier.CGPath
               @label.fillColor = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
-              @label.addChild(text)
+              #@label.addChild(text)
               @label.position = toy.position
 
               addChild(@label)
+
             when :score_adder
               if not toy.userData[:score]
                 toy.userData[:score] = 0

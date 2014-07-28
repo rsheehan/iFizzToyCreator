@@ -41,15 +41,26 @@ class State
     else
       scene = @scenes[pos]
     end
-    actions = []
-    scene.toys.each do |toy|
-      actions << return_toy_actions(toy.template)
-    end
-    actions.flatten!
+    actions = get_actions_from_toys(scene.toys)
     scene.add_actions(actions)
   end
 
-  def return_toy_actions(toy, completed=[])
+  def get_actions_from_toys(toys)
+    actions = []
+    checked = []
+    toys.each do |toy|
+      actions << return_toy_actions(toy, checked)
+    end
+    actions.flatten!
+    actions
+  end
+
+  def return_toy_actions(in_toy, completed=[])
+    if in_toy.is_a? ToyInScene
+      toy = in_toy.template
+    else
+      toy = in_toy
+    end
     if completed.include?(toy.identifier)
       return []
     else
@@ -59,7 +70,7 @@ class State
     toy.actions.each do |action|
       if action[:effect_type] == :create_new_toy
         create_toy = (@toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first
-        puts "Found Created Toy"
+        #puts "Found Created Toy"
         create_actions = return_toy_actions(create_toy, completed)
         create_actions.each do |creaction|
           if !actions.include?(creaction)
@@ -282,7 +293,8 @@ class State
     end
 
     unless toys.empty? and edges.empty?
-      scene = SceneTemplate.new(toys, edges, [], id, CGRectMake(0,0,0,0))
+      actions = get_actions_from_toys(toys)
+      scene = SceneTemplate.new(toys, edges, actions, id, CGRectMake(0,0,0,0))
       scene
     end
   end
