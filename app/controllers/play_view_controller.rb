@@ -139,7 +139,7 @@ class PlayViewController < UIViewController
     end
     remove_actions
     disableButtons
-    actions = scene.actions
+    actions = @state.get_actions_from_toys(scene.toys)
     actions.each do |action|
       case action[:action_type]
         when :button
