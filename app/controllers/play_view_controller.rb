@@ -59,12 +59,16 @@ class PlayViewController < UIViewController
     @listening = true
     url = NSURL.fileURLWithPath("/dev/null")
 
-    settings = NSDictionary.dictionaryWithObjectsAndKeys(
-        NSNumber.numberWithFloat(44100.0),                 AVSampleRateKey,
-        NSNumber.numberWithInt(KAudioFormatAppleLossless), AVFormatIDKey,
-        NSNumber.numberWithInt(2),                         AVNumberOfChannelsKey,
-        NSNumber.numberWithInt(AVAudioQualityMax),         AVEncoderAudioQualityKey,
-        nil)
+    val_a = NSNumber.numberWithFloat(44100.0)
+    key_a = AVSampleRateKey
+    val_b = NSNumber.numberWithInt(KAudioFormatAppleLossless)
+    key_b = AVFormatIDKey
+    val_c = NSNumber.numberWithInt(2)
+    key_c = AVNumberOfChannelsKey
+    val_d = NSNumber.numberWithInt(AVAudioQualityMax)
+    key_d = AVEncoderAudioQualityKey
+
+    settings = NSDictionary.dictionaryWithObjects([val_a, val_b, val_c, val_d], forKeys: [key_a, key_b, key_c, key_d])
 
     error = nil
     @recorder = AVAudioRecorder.alloc.initWithURL(url, settings:settings, error:error)
