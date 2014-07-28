@@ -107,6 +107,10 @@ class ActionListPopoverViewController < UIViewController
     resizeTV
   end
 
+  def viewWillDisappear(animated)
+    @state.save
+  end
+
   def resizeTV
     if @table_view and @toy_actions
       if @toy_actions.size > 3
