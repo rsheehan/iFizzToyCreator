@@ -241,7 +241,8 @@ class PlayScene < SKScene
               fadeOut = SKAction.fadeOutWithDuration(param)
               remove = SKAction.removeFromParent()
               sequence = SKAction.sequence([fadeOut, remove])
-              toy.runAction(sequence)
+              #toy.runAction(sequence)
+              apply_action_to_toy(toy, sequence)
               delete = true
 
             when :play_sound

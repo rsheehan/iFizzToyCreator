@@ -57,13 +57,15 @@ class PlayViewController < UIViewController
     audioSession.setActive(true, error:nil)
 
     @listening = true
-    url = NSURL.fileURLWithPath("/dev/null");
+    url = NSURL.fileURLWithPath("/dev/null")
+
     settings = NSDictionary.dictionaryWithObjectsAndKeys(
         NSNumber.numberWithFloat(44100.0),                 AVSampleRateKey,
         NSNumber.numberWithInt(KAudioFormatAppleLossless), AVFormatIDKey,
         NSNumber.numberWithInt(2),                         AVNumberOfChannelsKey,
         NSNumber.numberWithInt(AVAudioQualityMax),         AVEncoderAudioQualityKey,
         nil)
+
     error = nil
     @recorder = AVAudioRecorder.alloc.initWithURL(url, settings:settings, error:error)
 
@@ -136,6 +138,10 @@ class PlayViewController < UIViewController
     # also go through the actions checking for button actions and enabling the buttons
     @button_actions.each_key do |button|
       @button_actions[button] = []
+    end
+    if not @label.nil?
+      @label.dismissPopoverAnimated(true)
+      @label = nil
     end
     remove_actions
     disableButtons
