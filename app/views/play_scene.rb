@@ -178,11 +178,13 @@ class PlayScene < SKScene
       end
     end
 
+    # Places sound actions at the front
     sound_actions = @actions_to_fire.reject { |action| action[:effect_type] != :play_sound }
     @actions_to_fire.reject! { |action| action[:action_type] == :play_sound }
     sound_actions << @actions_to_fire
     @actions_to_fire = sound_actions.flatten
 
+    # Debugging purposes
     if @check
       puts @toy_hash[@check].last.physicsBody.to_s
     end
@@ -231,7 +233,7 @@ class PlayScene < SKScene
               delete = true
 
             when :apply_torque
-              param *= toy.size.width/2
+              param *= toy.size.width/2  # Scale by opposing torque on toy
               effect = "applyTorque"
               send = true
 
@@ -243,10 +245,12 @@ class PlayScene < SKScene
               delete = true
 
             when :play_sound
+              # full file path
               local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, param.gsub(' ','_')+'.wav'))
 
+              #
               @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
-              @player.numberOfLoops = 0
+              @player.numberOfLoops = 0 # 0 plays once, 1 plays twice...
               @player.prepareToPlay
               @player.play
 
@@ -280,10 +284,14 @@ class PlayScene < SKScene
               addChild(@label)
 
             when :score_adder
+
+              # Initial set of score
               if not toy.userData[:score]
                 toy.userData[:score] = 0
               end
+
               label_colour = nil
+              # Performs action and assigns colour corresponding to type of score adder made
               case param[1]
                 when "add"
                   toy.userData[:score] += param[0]
@@ -296,14 +304,16 @@ class PlayScene < SKScene
                   label_colour = UIColor.yellowColor
               end
 
+              # Creates label to appear at toys position
               label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
-              label.position = toy.position + CGPointMake(-20, 0)
+              label.position = toy.position + CGPointMake(-30, 0)
               label.fontSize = 18
               label.text = toy.userData[:score].to_s
               label.fontColor = label_colour
 
               addChild(label)
 
+              # Creates Fade and sclae effect before removing
               action_duration = 1.0
               groupActions = []
               groupActions << SKAction.moveByX(10, y: 0, duration: action_duration)
@@ -315,28 +325,39 @@ class PlayScene < SKScene
 
               label.runAction(actions)
 
+              # Checks for actions to fire if a score is reached or passed
               puts "Toy Score: " + toy.userData[:score].to_s
               @score_actions.each do |score_action|
+                # Checks toy identifier, score being reached or passed, and that the action has not been fired previously
                 if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score] and not score_action[:used].include?(toy.userData[:uniqueID])
+
+                  # Clone the hash so its not overwritten
+                  score_action = score_action.select {|k, v| true }
+                  # Places identifier in hash
                   score_action[:action_param] =  [score_action[:action_param][0], toy.userData[:uniqueID]]
+
+                  # Places uid in score action so it doesnt get fired again
                   if not score_action[:used]
                     score_action[:used] = []
                   end
                   score_action[:used] << toy.userData[:uniqueID]
+
+                  # Puts action in array for future use
                   if @actions_to_be_fired
                     @actions_to_be_fired << score_action
                   else
                     @actions_to_be_fired = [score_action]
                   end
                   puts "score action "+ score_action.to_s
-                  #toy.userData[:score] = 0
                 end
               end
-            when :create_new_toy # TODO Adjust to angle of toy
+
+            when :create_new_toy
               id = action[:effect_param][:id]
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
+
+              # Gets toy in scene from loaded toys
               toy_in_scene = @loaded_toys[id].select {|s| s.uid == action[:uid]}.first
-              #puts "TIS Pos, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
 
               displacement = CGPointMake(action[:effect_param][:x], action[:effect_param][:y])
               #puts "DisB4 Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
