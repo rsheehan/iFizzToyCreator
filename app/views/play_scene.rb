@@ -378,6 +378,7 @@ class PlayScene < SKScene
               @create_actions.each do |create_action|
                 if create_action[:toy] == new_toy.name
                   #trigger event
+                  create_action = create_action.clone
                   create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
                   if @actions_to_be_fired
                     @actions_to_be_fired << create_action
