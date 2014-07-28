@@ -174,10 +174,6 @@ class CollectionViewPopoverViewController < UIViewController
           Language::EXPLOSION
         when :create_new_toy
           Language::CREATE_NEW_TOY
-        when :transition
-          Language::TRANSITION
-        when :sound
-          Language::SOUND
         when :delete_effect
           Language::DELETE
         when :score_adder

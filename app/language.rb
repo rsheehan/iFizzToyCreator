@@ -38,10 +38,10 @@ class Language
   COLLISION     = 'collision'
   REPEAT        = 'timer'     # Repeat?
   HOLD          = 'hold'
-  SCORE_REACHES = 'score reaches'
+  SCORE_REACHES = 'reaches'
   WHEN_CREATED  = 'created'
   SHAKE         = 'shake'
-  LOUD_NOISE    = 'loud noise'
+  LOUD_NOISE    = 'noise'
   TOY_TOUCH     = 'tap toy'
 
   # Effect Names
@@ -49,8 +49,6 @@ class Language
   ROTATION      = 'rotate'
   EXPLOSION     = 'explosion'
   CREATE_NEW_TOY= 'create'
-  TRANSITION    = 'transition'
-  SOUND         = 'sound'
   DELETE        = 'delete'
   SCORE_ADDER   = 'score'
   PLAY_SOUND    = 'sound'

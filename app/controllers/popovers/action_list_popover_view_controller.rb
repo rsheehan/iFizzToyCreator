@@ -208,10 +208,11 @@ class ActionListPopoverViewController < UIViewController
       action_cell.selectionStyle = UITableViewCellSelectionStyleNone
       action = @toy_actions[item]
 
-      action_cell.action_text = action[:action_type].gsub('_', ' ')
+      action[:action_type].gsub('_', ' ')
       #action image
       case action[:action_type]
         when :collision
+          action_cell.action_text = Language::COLLISION
           action_cell.action_image = UIImage.imageNamed("collision.png")
           #set object to be the toy image of the identifier in actionparam
           @state.toys.each do |toy|
@@ -222,42 +223,58 @@ class ActionListPopoverViewController < UIViewController
           end
 
         when :timer
+          action_cell.action_text = Language::REPEAT
           action_cell.action_image = UIImage.imageNamed("timer.png")
           # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
           #show how often in object view
           textImage = drawText(action[:action_param][0].to_s.rjust(2, "0") + ':' + action[:action_param][1].to_s.rjust(2, "0"), inImage:UIImage.imageNamed("empty.png") )
           action_cell.object_image = textImage
         when :button
+          action_cell.action_text = Language::TOUCH
           action_cell.action_image = UIImage.imageNamed("touch.png")
           action_cell.action_text = 'tap'
           action_cell.object_image = UIImage.imageNamed(action[:action_param]+ ".png")
         when :score_reaches
+          action_cell.action_text = Language::SCORE_REACHES
           action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
           textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
           action_cell.object_image = textImage
-        when :shake, :when_created, :loud_noise, :toy_touch
+        when :shake
+          action_cell.action_text = Language::SHAKE
+          action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
+        when :when_created
+          action_cell.action_text = Language::WHEN_CREATED
+          action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
+        when :loud_noise
+          action_cell.action_text = Language::LOUD_NOISE
+          action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
+        when :toy_touch
+          action_cell.action_text = Language::TOY_TOUCH
           action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
         else
       end
 
       action_cell.effect_image = UIImage.imageNamed(action[:effect_type]+".png")
-      action_cell.effect_text = action[:effect_type].gsub('_',' ')
 
       case action[:effect_type]
         when :apply_force
           #draw arrow in direction
+          action_cell.effect_text = Language::FORCE
           forceImage = drawForce(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
           action_cell.param_image = forceImage
         when :explosion
           #draw circle with size
+          action_cell.effect_text = Language::EXPLOSION
           expImage = drawExplosion(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
           action_cell.param_image = expImage
         when :apply_torque
           #draw arrow with direction in circle
+          action_cell.effect_text = Language::ROTATION
           rotImage = drawRotation(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
           action_cell.param_image = rotImage
         when :create_new_toy
           #draw toy
+          action_cell.effect_text = Language::CREATE_NEW_TOY
           #set object to be the toy image of the identifier in actionparam
           @state.toys.each do |toy|
             if toy.identifier == action[:effect_param][:id]
@@ -266,13 +283,20 @@ class ActionListPopoverViewController < UIViewController
             end
           end
         when :delete_effect
+          action_cell.effect_text = Language::DELETE
           #nothing
         when :score_adder
           #show how score is changed
+          action_cell.effect_text = Language::SCORE_ADDER
           textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
           action_cell.object_image = textImage
         when :play_sound
+          action_cell.effect_text = Language::PLAY_SOUND
           #show sound name? button to play sound?
+        when :text_bubble
+          action_cell.effect_text = Language::TEXT_BUBBLE
+        when :scene_shift
+          action_cell.effect_text = Language::SCENE_SHIFT
         else
       end
 
