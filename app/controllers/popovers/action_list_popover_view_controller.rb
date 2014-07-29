@@ -7,6 +7,11 @@ class ActionListPopoverViewController < UIViewController
   WIDTH = 300
   MAX_HEIGHT = 500
 
+
+  EMPTY_ICON_TEXT_INSET_X = Device.retina? ? 10 : 5
+  EMPTY_ICON_TEXT_INSET_Y = Device.retina? ? 35 : 17.5
+  EMPTY_ICON_INSET = Device.retina? ? 20 : 10
+
   def loadView
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, 40]])
@@ -26,7 +31,6 @@ class ActionListPopoverViewController < UIViewController
     @table_view.backgroundColor =  UIColor.colorWithRed(0.95, green: 0.95, blue: 0.95, alpha: 1.0)
     @table_view.dataSource = self
     @table_view.delegate = self
-    # @table_view.rowHeight = 80
 
     view.addSubview(@table_view)
 
@@ -149,20 +153,71 @@ class ActionListPopoverViewController < UIViewController
     if indexPath.section == 0
       40
     else
-      80
+      90
     end
   end
 
-  def drawText(text, inImage:image)
-    font = UIFont.fontWithName('Courier New', size: 20)
+  def drawText(text, inImage:image, withFontName:fontname)
     UIGraphicsBeginImageContext(image.size)
-    image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
-    rect = CGRectMake(image.size.width/9, image.size.height/2.75, image.size.width, image.size.height)
+    image.drawInRect(CGRectMake(0, 0,image.size.width,image.size.height))
+
+    width = (image.size.width-2*EMPTY_ICON_TEXT_INSET_X)/text.size()
+    height = image.size.height-2*EMPTY_ICON_TEXT_INSET_Y
+    fontsize = [width,height].min
+    font = UIFont.fontWithName(fontname, size: fontsize)
+
+    puts "fontsize = "+fontsize.to_s+" w,h = "+width.to_s+', '+height.to_s
+    puts "name = "+fontname.to_s+" pointsz = "+font.pointSize.to_s
+
     UIColor.blackColor.set
-    text.drawInRect(CGRectIntegral(rect), withFont:font)
+    # attributedText = NSAttributedString.alloc.initWithString(text, attributes:{NSFontAttributeName: font})
+    # textRect = attributedText.boundingRectWithSize(CGSizeMake(width, height), options:NSStringDrawingUsesLineFragmentOrigin,context:nil)
+    # while (textRect.size.width+1) < width and (textRect.size.height+1) < height do
+    #   puts "text rect = "+textRect.size.width.to_s+", " +textRect.size.height.to_s
+    #   fontsize += 1
+    #   puts "fontsize = "+fontsize.to_s
+    #   font = UIFont.fontWithName(fontname, size: fontsize)
+    #   attributedText = NSAttributedString.alloc.initWithString(text, attributes:{NSFontAttributeName: font})
+    #   textRect = attributedText.boundingRectWithSize(CGSizeMake(width, height), options:NSStringDrawingUsesLineFragmentOrigin,context:nil)
+    # end
+    # font = UIFont.fontWithName(fontname, size: fontsize-1)
+    # puts "Ffontsize = "+(fontsize-1).to_s
+
+    #center text in rect
+    fontHeight = font.pointSize
+    yOffset = (image.size.height-2*EMPTY_ICON_TEXT_INSET_Y - fontHeight) / 2.0
+
+    rect = CGRectMake(EMPTY_ICON_TEXT_INSET_X, EMPTY_ICON_TEXT_INSET_Y+yOffset, image.size.width-2*EMPTY_ICON_TEXT_INSET_X, fontHeight)
+
+    ###DEBUG
+    # context = UIGraphicsGetCurrentContext()
+    # CGContextSetFillColorWithColor(context,UIColor.redColor.CGColor)
+    # CGContextAddRect(context, rect)
+    # CGContextFillPath(context)
+    ###
+
+    text.drawInRect(CGRectIntegral(rect), withFont:font, lineBreakMode: UILineBreakModeClip, alignment: UITextAlignmentCenter)
     newImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
 
+    newImage
+  end
+
+  def drawToy(toy)
+    image = UIImage.imageNamed('empty.png')
+    UIGraphicsBeginImageContext(image.size)
+    image.drawInRect(CGRectMake(0, 0,image.size.width,image.size.height))
+
+    rect = CGRectMake(EMPTY_ICON_INSET,EMPTY_ICON_INSET,image.size.width-2*EMPTY_ICON_INSET,image.size.height-2*EMPTY_ICON_INSET)
+    aspect = toy.image.size.width / toy.image.size.height
+    if (rect.size.width / aspect <= rect.size.height)
+      rect.size = CGSizeMake(rect.size.width, rect.size.width/aspect)
+    else
+      rect.size = CGSizeMake(rect.size.height * aspect, rect.size.height)
+    end
+    toy.image.drawInRect(rect)
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
     newImage
   end
 
@@ -195,11 +250,10 @@ class ActionListPopoverViewController < UIViewController
           cell.text = Language::FRONT
           cell.accessoryView = frontDirectionControl(CGRectMake(0,0,0,0))
       end
-
-
       cell
+
     else
-      item = index_path.row # ignore section as only one
+      item = index_path.row
 
       @reuseIdentifier ||= "cell"
       action_cell = @table_view.dequeueReusableCellWithIdentifier(@reuseIdentifier)
@@ -208,7 +262,6 @@ class ActionListPopoverViewController < UIViewController
       action_cell.selectionStyle = UITableViewCellSelectionStyleNone
       action = @toy_actions[item]
 
-      action[:action_type].gsub('_', ' ')
       #action image
       case action[:action_type]
         when :collision
@@ -217,28 +270,21 @@ class ActionListPopoverViewController < UIViewController
           #set object to be the toy image of the identifier in actionparam
           @state.toys.each do |toy|
             if toy.identifier == action[:action_param]
-              action_cell.object_image = toy.image
+              action_cell.action_image = drawToy(toy)
               break
             end
           end
 
         when :timer
           action_cell.action_text = Language::REPEAT
-          action_cell.action_image = UIImage.imageNamed("timer.png")
-          # action_cell.action_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("touch.png"))
-          #show how often in object view
-          textImage = drawText(action[:action_param][0].to_s.rjust(2, "0") + ':' + action[:action_param][1].to_s.rjust(2, "0"), inImage:UIImage.imageNamed("empty.png") )
-          action_cell.object_image = textImage
+          puts "timer param = "+action[:action_param].to_s
+          action_cell.action_image = drawText(action[:action_param][0].to_s.rjust(3, "0") + 's' , inImage:UIImage.imageNamed("empty.png"), withFontName:'DBLCDTempBlack' )
         when :button
           action_cell.action_text = Language::TOUCH
-          action_cell.action_image = UIImage.imageNamed("touch.png")
-          action_cell.action_text = 'tap'
-          action_cell.object_image = UIImage.imageNamed(action[:action_param]+ ".png")
+          action_cell.action_image = UIImage.imageNamed(action[:action_param]+ ".png")
         when :score_reaches
           action_cell.action_text = Language::SCORE_REACHES
-          action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
-          textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
-          action_cell.object_image = textImage
+          action_cell.action_image = drawText(action[:action_param][0].to_s.rjust(2, "0"), inImage:UIImage.imageNamed("empty.png"), withFontName:'Helvetica' )
         when :shake
           action_cell.action_text = Language::SHAKE
           action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
@@ -261,24 +307,24 @@ class ActionListPopoverViewController < UIViewController
           #draw arrow in direction
           action_cell.effect_text = Language::FORCE
           forceImage = drawForce(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
-          action_cell.param_image = forceImage
+          action_cell.effect_image = forceImage
         when :explosion
           #draw circle with size
           action_cell.effect_text = Language::EXPLOSION
           expImage = drawExplosion(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
-          action_cell.param_image = expImage
+          action_cell.effect_image = expImage
         when :apply_torque
           #draw arrow with direction in circle
           action_cell.effect_text = Language::ROTATION
           rotImage = drawRotation(action[:effect_param], inImage:UIImage.imageNamed("empty.png") )
-          action_cell.param_image = rotImage
+          action_cell.effect_image = rotImage
         when :create_new_toy
           #draw toy
           action_cell.effect_text = Language::CREATE_NEW_TOY
           #set object to be the toy image of the identifier in actionparam
           @state.toys.each do |toy|
             if toy.identifier == action[:effect_param][:id]
-              action_cell.param_image = toy.image
+              action_cell.effect_image = drawToy(toy)
               break
             end
           end
@@ -288,8 +334,17 @@ class ActionListPopoverViewController < UIViewController
         when :score_adder
           #show how score is changed
           action_cell.effect_text = Language::SCORE_ADDER
-          textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
-          action_cell.object_image = textImage
+          text = action[:effect_param][0].to_s.rjust(2, "0")
+          case action[:effect_param][1]
+            when 'set'
+              text.insert(0,'=')
+            when 'add'
+              text.insert(0,'+')
+            when 'subtract'
+              text.insert(0,'-')
+            else
+          end
+          action_cell.effect_image = drawText(text, inImage:UIImage.imageNamed("empty.png"), withFontName:'Helvetica')
         when :play_sound
           action_cell.effect_text = Language::PLAY_SOUND
           #show sound name? button to play sound?
@@ -462,14 +517,6 @@ class ActionListPopoverViewController < UIViewController
     @selected.template.always_travels_forward = @travel_switch.on?
   end
 
-  def tableView(tv, titleForHeaderInSection:section)
-    if section == 0
-      'Properties'
-    else
-      'Actions'
-    end
-  end
-
   def tableView(tv, viewForHeaderInSection:section)
     if section == 0
       h_view = UIView.alloc.initWithFrame(CGRectMake(0, 0, tv.frame.size.width, 30))
@@ -504,13 +551,13 @@ class ActionListPopoverViewController < UIViewController
       h_view.layer.addSublayer(separator)
 
       #labels
-      @trigger_label = UILabel.alloc.initWithFrame([[0,30],[WIDTH/4,20]])
+      @trigger_label = UILabel.alloc.initWithFrame([[0,30],[WIDTH/2,20]])
       @trigger_label.setText(Language::TRIGGER)
       @trigger_label.setFont(UIFont.boldSystemFontOfSize(16))
       @trigger_label.textAlignment = UITextAlignmentCenter
       h_view.addSubview(@trigger_label)
       #effect label
-      @effect_label = UILabel.alloc.initWithFrame([[2*WIDTH/4,30],[WIDTH/4,20]])
+      @effect_label = UILabel.alloc.initWithFrame([[WIDTH/2,30],[WIDTH/2,20]])
       @effect_label.setText(Language::EFFECT)
       @effect_label.setFont(UIFont.boldSystemFontOfSize(16))
       @effect_label.textAlignment = UITextAlignmentCenter
