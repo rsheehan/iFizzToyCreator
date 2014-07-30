@@ -12,6 +12,8 @@ class SceneCreatorView < CreatorView
   attr_accessor :alpha_view
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
+  THRESHOLD = 50
+  NUM_SEGMENTS = 10
 
   # MODES for interaction  :scene, :toys_only, :force, :none
 
@@ -596,10 +598,13 @@ class SceneCreatorView < CreatorView
     case @mode
       when :force
         if @current_point && @selected
+          @current_point = round_coordinates(@current_point, @selected.position)
+          @current_point = snap_to_45(@current_point, @selected.position)
           draw_force_arrow(context, @selected.position, @current_point)
         end
       when :explosion
         if @current_point && @selected
+          @current_point = round_coordinates(@current_point, @selected.position)
           #draw_force_arrow(context, @selected.position, @current_point)
           length = Math.hypot(@selected.position.x - @current_point.x, @selected.position.y - @current_point.y)
           draw_force_circle(context, @selected.position, length)
@@ -616,6 +621,36 @@ class SceneCreatorView < CreatorView
           @selected.position = @current_point
         end
     end
+  end
+
+  def snap_to_45(point, selected)
+    delta = point - selected
+    magnitude = Math.hypot(*delta)
+    angle = Math.atan2(delta.y, delta.x)
+    angle /= (Math::PI/4)
+    angle = angle.round(0)
+    angle *= (Math::PI/4)
+    x = magnitude * Math.cos(angle)
+    y = magnitude * Math.sin(angle)
+    new_point = CGPointMake(x, y)
+    new_point = new_point + selected
+    change_mag = Math.hypot(*(new_point-point))
+    if change_mag > THRESHOLD
+      return point
+    end
+    new_point
+  end
+
+  def round_coordinates(point, selected)
+    point = point - selected
+    new_point = CGPointMake(round_num(point.x), round_num(point.y))
+    new_point = new_point + selected
+    new_point
+  end
+
+  def round_num(num)
+    num = (num/8).round(-1)*8
+    num
   end
 
   def clear
