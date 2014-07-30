@@ -161,13 +161,19 @@ class ActionListPopoverViewController < UIViewController
     UIGraphicsBeginImageContext(image.size)
     image.drawInRect(CGRectMake(0, 0,image.size.width,image.size.height))
 
-    width = (image.size.width-2*EMPTY_ICON_TEXT_INSET_X)/text.size()
-    height = image.size.height-2*EMPTY_ICON_TEXT_INSET_Y
-    fontsize = [width,height].min
+
+    width = (image.size.width-2*EMPTY_ICON_TEXT_INSET_X)
+    height = (image.size.height-2*EMPTY_ICON_TEXT_INSET_Y)
+    fontsize = 26
     font = UIFont.fontWithName(fontname, size: fontsize)
 
+    userAttributes = {NSFontAttributeName: font, NSForegroundColorAttributeName: UIColor.blackColor}
+    textSize = text.sizeWithAttributes(userAttributes)
+    puts "supposed text size = "+ textSize.width.to_s+", "+ textSize.height.to_s
     puts "fontsize = "+fontsize.to_s+" w,h = "+width.to_s+', '+height.to_s
     puts "name = "+fontname.to_s+" pointsz = "+font.pointSize.to_s
+    puts ''
+
 
     UIColor.blackColor.set
     # attributedText = NSAttributedString.alloc.initWithString(text, attributes:{NSFontAttributeName: font})
@@ -186,6 +192,10 @@ class ActionListPopoverViewController < UIViewController
     #center text in rect
     fontHeight = font.pointSize
     yOffset = (image.size.height-2*EMPTY_ICON_TEXT_INSET_Y - fontHeight) / 2.0
+
+    if fontname == 'DBLCDTempBlack'
+      yOffset = 1.5*yOffset
+    end
 
     rect = CGRectMake(EMPTY_ICON_TEXT_INSET_X, EMPTY_ICON_TEXT_INSET_Y+yOffset, image.size.width-2*EMPTY_ICON_TEXT_INSET_X, fontHeight)
 
@@ -400,7 +410,7 @@ class ActionListPopoverViewController < UIViewController
     radius = image.size.width/4
 
     UIColor.redColor.set
-    if(radians > 0)
+    if(radians < 0)
       CGContextAddArc(context, image.size.width/2, image.size.height/2, radius, Math::PI, radians+Math::PI, 0)
     else
       CGContextAddArc(context, image.size.width/2, image.size.height/2, radius, Math::PI, radians+Math::PI, 1)
@@ -420,7 +430,7 @@ class ActionListPopoverViewController < UIViewController
   def draw_rotate_circle_arrow(context,center, length, angle, clockwise)
 
     arrow_points = []
-    if not clockwise
+    if clockwise
       arrow_points << CGPointMake(- 15, 0) << CGPointMake(0, -18.75)
       arrow_points << CGPointMake(15, 0)
     else
