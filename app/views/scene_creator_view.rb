@@ -14,6 +14,7 @@ class SceneCreatorView < CreatorView
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
   THRESHOLD = 50
   NUM_SEGMENTS = 10
+  MAX_DIAGONAL_DRAG = 660
 
   # MODES for interaction  :scene, :toys_only, :force, :none
 
@@ -381,15 +382,15 @@ class SceneCreatorView < CreatorView
     vector = @current_point - @selected.position
     radians = (Math::PI - (Math.atan2(vector.y,vector.x)*-1))
 
+    radians = round_radians(radians)
+
     if radians > Math::PI
       radians = (Math::PI*2 - radians)
     else
       radians *= -1
     end
-
-    magnitude = radians
-
-    @delegate.rotation = magnitude
+    
+    @delegate.rotation = radians
     @delegate.close_modal_view
   end
 
@@ -643,24 +644,35 @@ class SceneCreatorView < CreatorView
   end
 
   def round_coordinates(point, selected)
-    point = point - selected
-    new_point = CGPointMake(round_num(point.x), round_num(point.y))
-    new_point = new_point + selected
-    new_point
-  end
+    displacement = point - selected
+    length =  Math.hypot(*displacement)
+    angle = Math.atan2(displacement.y, displacement.x)
+    puts "Length: " + length.to_s
 
-  def round_num(num)
-    num = (num/8).round(-1)*8
-    num
+    length = (length/(MAX_DIAGONAL_DRAG/NUM_SEGMENTS)).round(0) * (MAX_DIAGONAL_DRAG/NUM_SEGMENTS)
+    if length == 0
+      length = (MAX_DIAGONAL_DRAG/NUM_SEGMENTS)
+    end
+
+    x = length * Math.cos(angle)
+    y = length * Math.sin(angle)
+
+    rounded_displacement = CGPointMake(x, y)
+    rounded_point = rounded_displacement + selected
+    rounded_point
   end
 
   def round_radians(num)
-    new_num = (num/(Math::PI/10)).round(0)*(Math::PI/10)
+    new_num = (num/(Math::PI/NUM_SEGMENTS)).round(0)*(Math::PI/NUM_SEGMENTS)
     diff = (new_num - Math::PI).abs
     if diff < 0.0001 and num > Math::PI
       new_num = Math::PI + Math::PI/180
-    elsif new_num == 0 and num < 1
-      new_num = Math::PI/180
+    elsif new_num == 0
+      if num < 1
+        new_num = (Math::PI/NUM_SEGMENTS)
+      else
+        new_num = Math::PI*2 - (Math::PI/NUM_SEGMENTS)
+      end
     end
     #puts "PIE: " + Math::PI.to_s
     puts "Radians rounded: " + new_num.to_s
