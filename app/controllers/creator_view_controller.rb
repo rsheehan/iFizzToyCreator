@@ -231,9 +231,9 @@ module CreatorViewControllerModule
     @current_colour_view.current_colour_image = Swatch.images['black']
   end
 
-  def blue
+  def blue_colour
     @main_view.current_colour = UIColor.blueColor
-    @current_colour_view.current_colour_image = Swatch.images['blue']
+    @current_colour_view.current_colour_image = Swatch.images['blue_colour']
   end
 
   def brown
@@ -248,9 +248,9 @@ module CreatorViewControllerModule
     #view.current_colour = UIColor.cyanColor
   end
 
-  def green
+  def green_colour
     @main_view.current_colour = UIColor.colorWithRed(0.0, green: 169.0/255.0, blue: 0.0, alpha: 1.0)
-    @current_colour_view.current_colour_image = Swatch.images['green']
+    @current_colour_view.current_colour_image = Swatch.images['green_colour']
     #view.current_colour = UIColor.greenColor
   end
 
@@ -270,9 +270,9 @@ module CreatorViewControllerModule
     @current_colour_view.current_colour_image = Swatch.images['purple']
   end
 
-  def red
+  def red_colour
     @main_view.current_colour = UIColor.redColor
-    @current_colour_view.current_colour_image = Swatch.images['red']
+    @current_colour_view.current_colour_image = Swatch.images['red_colour']
   end
 
   def yellow
@@ -290,7 +290,7 @@ end
 
 class Swatch
 
-  COLOURS = ['black', 'blue', 'brown', 'cyan', 'green', 'magenta', 'orange', 'purple', 'red', 'yellow', 'white']
+  COLOURS = ['black', 'blue_colour', 'brown', 'cyan', 'green_colour', 'magenta', 'orange', 'purple', 'red_colour', 'yellow', 'white']
 
   def self.images
     if @images.nil?
