@@ -505,7 +505,8 @@ class SceneCreatorView < CreatorView
 
     clockwise = true
 
-    puts "Degrees: " + (radians*180/Math::PI).to_s
+    #puts "Degrees: " + (radians*180/Math::PI).to_s
+    radians = round_radians(radians)
 
     CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
     if(radians > 0 and radians < Math::PI)
@@ -651,6 +652,19 @@ class SceneCreatorView < CreatorView
   def round_num(num)
     num = (num/8).round(-1)*8
     num
+  end
+
+  def round_radians(num)
+    new_num = (num/(Math::PI/10)).round(0)*(Math::PI/10)
+    diff = (new_num - Math::PI).abs
+    if diff < 0.0001 and num > Math::PI
+      new_num = Math::PI + Math::PI/180
+    elsif new_num == 0 and num < 1
+      new_num = Math::PI/180
+    end
+    #puts "PIE: " + Math::PI.to_s
+    puts "Radians rounded: " + new_num.to_s
+    new_num
   end
 
   def clear
