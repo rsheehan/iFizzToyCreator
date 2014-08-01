@@ -227,18 +227,18 @@ class PlayViewController < UIViewController
 
   # The sides are left for user interactions to the running scenes
   def setup_sides
-    left_panel = UIView.alloc.initWithFrame(CGRectMake(0, 0, 95, @bounds.size.height))
-    left_panel.setBackgroundColor(UIColor.grayColor)
-    @left_top_button = setup_button([LEFT, TOP], left_panel)
-    @left_middle_button = setup_button([LEFT, MIDDLE], left_panel)
-    @left_bottom_button = setup_button([LEFT, BOTTOM], left_panel,)
-    view.addSubview(left_panel)
-    right_panel = UIView.alloc.initWithFrame(CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height))
-    right_panel.setBackgroundColor(UIColor.grayColor)
-    @right_top_button = setup_button([LEFT, TOP], right_panel)
-    @right_middle_button = setup_button([LEFT, MIDDLE], right_panel)
-    @right_bottom_button = setup_button([LEFT, BOTTOM], right_panel)
-    view.addSubview(right_panel)
+    @left_panel = UIView.alloc.initWithFrame(CGRectMake(0, 0, 95, @bounds.size.height))
+    @left_panel.setBackgroundColor(UIColor.grayColor)
+    @left_top_button = setup_button([LEFT, TOP], @left_panel)
+    @left_middle_button = setup_button([LEFT, MIDDLE], @left_panel)
+    @left_bottom_button = setup_button([LEFT, BOTTOM], @left_panel,)
+    view.addSubview(@left_panel)
+    @right_panel = UIView.alloc.initWithFrame(CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height))
+    @right_panel.setBackgroundColor(UIColor.grayColor)
+    @right_top_button = setup_button([LEFT, TOP], @right_panel)
+    @right_middle_button = setup_button([LEFT, MIDDLE], @right_panel)
+    @right_bottom_button = setup_button([LEFT, BOTTOM], @right_panel)
+    view.addSubview(@right_panel)
   end
 
   def setup_button(position, panel)
@@ -365,6 +365,9 @@ class PlayViewController < UIViewController
 
   def create_label(string, frame)
     if not @label.nil?
+      if @label.contentViewController.getInstruction == string
+        return
+      end
       @label.dismissPopoverAnimated(true)
       #remove label first
     end
@@ -372,7 +375,7 @@ class PlayViewController < UIViewController
     textpopover.delegate = self
     textpopover.setInstruction(string)
     @label = UIPopoverController.alloc.initWithContentViewController(textpopover)
-    @label.passthroughViews = [@play_view] #not working? should allow dragging while popover open
+    @label.passthroughViews = [@play_view, @left_panel, @right_panel] #not working? should allow dragging while popover open
     @label.delegate = self
     viewy = self.view
     @label.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionDown, animated:true)

@@ -72,6 +72,10 @@ class PlayPopoverViewController < UIViewController
     end
   end
 
+  def getInstruction
+    @instr_text
+  end
+
   def resizeViews
     #frame = @instruction.frame
     #frame.size.height = @instruction.contentSize.height
