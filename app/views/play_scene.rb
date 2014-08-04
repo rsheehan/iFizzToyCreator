@@ -243,6 +243,7 @@ class PlayScene < SKScene
               sequence = SKAction.sequence([fadeOut, remove])
               #toy.runAction(sequence)
               apply_action_to_toy(toy, sequence)
+              toy.userData[:uniqueID] = -1
               delete = true
 
             when :play_sound
@@ -391,6 +392,14 @@ class PlayScene < SKScene
               end
               @toy_hash[id] << new_toy
               @toys_count[id] = 0 unless @toys_count[id]
+
+              @toy_hash[id].delete_if do |check_toy|
+                bool = check_toy.userData[:uniqueID] == -1
+                puts "UniqueID: " + check_toy.userData[:uniqueID].to_s
+                puts "Is dead?: " + bool.to_s
+                bool
+              end
+
               while @toy_hash[id].length - @toys_count[id] > MAX_CREATES
                 to_remove = @toy_hash[id].delete_at(@toys_count[id])
                 fadeOut = SKAction.fadeOutWithDuration(0.7)
@@ -404,6 +413,10 @@ class PlayScene < SKScene
             param = scale_force_mass(param, toy.physicsBody.mass)
             toy.physicsBody.send(effect, param)
           end
+        end
+        puts "Deleted: " + delete.to_s
+        if delete
+          #@toy_hash[id].delete_if {|check_toy| check_toy == toy}
         end
         delete
       end
