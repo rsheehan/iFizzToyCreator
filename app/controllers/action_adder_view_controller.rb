@@ -64,6 +64,8 @@ class ActionAdderViewController < UIViewController
     view.addSubview(@main_view)
     super # MUST BE CALLED
 
+    hide_sides
+
     #add popover to prompt to select a toy
     if not @selected_toy.nil?
       start_action_flow
@@ -78,9 +80,8 @@ class ActionAdderViewController < UIViewController
     end
 
     #load all button actions to button images?
-    if @left_top_button
-      reload_button_image_hash
-    end
+    reload_button_image_hash
+    draw_all_buttons
 
     #if @view_mode == :nothing_chosen
     #enable_action_buttons(false)
@@ -93,12 +94,10 @@ class ActionAdderViewController < UIViewController
     @button_toys = {}
     #setup_sides
     draw_all_buttons
-    @state.scenes[@state.currentscene].actions.each do |action|
-      if action[:action_type] == :button
-        @state.toys.each do |toy|
-          if toy.identifier == action[:toy]
-            add_toy_to_button(toy,action[:action_param])
-          end
+    @state.scenes[@state.currentscene].toys.each do |toy|
+      @state.return_toy_actions(toy).each do |action|
+        if action[:action_type] == :button
+          add_toy_to_button(toy.template,action[:action_param])
         end
       end
     end
