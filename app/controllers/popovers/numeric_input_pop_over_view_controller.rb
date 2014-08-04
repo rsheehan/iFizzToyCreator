@@ -61,6 +61,10 @@ class NumericInputPopOverViewController < UIViewController
 
   def textField(textField, shouldChangeCharactersInRange:range, replacementString:string)
     nonNumberSet = NSCharacterSet.decimalDigitCharacterSet.invertedSet
+    newLength = textField.text.length + string.length - range.length
+    if newLength > 3
+        return false
+    end
     return ((string.stringByTrimmingCharactersInSet(nonNumberSet).length > 0) or string == '')
   end
 
