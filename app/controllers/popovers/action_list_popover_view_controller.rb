@@ -201,10 +201,6 @@ class ActionListPopoverViewController < UIViewController
     newImage
   end
 
-
-
-
-
   def tableView(tv, cellForRowAtIndexPath: index_path)
     item = index_path.row # ignore section as only one
 
