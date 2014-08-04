@@ -8,9 +8,9 @@ class ActionListPopoverViewController < UIViewController
   MAX_HEIGHT = 500
 
 
-  EMPTY_ICON_TEXT_INSET_X = Device.retina? ? 10 : 5
-  EMPTY_ICON_TEXT_INSET_Y = Device.retina? ? 35 : 17.5
-  EMPTY_ICON_INSET = Device.retina? ? 20 : 10
+  EMPTY_ICON_TEXT_INSET_X = UIScreen.mainScreen.scale != 1.0 ? 10 : 5
+  EMPTY_ICON_TEXT_INSET_Y = UIScreen.mainScreen.scale != 1.0 ? 35 : 17.5
+  EMPTY_ICON_INSET = UIScreen.mainScreen.scale != 1.0 ? 20 : 10
 
   def loadView
     # Do not call super.
