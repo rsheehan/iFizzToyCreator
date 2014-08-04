@@ -272,7 +272,7 @@ class ActionListPopoverViewController < UIViewController
         #nothing
       when :score_adder
         #show how score is changed
-        textImage = drawText(action[:action_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
+        textImage = drawText(action[:effect_param][0].to_s, inImage:UIImage.imageNamed("empty.png") )
         action_cell.object_image = textImage
       when :play_sound
         #show sound name? button to play sound?
