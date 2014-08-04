@@ -57,13 +57,19 @@ class PlayViewController < UIViewController
     audioSession.setActive(true, error:nil)
 
     @listening = true
-    url = NSURL.fileURLWithPath("/dev/null");
-    settings = NSDictionary.dictionaryWithObjectsAndKeys(
-        NSNumber.numberWithFloat(44100.0),                 AVSampleRateKey,
-        NSNumber.numberWithInt(KAudioFormatAppleLossless), AVFormatIDKey,
-        NSNumber.numberWithInt(2),                         AVNumberOfChannelsKey,
-        NSNumber.numberWithInt(AVAudioQualityMax),         AVEncoderAudioQualityKey,
-        nil)
+    url = NSURL.fileURLWithPath("/dev/null")
+
+    val_a = NSNumber.numberWithFloat(44100.0)
+    key_a = AVSampleRateKey
+    val_b = NSNumber.numberWithInt(KAudioFormatAppleLossless)
+    key_b = AVFormatIDKey
+    val_c = NSNumber.numberWithInt(2)
+    key_c = AVNumberOfChannelsKey
+    val_d = NSNumber.numberWithInt(AVAudioQualityMax)
+    key_d = AVEncoderAudioQualityKey
+
+    settings = NSDictionary.dictionaryWithObjects([val_a, val_b, val_c, val_d], forKeys: [key_a, key_b, key_c, key_d])
+
     error = nil
     @recorder = AVAudioRecorder.alloc.initWithURL(url, settings:settings, error:error)
 
@@ -137,9 +143,13 @@ class PlayViewController < UIViewController
     @button_actions.each_key do |button|
       @button_actions[button] = []
     end
+    if not @label.nil?
+      @label.dismissPopoverAnimated(true)
+      @label = nil
+    end
     remove_actions
     disableButtons
-    actions = scene.actions
+    actions = @state.get_actions_from_toys(scene.toys)
     actions.each do |action|
       case action[:action_type]
         when :button
@@ -217,18 +227,18 @@ class PlayViewController < UIViewController
 
   # The sides are left for user interactions to the running scenes
   def setup_sides
-    left_panel = UIView.alloc.initWithFrame(CGRectMake(0, 0, 95, @bounds.size.height))
-    left_panel.setBackgroundColor(UIColor.grayColor)
-    @left_top_button = setup_button([LEFT, TOP], left_panel)
-    @left_middle_button = setup_button([LEFT, MIDDLE], left_panel)
-    @left_bottom_button = setup_button([LEFT, BOTTOM], left_panel,)
-    view.addSubview(left_panel)
-    right_panel = UIView.alloc.initWithFrame(CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height))
-    right_panel.setBackgroundColor(UIColor.grayColor)
-    @right_top_button = setup_button([LEFT, TOP], right_panel)
-    @right_middle_button = setup_button([LEFT, MIDDLE], right_panel)
-    @right_bottom_button = setup_button([LEFT, BOTTOM], right_panel)
-    view.addSubview(right_panel)
+    @left_panel = UIView.alloc.initWithFrame(CGRectMake(0, 0, 95, @bounds.size.height))
+    @left_panel.setBackgroundColor(UIColor.grayColor)
+    @left_top_button = setup_button([LEFT, TOP], @left_panel)
+    @left_middle_button = setup_button([LEFT, MIDDLE], @left_panel)
+    @left_bottom_button = setup_button([LEFT, BOTTOM], @left_panel,)
+    view.addSubview(@left_panel)
+    @right_panel = UIView.alloc.initWithFrame(CGRectMake(@bounds.size.width - 95, 0, 95, @bounds.size.height))
+    @right_panel.setBackgroundColor(UIColor.grayColor)
+    @right_top_button = setup_button([LEFT, TOP], @right_panel)
+    @right_middle_button = setup_button([LEFT, MIDDLE], @right_panel)
+    @right_bottom_button = setup_button([LEFT, BOTTOM], @right_panel)
+    view.addSubview(@right_panel)
   end
 
   def setup_button(position, panel)
@@ -355,6 +365,9 @@ class PlayViewController < UIViewController
 
   def create_label(string, frame)
     if not @label.nil?
+      if @label.contentViewController.getInstruction == string
+        return
+      end
       @label.dismissPopoverAnimated(true)
       #remove label first
     end
@@ -362,10 +375,9 @@ class PlayViewController < UIViewController
     textpopover.delegate = self
     textpopover.setInstruction(string)
     @label = UIPopoverController.alloc.initWithContentViewController(textpopover)
-    @label.passthroughViews = [@play_view] #not working? should allow dragging while popover open
+    @label.passthroughViews = [@play_view, @left_panel, @right_panel] #not working? should allow dragging while popover open
     @label.delegate = self
-    viewy = self.view
-    @label.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionDown, animated:true)
+    @label.presentPopoverFromRect(frame , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionDown, animated:true)
   end
 
 end

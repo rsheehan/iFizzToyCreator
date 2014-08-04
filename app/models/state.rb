@@ -66,7 +66,7 @@ class State
     else
       completed << toy.identifier
     end
-    actions = toy.actions
+    actions = toy.actions.clone
     toy.actions.each do |action|
       if action[:effect_type] == :create_new_toy
         create_toy = (@toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first
@@ -293,7 +293,7 @@ class State
     end
 
     unless toys.empty? and edges.empty?
-      actions = get_actions_from_toys(toys)
+      actions = [] #get_actions_from_toys(toys)
       scene = SceneTemplate.new(toys, edges, actions, id, CGRectMake(0,0,0,0))
       scene
     end

@@ -17,25 +17,6 @@ class PlayPopoverViewController < UIViewController
 
     @margin = @back_button.frame.size.width
 
-    #title
-    @title = UILabel.alloc.initWithFrame([[5,5],[@width-10,20]])
-    if @title_text
-      @title.setText(@title_text)
-    else
-      @title.setText('Help')
-    end
-    @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
-    @title.setFont(UIFont.boldSystemFontOfSize(16))
-    @title.textAlignment = NSTextAlignmentCenter
-    #view.addSubview(@title)
-    #view.addSubview(@back_button)
-
-    #title separator
-    separator = CALayer.layer
-    separator.frame = CGRectMake(5, 29.0, @width, 1.0)
-    separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
-    #self.view.layer.addSublayer(separator)
-
     #text instruction
     @instruction = UITextView.alloc.initWithFrame([[5,30],[@width-10,0]])
     if @instr_text
@@ -50,19 +31,6 @@ class PlayPopoverViewController < UIViewController
     resizeViews
   end
 
-  def back(sender)
-    puts 'back'
-    @delegate.action_flow_back
-  end
-
-  def setTitle(text)
-    @title_text = text
-    #resize frames
-    if @title
-      @title.setText(@title_text)
-    end
-  end
-
   def setInstruction(text)
     @instr_text = text
     #resize frames
@@ -70,6 +38,10 @@ class PlayPopoverViewController < UIViewController
       @instruction.setText(@instr_text)
       resizeViews
     end
+  end
+
+  def getInstruction
+    @instr_text
   end
 
   def resizeViews

@@ -14,7 +14,7 @@ class ToyCreatorViewController < UIViewController
     @main_view.add_delegate(self)
     view.addSubview(@main_view)
     setup_colour_buttons
-    @current_colour_view.current_colour_image = Swatch.images['blue']
+    @current_colour_view.current_colour_image = Swatch.images['blue_colour']
     @main_view.current_colour = UIColor.blueColor
     setup_tool_buttons
     setup_mode_buttons(MODES)
