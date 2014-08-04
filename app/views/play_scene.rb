@@ -416,7 +416,8 @@ class PlayScene < SKScene
         end
         puts "Deleted: " + delete.to_s
         if delete
-          #@toy_hash[id].delete_if {|check_toy| check_toy == toy}
+          puts "ID: " + toy.name.to_s
+          @toy_hash[toy.name].delete_if {|check_toy| check_toy == toy}
         end
         delete
       end
