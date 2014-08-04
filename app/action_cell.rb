@@ -55,6 +55,21 @@ class ActionCell < UITableViewCell
     @effect_text_view.setText(text)
   end
 
+  def sound_button=(btn)
+    puts "sound Baton "
+
+    if @sound_button
+      @sound_button.removeFromSuperview
+    end
+
+    if btn
+      @sound_button = btn
+      addSubview(@sound_button)
+    else
+      @sound_button = nil
+    end
+  end
+
   def layoutSubviews
     super
 
@@ -73,6 +88,10 @@ class ActionCell < UITableViewCell
 
     @action_text_view.frame = CGRectMake(boundsX, boundsY+y_space+img_size, width/2, 15)
     @effect_text_view.frame = CGRectMake(boundsX+width/2,boundsY+y_space+img_size,width/2, 15)
+
+    if @sound_button
+      @sound_button.frame = @effect_image_view.frame
+    end
 
   end
 

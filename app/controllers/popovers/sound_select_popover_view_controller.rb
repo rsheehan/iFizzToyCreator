@@ -65,7 +65,7 @@ class SoundSelectPopoverViewController < UIViewController
   end
 
   def play_sound(sender)
-    buttonPosition = sender.convertPoint(CGPointZero, toView:@table_view);
+    buttonPosition = sender.convertPoint(CGPointZero, toView:@table_view)
     indexPath = @table_view.indexPathForRowAtPoint(buttonPosition)
     if indexPath != nil
       name = Constants::SOUND_NAMES[indexPath.row]

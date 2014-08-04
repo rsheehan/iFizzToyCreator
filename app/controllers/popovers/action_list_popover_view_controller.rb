@@ -101,12 +101,6 @@ class ActionListPopoverViewController < UIViewController
     end
   end
 
-  # # Back to the Select toy screen.
-  # def back(sender)
-  #   @state.save
-  #   @delegate.action_flow_back
-  # end
-
   def new_action(sender)
     puts "new action"
     @state.save
@@ -126,7 +120,6 @@ class ActionListPopoverViewController < UIViewController
   end
 
   # The methods to implement the UICollectionViewDataSource protocol.
-
   def tableView(tv, commitEditingStyle: style, forRowAtIndexPath: index_path)
     puts "Index Path: " + index_path.to_s
     tv.beginUpdates
@@ -161,33 +154,10 @@ class ActionListPopoverViewController < UIViewController
     UIGraphicsBeginImageContext(image.size)
     image.drawInRect(CGRectMake(0, 0,image.size.width,image.size.height))
 
-
-    width = (image.size.width-2*EMPTY_ICON_TEXT_INSET_X)
-    height = (image.size.height-2*EMPTY_ICON_TEXT_INSET_Y)
     fontsize = 26
     font = UIFont.fontWithName(fontname, size: fontsize)
 
-    userAttributes = {NSFontAttributeName: font, NSForegroundColorAttributeName: UIColor.blackColor}
-    textSize = text.sizeWithAttributes(userAttributes)
-    puts "supposed text size = "+ textSize.width.to_s+", "+ textSize.height.to_s
-    puts "fontsize = "+fontsize.to_s+" w,h = "+width.to_s+', '+height.to_s
-    puts "name = "+fontname.to_s+" pointsz = "+font.pointSize.to_s
-    puts ''
-
-
     UIColor.blackColor.set
-    # attributedText = NSAttributedString.alloc.initWithString(text, attributes:{NSFontAttributeName: font})
-    # textRect = attributedText.boundingRectWithSize(CGSizeMake(width, height), options:NSStringDrawingUsesLineFragmentOrigin,context:nil)
-    # while (textRect.size.width+1) < width and (textRect.size.height+1) < height do
-    #   puts "text rect = "+textRect.size.width.to_s+", " +textRect.size.height.to_s
-    #   fontsize += 1
-    #   puts "fontsize = "+fontsize.to_s
-    #   font = UIFont.fontWithName(fontname, size: fontsize)
-    #   attributedText = NSAttributedString.alloc.initWithString(text, attributes:{NSFontAttributeName: font})
-    #   textRect = attributedText.boundingRectWithSize(CGSizeMake(width, height), options:NSStringDrawingUsesLineFragmentOrigin,context:nil)
-    # end
-    # font = UIFont.fontWithName(fontname, size: fontsize-1)
-    # puts "Ffontsize = "+(fontsize-1).to_s
 
     #center text in rect
     fontHeight = font.pointSize
@@ -198,13 +168,6 @@ class ActionListPopoverViewController < UIViewController
     end
 
     rect = CGRectMake(EMPTY_ICON_TEXT_INSET_X, EMPTY_ICON_TEXT_INSET_Y+yOffset, image.size.width-2*EMPTY_ICON_TEXT_INSET_X, fontHeight)
-
-    ###DEBUG
-    # context = UIGraphicsGetCurrentContext()
-    # CGContextSetFillColorWithColor(context,UIColor.redColor.CGColor)
-    # CGContextAddRect(context, rect)
-    # CGContextFillPath(context)
-    ###
 
     text.drawInRect(CGRectIntegral(rect), withFont:font, lineBreakMode: UILineBreakModeClip, alignment: UITextAlignmentCenter)
     newImage = UIGraphicsGetImageFromCurrentImageContext()
@@ -264,7 +227,6 @@ class ActionListPopoverViewController < UIViewController
 
     else
       item = index_path.row
-
       @reuseIdentifier ||= "cell"
       action_cell = @table_view.dequeueReusableCellWithIdentifier(@reuseIdentifier)
       action_cell ||= ActionCell.alloc.initWithStyle(UITableViewCellStyleValue1, reuseIdentifier: @reuseIdentifier)
@@ -287,7 +249,6 @@ class ActionListPopoverViewController < UIViewController
 
         when :timer
           action_cell.action_text = Language::REPEAT
-          puts "timer param = "+action[:action_param].to_s
           action_cell.action_image = drawText(action[:action_param][0].to_s.rjust(3, "0") + 's' , inImage:UIImage.imageNamed("empty.png"), withFontName:'DBLCDTempBlack' )
         when :button
           action_cell.action_text = Language::TOUCH
@@ -309,8 +270,8 @@ class ActionListPopoverViewController < UIViewController
           action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
         else
       end
-
       action_cell.effect_image = UIImage.imageNamed(action[:effect_type]+".png")
+      action_cell.sound_button = nil
 
       case action[:effect_type]
         when :apply_force
@@ -358,15 +319,34 @@ class ActionListPopoverViewController < UIViewController
         when :play_sound
           action_cell.effect_text = Language::PLAY_SOUND
           #show sound name? button to play sound?
+          button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+          button.setFrame((action_cell.effect_image_view.frame))
+          button.setTitle('Play', forState: UIControlStateNormal)
+          button.addTarget(self,action:'play_sound_file:', forControlEvents:UIControlEventTouchUpInside)
+          action_cell.sound_button = button
+
         when :text_bubble
           action_cell.effect_text = Language::TEXT_BUBBLE
         when :scene_shift
           action_cell.effect_text = Language::SCENE_SHIFT
         else
       end
-
       action_cell
     end
+  end
+
+  def play_sound_file(sender)
+    buttonPosition = sender.convertPoint(CGPointZero, toView:@table_view)
+    indexPath = @table_view.indexPathForRowAtPoint(buttonPosition)
+    if indexPath != nil
+      name = @toy_actions[indexPath.row][:effect_param]
+      puts('play sound - '+name)
+
+      local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, name))
+      @player = AVPlayer.alloc.initWithURL(local_file)
+      @player.play
+    end
+
   end
 
   def numberOfSectionsInTableView(tv)
