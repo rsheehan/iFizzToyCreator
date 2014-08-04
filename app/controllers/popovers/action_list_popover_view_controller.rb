@@ -136,7 +136,11 @@ class ActionListPopoverViewController < UIViewController
 
   def tableView(tv, numberOfRowsInSection: section)
     if section == 0
-      4
+      if @selected.template.always_travels_forward
+        4
+      else
+        3
+      end
     else
       @toy_actions.length
     end
@@ -507,6 +511,32 @@ class ActionListPopoverViewController < UIViewController
 
   def travel_switch_changed
     @selected.template.always_travels_forward = @travel_switch.on?
+    indexPath = NSIndexPath.indexPathForRow(3, inSection:0)
+    if @travel_switch.on?
+      if not @table_view.cellForRowAtIndexPath(indexPath)
+        @table_view.insertRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimationBottom)
+      end
+    else
+      if @table_view.cellForRowAtIndexPath(indexPath)
+      @table_view.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimationBottom)
+      end
+    end
+  end
+
+  def tableView(tv,  editingStyleForRowAtIndexPath: index)
+    if index.section == 0
+      UITableViewCellEditingStyleNone
+    else
+      UITableViewCellEditingStyleDelete
+    end
+  end
+
+  def tableView(tv, shouldIndentWhileEditingRowAtIndexPath: index)
+    if index.section == 0
+      false
+    else
+      true
+    end
   end
 
   def tableView(tv, viewForHeaderInSection:section)
