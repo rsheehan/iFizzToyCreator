@@ -7,7 +7,6 @@ class ActionAdderViewController < UIViewController
 
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
   EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble, :scene_shift]
-  MODES = [:show_actions,:show_properties]
 
   FORCE_SCALE = 250
   EXPLODE_SCALE = 80
@@ -46,9 +45,9 @@ class ActionAdderViewController < UIViewController
 
     #setup mode buttons - show actions and properties
     position = [10, 10]
-    @show_actions_btn = setup_button(:show_actions, position, @main_view)
-    position[0] += CGRectGetWidth(@show_actions_btn.frame) + 10
-    @show_properties_btn = setup_button(:show_properties, position, @main_view)
+
+    #position[0] += CGRectGetWidth(@show_actions_btn.frame) + 10
+
 
     view.addSubview(@main_view)
   end
