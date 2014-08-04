@@ -38,7 +38,6 @@ class PropertyListViewController < UIViewController
     @rotate_switch = nil
     @stuck_switch = nil
 
-
   end
 
   def viewDidAppear(animated)

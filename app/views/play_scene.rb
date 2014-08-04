@@ -247,14 +247,8 @@ class PlayScene < SKScene
               delete = true
 
             when :play_sound
-              # full file path
-              local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, param.gsub(' ','_')+'.wav'))
-
-              #
-              @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
-              @player.numberOfLoops = 0 # 0 plays once, 1 plays twice...
-              @player.prepareToPlay
-              @player.play
+              sound = SKAction.playSoundFileNamed(param, waitForCompletion: false)
+              toy.runAction(sound)
 
             when :scene_shift
               @delegate.scene_shift(param)
