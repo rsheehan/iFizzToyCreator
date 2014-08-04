@@ -56,7 +56,6 @@ class ActionCell < UITableViewCell
   end
 
   def sound_button=(btn)
-    puts "sound Baton "
 
     if @sound_button
       @sound_button.removeFromSuperview
