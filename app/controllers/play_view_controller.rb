@@ -6,6 +6,7 @@ class PlayViewController < UIViewController
   BOTTOM = 552
   LEFT = 10
   #RIGHT = 939
+  EMPTY_ICON_INSET = UIScreen.mainScreen.scale != 1.0 ? 20 : 10
 
   attr_writer :state
 
