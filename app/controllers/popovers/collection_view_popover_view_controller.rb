@@ -5,7 +5,7 @@ class CollectionViewPopoverViewController < UIViewController
     LITTLE_GAP = 10
     BIG_GAP = 40
     WIDTH = 350
-    MAX_HEIGHT = 500
+    MAX_HEIGHT = 350
 
     ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
     EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble, :scene_shift]
@@ -56,6 +56,7 @@ class CollectionViewPopoverViewController < UIViewController
       view.addSubview(@col_view)
 
       self.preferredContentSize = [WIDTH, [@col_view.frame.origin.y+@col_view.frame.size.height+5, MAX_HEIGHT].min ]
+      resizeViews
 
     end
 
@@ -185,6 +186,31 @@ class CollectionViewPopoverViewController < UIViewController
         when :scene_shift
           Language::SCENE_SHIFT
       end
+    end
+
+    # Resize the collection view to fit content
+    def resizeViews
+
+      puts 'resize cv'
+
+      num_items = collectionView(@col_view, numberOfItemsInSection: 0)
+      item_size = collectionView(@col_view, layout: @col_view.collectionViewLayout, sizeForItemAtIndexPath: NSIndexPath.indexPathForItem(0, inSection: 0) )
+      inset = collectionView(@col_view, layout: @col_view.collectionViewLayout, insetForSectionAtIndex: 0)
+
+      items_per_row = (@col_view.frame.size.width/(item_size.width+inset.left+inset.right)).floor
+      num_rows = ((num_items+0.0)/items_per_row).ceil
+      content_height = (item_size.height+inset.top+inset.bottom)*num_rows
+
+      puts "num items " + num_items.to_s
+      puts "item size w " + item_size.width.to_s
+      puts "inset l " + inset.left.to_s
+      puts "items per row " + items_per_row.to_s+" num rows "+num_rows.to_s
+      puts "content height " + content_height.to_s
+      puts "item height = i, top,bot"+item_size.height.to_s+", "+inset.top.to_s+","+inset.bottom.to_s
+      @col_view.frame = CGRectMake(*@col_view.frame.origin, @col_view.frame.size.width, [content_height , MAX_HEIGHT-5-@col_view.frame.origin.y].min)
+      puts "col view height = "+@col_view.frame.size.height.to_s
+
+      self.preferredContentSize = [WIDTH, [@col_view.frame.origin.y+@col_view.frame.size.height+5, MAX_HEIGHT].min ]
     end
 
 end
