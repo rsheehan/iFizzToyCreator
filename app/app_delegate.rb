@@ -11,20 +11,21 @@ class AppDelegate
     controllers = []
     icons = []
 
+    # Make Toys view
     controllers << toy_creator_view_controller = ToyCreatorViewController.alloc.initWithNibName(nil, bundle: nil)
     icons << icon_and_title(toy_creator_view_controller, Language::MAKE_TOYS, 'toy_for_tab_bar')
 
-    play_view_controller = PlayViewController.alloc.initWithNibName(nil, bundle: nil)
-
+    # Make Scene view
     controllers << scene_creator_view_controller = SceneCreatorViewController.alloc.initWithNibName(nil, bundle: nil)
     icons << icon_and_title(scene_creator_view_controller, Language::MAKE_SCENES, 'scene_for_tab_bar')
-    scene_creator_view_controller.play_view_controller = play_view_controller
 
+    # Add Actions View
     controllers << action_creator_view_controller = ActionAdderViewController.alloc.initWithNibName(nil, bundle: nil)
     icons << icon_and_title(action_creator_view_controller, Language::ADD_ACTIONS, 'action_for_tab_bar')
     action_creator_view_controller.scene_creator_view_controller = scene_creator_view_controller
-    action_creator_view_controller.play_view_controller = play_view_controller
 
+    # Play
+    play_view_controller = PlayViewController.alloc.initWithNibName(nil, bundle: nil)
     controllers << play_view_controller
     icons << icon_and_title(play_view_controller, Language::PLAY, 'play_for_tab_bar')
 

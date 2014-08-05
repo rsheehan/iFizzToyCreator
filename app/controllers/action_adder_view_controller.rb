@@ -3,8 +3,6 @@
 class ActionAdderViewController < UIViewController
 
   # Actions are hashes with the following keys.
-  # toy:, action_type:, action_param:, effect_type:, effect_param:
-
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
   EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble, :scene_shift]
 
@@ -19,8 +17,7 @@ class ActionAdderViewController < UIViewController
   LEFT = 10
   EMPTY_ICON_INSET = UIScreen.mainScreen.scale != 1.0 ? 20 : 10
 
-  attr_writer :state, :scene_creator_view_controller, :play_view_controller
-  #attr_reader :selected_toy
+  attr_writer :state, :scene_creator_view_controller
 
   # TODO: undo/redo for placing, moving, resizing toys
   # Make sure that a list of added toys is maintained. These are removed when
@@ -65,6 +62,8 @@ class ActionAdderViewController < UIViewController
     view.addSubview(@main_view)
     super # MUST BE CALLED
 
+    hide_sides
+
     #add popover to prompt to select a toy
     if not @selected_toy.nil?
       start_action_flow
@@ -79,9 +78,8 @@ class ActionAdderViewController < UIViewController
     end
 
     #load all button actions to button images?
-    if @left_top_button
-      reload_button_image_hash
-    end
+    reload_button_image_hash
+    draw_all_buttons
 
     #if @view_mode == :nothing_chosen
     #enable_action_buttons(false)
@@ -94,12 +92,10 @@ class ActionAdderViewController < UIViewController
     @button_toys = {}
     #setup_sides
     draw_all_buttons
-    @state.scenes[@state.currentscene].actions.each do |action|
-      if action[:action_type] == :button
-        @state.toys.each do |toy|
-          if toy.identifier == action[:toy]
-            add_toy_to_button(toy,action[:action_param])
-          end
+    @state.scenes[@state.currentscene].toys.each do |toy|
+      @state.return_toy_actions(toy).each do |action|
+        if action[:action_type] == :button
+          add_toy_to_button(toy.template,action[:action_param])
         end
       end
     end

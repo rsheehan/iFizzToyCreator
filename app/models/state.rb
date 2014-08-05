@@ -35,7 +35,7 @@ class State
     #save
   end
 
-  def load_scene_actions(pos)
+  def load_scene_actions(pos= @scenes[@currentscene])
     if pos.is_a? SceneTemplate
       scene = pos
     else

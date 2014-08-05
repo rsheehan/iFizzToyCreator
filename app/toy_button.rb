@@ -1,5 +1,7 @@
 class ToyButton < UICollectionViewCell
 
+  # Button Representation within toybox view controller
+
   #attr_accessor :toy
   attr_reader :toy_image_view
 
@@ -9,6 +11,7 @@ class ToyButton < UICollectionViewCell
     addSubview(@toy_image_view)
   end
 
+  # Used to get image from toy template
   def toy=(toy)
     @toy_image_view.image = toy.image
     @toy_image_view.sizeToFit

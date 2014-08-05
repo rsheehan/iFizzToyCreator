@@ -218,7 +218,7 @@ class SceneCreatorView < CreatorView
     if @truly_selected
       @selected = @truly_selected
       if @delegate.is_a?(ActionAdderViewController)
-        @delegate.start_action_flow
+        #@delegate.start_action_flow
       end
       self.mode = :toy_selected
     else
@@ -263,6 +263,7 @@ class SceneCreatorView < CreatorView
         case @mode
           when :toys_only, :scene, :toy_selected
             if @delegate.is_a?(ActionAdderViewController)
+              @drag = true
               @delegate.close_popover
             end
             touch_move_scene(point)
@@ -306,6 +307,8 @@ class SceneCreatorView < CreatorView
   end
 
   def touchesEnded(touches, withEvent: event)
+    touch = touches.anyObject
+    point = touch.locationInView(self)
     return unless @valid_start_location
     case @current_tool
       when :squiggle, :line
@@ -315,7 +318,7 @@ class SceneCreatorView < CreatorView
       when :grab
         case @mode
           when :toys_only, :scene
-            touch_end_scene
+            touch_end_scene(point)
           when :force
             touch_end_force
           when :rotation
@@ -327,9 +330,10 @@ class SceneCreatorView < CreatorView
           when :create_new_toy
             @drag = false
           when :toy_selected
-            if @delegate.is_a?(ActionAdderViewController)
+            if @delegate.is_a?(ActionAdderViewController) and not @drag and @selected.close_enough(point)
               @delegate.reopen_action_flow
             end
+            @drag = false
         end
       when :circle
         centre = @points[0]
@@ -342,14 +346,16 @@ class SceneCreatorView < CreatorView
   end
 
   # Called when the touch ends for a scene.
-  def touch_end_scene
+  def touch_end_scene(point)
     if @truly_selected
       change_position_of(@truly_selected, to: @truly_selected.position)
       if @truly_selected.is_a?(ToyInScene)
         @toys_in_scene.delete(@truly_selected)
         @toys_in_scene << @truly_selected
         if @delegate.is_a?(ActionAdderViewController)
-          @delegate.reopen_action_flow
+          if @truly_selected.close_enough(point)
+            @delegate.reopen_action_flow
+          end
         end
       else
         @strokes.delete(@truly_selected)
