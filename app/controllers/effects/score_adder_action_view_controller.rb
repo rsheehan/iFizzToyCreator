@@ -15,26 +15,27 @@ class ScoreAdderActionViewController < UIViewController
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
     view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
 
-    #close button
-    @close_button = UIButton.buttonWithType(UIButtonTypeCustom)
-    @close_button.setImage(UIImage.imageNamed(:cross2), forState: UIControlStateNormal)
-    @close_button.frame = [[5, 5], [20,20]]
-    @close_button.addTarget(self, action: 'close_view:', forControlEvents: UIControlEventTouchUpInside)
-    view.addSubview(@close_button)
+    #back button
+    @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
+    @back_button.setImage(UIImage.imageNamed(:back_arrow), forState: UIControlStateNormal)
+    @back_button.frame = [[5, 5], [30,30]]
+    @back_button.addTarget(self, action: 'back:', forControlEvents: UIControlEventTouchUpInside)
+    view.addSubview(@back_button)
 
-    @margin = @close_button.frame.size.width
+    @margin = @back_button.frame.size.width
 
     #title
-    @title = UITextView.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,@close_button.frame.size.height]])
-    if @title_text
-      @title.setText(@title_text)
-    else
-      @title.setText('Title Goes Here')
-    end
+    @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,30]])
+    @title.setText(Language::CHOOSE_SCORE)
     @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
-    @title.editable = false
-    @title.scrollEnabled = false
+    @title.setFont(UIFont.boldSystemFontOfSize(18))
     view.addSubview(@title)
+
+    #title separator
+    separator = CALayer.layer
+    separator.frame = CGRectMake(5, 39.0, @width, 1.0)
+    separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
+    self.view.layer.addSublayer(separator)
 
     sc = segment_controls
     view.addSubview(sc)
@@ -83,10 +84,10 @@ class ScoreAdderActionViewController < UIViewController
     end
   end
 
-  def close_view(sender)
-    if @delegate
-      @delegate.close_popover
-    end
+  # Back to the action adder to make a new one.
+  def back(sender)
+    puts('Cancel')
+    @delegate.action_flow_back
   end
 
   def continue(sender)
@@ -123,16 +124,10 @@ class ScoreAdderActionViewController < UIViewController
   end
 
   def resizeViews
-    text_size = @title_text.sizeWithFont(UIFont.systemFontOfSize(14),
-                                         constrainedToSize:CGSizeMake(@width-@margin-10, MAX_HEIGHT),
-                                         lineBreakMode:UILineBreakModeWordWrap)
-    @title.setText(@title_text)
-    @title.setFont(UIFont.systemFontOfSize(14))
-    @title.setFrame([[@margin+5, 5],[@width-@margin-5, text_size.height+10]])
 
-    @segment_control.setFrame([[@width/6, 10+@title.frame.size.height], [@width*2/3, 30]])
+    @segment_control.setFrame([[@width/6, 15+@title.frame.size.height], [@width*2/3, 30]])
 
-    @number_input.setFrame([[@width/4, 10+@title.frame.size.height + @segment_control.frame.size.height + 10],[@width/2,30]])
+    @number_input.setFrame([[@width/4, 15+@title.frame.size.height + @segment_control.frame.size.height + 10],[@width/2,30]])
 
     @cont_button.setFrame([[5, @number_input.frame.origin.y+@number_input.frame.size.height+5], [@width-10,30]])
 

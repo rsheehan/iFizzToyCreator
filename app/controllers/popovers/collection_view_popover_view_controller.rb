@@ -4,7 +4,7 @@ class CollectionViewPopoverViewController < UIViewController
     attr_accessor :mode
     LITTLE_GAP = 10
     BIG_GAP = 40
-    WIDTH = 300
+    WIDTH = 350
     MAX_HEIGHT = 500
 
     ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
@@ -24,30 +24,30 @@ class CollectionViewPopoverViewController < UIViewController
       #back button
       @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
       @back_button.setImage(UIImage.imageNamed(:back_arrow), forState: UIControlStateNormal)
-      @back_button.frame = [[5, 5], [20,20]]
+      @back_button.frame = [[5, 5], [30,30]]
       @back_button.addTarget(self, action: 'back:', forControlEvents: UIControlEventTouchUpInside)
       view.addSubview(@back_button)
 
       @margin = @back_button.frame.size.width
 
       #title
-      @title = UILabel.alloc.initWithFrame([[@margin+5,5],[WIDTH-@margin-5,20]])
+      @title = UILabel.alloc.initWithFrame([[@margin+5,5],[WIDTH-@margin-5,30]])
       if @title_text
         @title.setText(@title_text)
       else
-        @title.setText('Choose a Trigger')
+        @title.setText(Language::CHOOSE_TRIGGER)
       end
       @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
-      @title.setFont(UIFont.boldSystemFontOfSize(16))
+      @title.setFont(UIFont.boldSystemFontOfSize(18))
       view.addSubview(@title)
 
       #title separator
       separator = CALayer.layer
-      separator.frame = CGRectMake(5, 29.0, WIDTH, 1.0)
+      separator.frame = CGRectMake(5, 35.0, WIDTH, 1.0)
       separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
       self.view.layer.addSublayer(separator)
 
-      @col_view = UICollectionView.alloc.initWithFrame([[0, 35], [WIDTH, WIDTH]], collectionViewLayout: UICollectionViewFlowLayout.alloc.init)
+      @col_view = UICollectionView.alloc.initWithFrame([[0, 40], [WIDTH, WIDTH]], collectionViewLayout: UICollectionViewFlowLayout.alloc.init)
       @col_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
       @col_view.registerClass(ImageCell, forCellWithReuseIdentifier: "ImgCell")
       @col_view.registerClass(ToyButton, forCellWithReuseIdentifier: TOYBUTTON)
@@ -122,7 +122,7 @@ class CollectionViewPopoverViewController < UIViewController
           img_size = UIImage.imageNamed(EFFECTS[item]).size
           CGSizeMake(img_size.width,img_size.height+10)
         when :toys
-          CGSizeMake(75,75)#@state.toys[item].image.size
+          CGSizeMake(75,75)
         else
           img_size = UIImage.imageNamed(ACTIONS[item]).size
           CGSizeMake(img_size.width,img_size.height+10)

@@ -621,13 +621,13 @@ class ActionAdderViewController < UIViewController
         content.delegate = self
         content.mode = :toys
         content.state = @state
-        content.setTitle('Choose a Toy that this toy will hit')
+        content.setTitle(Language::TOUCH_COLLISION)
         show_popover(content)
       when :score_reaches
         #show score popover
         @popover_type = :score_reaches
         content = NumericInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
-        content.setTitle('Enter the score that will trigger the event')
+        content.setTitle(Language::CHOOSE_SCORE_REACHES)
         content.delegate = self
         show_popover(content)
       when :shake
@@ -684,7 +684,7 @@ class ActionAdderViewController < UIViewController
     content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
     content.delegate = self
     content.mode = :effects
-    content.setTitle('Choose an Effect')
+    content.setTitle(Language::CHOOSE_EFFECT)
     show_popover(content)
   end
 
@@ -719,7 +719,7 @@ class ActionAdderViewController < UIViewController
         content.delegate = self
         content.mode = :toys
         content.state = @state
-        content.setTitle('Choose the Toy that will be created')
+        content.setTitle(Language::CHOOSE_CREATE_TOY)
         show_popover(content)
       when :delete_effect
         action_type, action_param = get_action
@@ -729,7 +729,7 @@ class ActionAdderViewController < UIViewController
         action_created
       when :score_adder
         content = ScoreAdderActionViewController.alloc.initWithNibName(nil, bundle: nil)
-        content.setTitle('Enter the change in score')
+        content.setTitle(Language::SCORE_ADDER_COMMAND)
         content.delegate = self
         show_popover(content)
       when :play_sound

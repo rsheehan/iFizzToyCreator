@@ -11,6 +11,7 @@ class Language
   PROPERTIES      = 'Properties'
   TRIGGER         = 'Trigger'
   EFFECT          = 'Effect'
+  SCORE_TRIGGER   = 'Score Trigger'
 
   # View labels
   TOY_MAKER       = 'Toy Maker'
@@ -62,12 +63,19 @@ class Language
   ALWAYS_TRAVELS_FORWARD = 'Always Travels Forward'
 
   # Commands
-  CHOOSE_TOUCH_BUTTON = 'Choose the button for this action.'
-  TOUCH_FORCE         = 'Touch to show force direction and strength.'
-  TOUCH_COLLISION     = 'Choose the toy that your toy will collide with.'
-  SHOW_ACTIONS        = 'Tap a toy to view it\'s actions and effects.'
-  TOUCH_EXPLOSION     = 'Touch to show force strength.'
-  TOUCH_ROTATION      = 'Touch to show rotation strength.'
-  DRAG_CREATE_TOY     = 'Drag the new toy to set where it will be made.'
-
+  CHOOSE_TOUCH_BUTTON  = 'Choose the button for this action.'
+  TOUCH_FORCE          = 'Touch to show force direction and strength.'
+  TOUCH_COLLISION      = 'Choose the toy that this toy will hit'
+  SHOW_ACTIONS         = 'Tap a toy to view it\'s actions and effects.'
+  TOUCH_EXPLOSION      = 'Touch to show force strength.'
+  TOUCH_ROTATION       = 'Touch to show rotation strength.'
+  DRAG_CREATE_TOY      = 'Drag the new toy to set where it will be made.'
+  CHOOSE_TRIGGER       = 'Choose a Trigger'
+  CHOOSE_EFFECT        = 'Choose an Effect'
+  SCORE_ADDER_COMMAND  = 'Enter the change in score'
+  CHOOSE_CREATE_TOY    = 'Choose the Toy that will be created'
+  CHOOSE_SCORE_REACHES = 'Enter the score that the toy will reach'
+  CHOOSE_TIMER         = 'Timer Trigger'
+  CHOOSE_SCORE         = 'Enter the change in score'
+  TEXT_COMMAND         = 'Enter the text to show'
 end

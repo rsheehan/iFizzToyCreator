@@ -16,27 +16,27 @@ class RepeatActionViewController < UIViewController
     #back button
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
     @back_button.setImage(UIImage.imageNamed(:back_arrow), forState: UIControlStateNormal)
-    @back_button.frame = [[5, 5], [20,20]]
+    @back_button.frame = [[5, 5], [30,30]]
     @back_button.addTarget(self, action: 'back:', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(@back_button)
 
     @margin = @back_button.frame.size.width
 
     #title
-    @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,20]])
-    @title.setText('Timer Trigger')
+    @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,30]])
+    @title.setText(Language::CHOOSE_TIMER)
     @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
-    @title.setFont(UIFont.boldSystemFontOfSize(16))
+    @title.setFont(UIFont.boldSystemFontOfSize(18))
     view.addSubview(@title)
 
     #title separator
     separator = CALayer.layer
-    separator.frame = CGRectMake(5, 29.0, @width, 1.0)
+    separator.frame = CGRectMake(5, 39.0, @width, 1.0)
     separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
     self.view.layer.addSublayer(separator)
 
     #picker for time
-    picker_view = UIPickerView.alloc.initWithFrame([[0,35],[@width,150]])
+    picker_view = UIPickerView.alloc.initWithFrame([[0,45],[@width,150]])
     picker_view.dataSource = self
     picker_view.delegate = self
     picker_view.selectRow(30001, inComponent: 0, animated: false)

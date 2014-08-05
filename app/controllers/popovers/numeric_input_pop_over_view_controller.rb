@@ -9,7 +9,7 @@ class NumericInputPopOverViewController < UIViewController
 
   def loadView
     super
-    @width = 300
+    @width = 350
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
     view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
@@ -17,31 +17,31 @@ class NumericInputPopOverViewController < UIViewController
     #back button
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
     @back_button.setImage(UIImage.imageNamed(:back_arrow), forState: UIControlStateNormal)
-    @back_button.frame = [[5, 5], [20,20]]
+    @back_button.frame = [[5, 5], [30,30]]
     @back_button.addTarget(self, action: 'back:', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(@back_button)
 
     @margin = @back_button.frame.size.width
 
     #title
-    @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,20]])
+    @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,30]])
     if @title_text
       @title.setText(@title_text)
     else
-      @title.setText('Score Trigger')
+      @title.setText(Language::SCORE_TRIGGER)
     end
     @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
-    @title.setFont(UIFont.boldSystemFontOfSize(16))
+    @title.setFont(UIFont.boldSystemFontOfSize(18))
     view.addSubview(@title)
 
     #title separator
     separator = CALayer.layer
-    separator.frame = CGRectMake(5, 29.0, @width, 1.0)
+    separator.frame = CGRectMake(5, 35.0, @width, 1.0)
     separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
     self.view.layer.addSublayer(separator)
 
     #number input
-    @number_input = UITextField.alloc.initWithFrame([[@width/4, 35],[@width/2,30]])
+    @number_input = UITextField.alloc.initWithFrame([[@width/4, 40],[@width/2,30]])
     @number_input.textAlignment = NSTextAlignmentCenter
     @number_input.delegate = self
     @number_input.keyboardType = UIKeyboardTypeNumberPad
@@ -84,10 +84,9 @@ class NumericInputPopOverViewController < UIViewController
     end
   end
 
-  def close_view(sender)
-    if @delegate
-      @delegate.close_popover
-    end
+  def back(sender)
+    puts 'back'
+    @delegate.action_flow_back
   end
 
   def continue(sender)
