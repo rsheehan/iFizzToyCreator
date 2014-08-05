@@ -4,7 +4,6 @@ class SceneCreatorViewController < UIViewController
 
   MODES = [:scene, :toy, :new]
 
-  attr_writer :toybox, :play_view_controller
   attr_reader :main_view
 
   def loadView # preferable to viewDidLoad because not using xib

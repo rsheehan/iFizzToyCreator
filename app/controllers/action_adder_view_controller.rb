@@ -3,8 +3,6 @@
 class ActionAdderViewController < UIViewController
 
   # Actions are hashes with the following keys.
-  # toy:, action_type:, action_param:, effect_type:, effect_param:
-
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
   EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble, :scene_shift]
 
@@ -18,8 +16,7 @@ class ActionAdderViewController < UIViewController
   BOTTOM = 552
   LEFT = 10
 
-  attr_writer :state, :scene_creator_view_controller, :play_view_controller
-  #attr_reader :selected_toy
+  attr_writer :state, :scene_creator_view_controller
 
   # TODO: undo/redo for placing, moving, resizing toys
   # Make sure that a list of added toys is maintained. These are removed when
