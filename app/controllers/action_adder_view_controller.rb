@@ -552,7 +552,9 @@ class ActionAdderViewController < UIViewController
   def reopen_action_flow
     #if there is a popover visible don't repoen?
     close_popover
-    if @popoverStack.size > 0
+    if @popoverStack.nil?
+      start_action_flow
+    elsif @popoverStack.size > 0
         content = @popoverStack.last
         @popover = UIPopoverController.alloc.initWithContentViewController(content)
         @popover.delegate = self
@@ -802,8 +804,10 @@ class ActionAdderViewController < UIViewController
   end
 
   def close_popover
-    @popover_type = nil
-    @popover.dismissPopoverAnimated(true)
+    if not @popover.nil?
+      @popover_type = nil
+      @popover.dismissPopoverAnimated(true)
+    end
     disableButtons
     hide_sides
   end
