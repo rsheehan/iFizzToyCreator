@@ -4,7 +4,6 @@ class SceneCreatorViewController < UIViewController
 
   MODES = [:scene, :toy, :new]
 
-  attr_writer :toybox, :play_view_controller
   attr_reader :main_view
 
   def loadView # preferable to viewDidLoad because not using xib
@@ -105,16 +104,24 @@ class SceneCreatorViewController < UIViewController
     scene.toys.each do |toy|
       @main_view.add_toy(toy)
       #add toy's actions to scene
-      toy.template.actions.each do |action|
-        @main_view.add_action(action)
-      end
     end
+    @state.load_scene_actions(scene)
+    @main_view.add_action(scene.actions)
     #update id
     @id = scene.identifier
     @state.currentscene = scene_index
     close_toybox
     grab
   end
+
+  # def add_all_toy_actions(toy)
+  #   toy.actions.each do |action|
+  #     @main_view.add_action(action)
+  #     if action[:effect_type] == :create_new_toy
+  #       add_all_toy_actions((@state.toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first)
+  #     end
+  #   end
+  # end
 
   # Called when the view disappears.
   def viewWillDisappear(animated)
@@ -139,6 +146,7 @@ class SceneCreatorViewController < UIViewController
   end
 
   def new
+    save_scene
     clear
   end
   

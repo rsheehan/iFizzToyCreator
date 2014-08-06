@@ -1,4 +1,4 @@
-class NumericInputPopOverViewController < UIViewController
+class ScoreAdderActionViewController < UIViewController
 
   attr_reader :text
   attr_writer :delegate
@@ -10,6 +10,7 @@ class NumericInputPopOverViewController < UIViewController
   def loadView
     super
     @width = 300
+    @selected = 0
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
     view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
@@ -35,6 +36,9 @@ class NumericInputPopOverViewController < UIViewController
     @title.scrollEnabled = false
     view.addSubview(@title)
 
+    sc = segment_controls
+    view.addSubview(sc)
+
     #number input
     @number_input = UITextField.alloc.initWithFrame([[@width/4, 10+@title.frame.size.height],[@width/2,30]])
     @number_input.textAlignment = NSTextAlignmentCenter
@@ -56,6 +60,10 @@ class NumericInputPopOverViewController < UIViewController
 
   def textField(textField, shouldChangeCharactersInRange:range, replacementString:string)
     nonNumberSet = NSCharacterSet.decimalDigitCharacterSet.invertedSet
+    newLength = textField.text.length + string.length - range.length
+    if newLength > 3
+      return false
+    end
     return ((string.stringByTrimmingCharactersInSet(nonNumberSet).length > 0) or string == '')
   end
 
@@ -85,20 +93,46 @@ class NumericInputPopOverViewController < UIViewController
     if @delegate
       text = @number_input.text
       if text.to_i > 0
-        @delegate.submit_number(@number_input.text)
+        puts "Selected: " + @selected.to_s
+        case @selected
+          when 0
+            @delegate.submit_score_adder(@number_input.text, "add")
+          when 1
+            @delegate.submit_score_adder(@number_input.text, "subtract")
+          when 2
+            @delegate.submit_score_adder(@number_input.text, "set")
+        end
       end
     end
   end
 
+  def segment_controls
+    @segment_control = UISegmentedControl.alloc.initWithFrame( CGRectZero)
+    @segment_control.segmentedControlStyle = UISegmentedControlStyleBar
+    @segment_control.insertSegmentWithTitle('Add', atIndex: 0, animated: false)
+    @segment_control.insertSegmentWithTitle('Subtract', atIndex: 1, animated: false)
+    @segment_control.insertSegmentWithTitle('Set', atIndex: 2, animated: false)
+    @segment_control.sizeToFit
+    @segment_control.selectedSegmentIndex = @selected
+    @segment_control.addTarget(self, action: 'segment_change', forControlEvents: UIControlEventValueChanged)
+    @segment_control
+  end
+
+  def segment_change
+    @selected = @segment_control.selectedSegmentIndex
+  end
+
   def resizeViews
     text_size = @title_text.sizeWithFont(UIFont.systemFontOfSize(14),
-                                             constrainedToSize:CGSizeMake(@width-@margin-10, MAX_HEIGHT),
-                                             lineBreakMode:UILineBreakModeWordWrap)
+                                         constrainedToSize:CGSizeMake(@width-@margin-10, MAX_HEIGHT),
+                                         lineBreakMode:UILineBreakModeWordWrap)
     @title.setText(@title_text)
     @title.setFont(UIFont.systemFontOfSize(14))
     @title.setFrame([[@margin+5, 5],[@width-@margin-5, text_size.height+10]])
 
-    @number_input.setFrame([[@width/4, 10+@title.frame.size.height],[@width/2,30]])
+    @segment_control.setFrame([[@width/6, 10+@title.frame.size.height], [@width*2/3, 30]])
+
+    @number_input.setFrame([[@width/4, 10+@title.frame.size.height + @segment_control.frame.size.height + 10],[@width/2,30]])
 
     @cont_button.setFrame([[5, @number_input.frame.origin.y+@number_input.frame.size.height+5], [@width-10,30]])
 

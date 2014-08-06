@@ -1,12 +1,15 @@
 class DeleteToyButton < UICollectionViewCell
 
+    # Small 'X' on top left corner of toys within the toyboxviewcontroller when deleting is active
+    # Only allows for "X" to be tapped to delete toys
+
     attr_accessor :rotating, :del_toy_button
     attr_reader :toy_image_view, :id
 
     def initWithFrame(frame)
       super
+
       @toy_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("toy.png"))
-      @cross_button = UIButton.alloc.initWithFrame(CGRectMake(-5,-5,20,20))
 
       @del_toy_button = UIButton.buttonWithType(UIButtonTypeCustom)
       @del_toy_button.setImage(UIImage.imageNamed(:cross2), forState: UIControlStateNormal)
@@ -18,6 +21,7 @@ class DeleteToyButton < UICollectionViewCell
 
     end
 
+    # Toy Template to be represented
     def toy=(toy)
       @toy_image_view.image = toy.image
       @toy_image_view.sizeToFit

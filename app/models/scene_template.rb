@@ -18,11 +18,26 @@ class SceneTemplate
     @toys = toys    # each of type ToyInScene
     @edges = edges  # each of type ToyPart - either Circle or Points
     @actions = actions   # each a Hash
-    puts "SceneTemplate actions"
+    #puts "SceneTemplate actions"
     @bounds = bounds
-    p actions
+    #p actions
     # possibly create an image of the scene for the scene box view
     @image = create_image(0.35)
+  end
+
+  def add_actions(actions)
+    if actions.kind_of?(Array)
+      actions.each do |action|
+        if !@actions.include?(action)
+          @actions << action
+        end
+      end
+    else
+      if !@actions.include?(actions)
+        @actions << actions
+      end
+    end
+    @actions.flatten!
   end
 
   # Turns the SceneTemplate into json compatible data.

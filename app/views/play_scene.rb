@@ -7,7 +7,7 @@ class PlayScene < SKScene
   attr_accessor :edges # ToyParts - either CirclePart or PointsPart
   attr_reader :loaded_toys # ToyInScene not put into play straight away
   attr_reader :mutex
-  attr_writer :scores
+  attr_writer :scores, :delegate
 
   TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
@@ -43,6 +43,7 @@ class PlayScene < SKScene
     @paused = true
     @mutex = Mutex.new
     @scores = {}
+    @toys_count = {}
     add_edges
     add_toys
   end
@@ -61,6 +62,7 @@ class PlayScene < SKScene
   end
 
   def add_score_action(action)
+    action[:used] = []
     if @score_actions
       @score_actions << action
     else
@@ -173,9 +175,17 @@ class PlayScene < SKScene
   def update(current_time)
     checkFront
 
+    # Places sound actions at the front
+    sound_actions = @actions_to_fire.reject { |action| action[:effect_type] != :play_sound }
+    @actions_to_fire.reject! { |action| action[:action_type] == :play_sound }
+    sound_actions << @actions_to_fire
+    @actions_to_fire = sound_actions.flatten
+
+    # Debugging purposes
     if @check
       puts @toy_hash[@check].last.physicsBody.to_s
     end
+
     @actions_to_fire.each do |action|
       toy_id = action[:toy]
       toys = @toy_hash[toy_id] # all toys of the correct type
@@ -201,12 +211,14 @@ class PlayScene < SKScene
           delete = false
           send = false
           case effect
+
             when :apply_force
               # make force relative to the toy
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               param = CGPointApplyAffineTransform(param, rotation)
               send = true
               effect = "applyForce"
+
             when :explosion
               #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
               @mutex.synchronize do
@@ -216,52 +228,135 @@ class PlayScene < SKScene
                 end
               end
               delete = true
+
             when :apply_torque
-              param *= toy.size.width/2
+              param *= toy.size.width/2  # Scale by opposing torque on toy
               effect = "applyTorque"
               send = true
+
             when :delete_effect
               fadeOut = SKAction.fadeOutWithDuration(param)
               remove = SKAction.removeFromParent()
               sequence = SKAction.sequence([fadeOut, remove])
-              toy.runAction(sequence)
+              #toy.runAction(sequence)
+              apply_action_to_toy(toy, sequence)
+              toy.userData[:uniqueID] = -1
               delete = true
-            when :play_sound
-              local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, param.gsub(' ','_')+'.wav'))
 
-              @player = AVAudioPlayer.alloc.initWithContentsOfURL(local_file, error:nil)
-              @player.numberOfLoops = 1
-              @player.prepareToPlay
-              @player.play
+            when :play_sound
+              sound = SKAction.playSoundFileNamed(param, waitForCompletion: false)
+              toy.runAction(sound)
+
+            when :scene_shift
+              @delegate.scene_shift(param)
+
+            when :text_bubble
+              position = view.convertPoint(toy.position, fromScene: self)
+              position -= CGPointMake(-20, 20)
+              frame = CGRectMake(*position, 40, 40)
+              @delegate.create_label(param, frame)
+              if @label
+                @label.removeFromParent
+              end
+
+              # text = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
+              # text.position = CGPointMake(0, 0)
+              # text.fontSize = 14
+              # text.text = param
+              # text.fontColor = UIColor.blackColor
+
+              @label = SKShapeNode.alloc.init
+              num = Pointer.new(:float, 2)
+              num[0] = 5
+              bezier = UIBezierPath.bezierPathWithRoundedRect(CGRectMake(-20, -20, 40, 40), cornerRadius: num[0])
+              @label.path = bezier.CGPath
+              @label.fillColor = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+              #@label.addChild(text)
+              @label.position = toy.position
+
+              addChild(@label)
 
             when :score_adder
+
+              # Initial set of score
               if not toy.userData[:score]
                 toy.userData[:score] = 0
               end
-              toy.userData[:score] += param
+
+              label_colour = nil
+              # Performs action and assigns colour corresponding to type of score adder made
+              case param[1]
+                when "add"
+                  toy.userData[:score] += param[0]
+                  label_colour = UIColor.greenColor
+                when "subtract"
+                  toy.userData[:score] -= param[0]
+                  label_colour = UIColor.redColor
+                when "set"
+                  toy.userData[:score] = param[0]
+                  label_colour = UIColor.yellowColor
+              end
+
+              # Creates label to appear at toys position
+              label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
+              label.position = toy.position + CGPointMake(-30, 0)
+              label.fontSize = 18
+              label.text = toy.userData[:score].to_s
+              label.fontColor = label_colour
+
+              addChild(label)
+
+              # Creates Fade and sclae effect before removing
+              action_duration = 1.0
+              groupActions = []
+              groupActions << SKAction.moveByX(10, y: 0, duration: action_duration)
+              groupActions << SKAction.scaleBy(7, duration: action_duration)
+              groupActions << SKAction.fadeOutWithDuration(action_duration)
+
+              actions = SKAction.group(groupActions)
+              actions = SKAction.sequence([actions, SKAction.removeFromParent])
+
+              label.runAction(actions)
+
+              # Checks for actions to fire if a score is reached or passed
               puts "Toy Score: " + toy.userData[:score].to_s
               @score_actions.each do |score_action|
-                if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score]
+                # Checks toy identifier, score being reached or passed, and that the action has not been fired previously
+                if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score] and not score_action[:used].include?(toy.userData[:uniqueID])
+
+                  # Clone the hash so its not overwritten
+                  score_action = score_action.select {|k, v| true }
+                  # Places identifier in hash
                   score_action[:action_param] =  [score_action[:action_param][0], toy.userData[:uniqueID]]
+
+                  # Places uid in score action so it doesnt get fired again
+                  if not score_action[:used]
+                    score_action[:used] = []
+                  end
+                  score_action[:used] << toy.userData[:uniqueID]
+
+                  # Puts action in array for future use
                   if @actions_to_be_fired
                     @actions_to_be_fired << score_action
                   else
                     @actions_to_be_fired = [score_action]
                   end
                   puts "score action "+ score_action.to_s
-                  toy.userData[:score] = 0
                 end
               end
-            when :create_new_toy # TODO Adjust to angle of toy
+
+            when :create_new_toy
+              id = action[:effect_param][:id]
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
-              toy_in_scene = @loaded_toys[action[:effect_param][:id]].select {|s| s.uid == action[:uid]}.first
-              #puts "TIS Pos, X: " + toy_in_scene.position.x.to_s + ", Y: " + toy_in_scene.position.y.to_s
+
+              # Gets toy in scene from loaded toys
+              toy_in_scene = @loaded_toys[id].select {|s| s.uid == action[:uid]}.first
 
               displacement = CGPointMake(action[:effect_param][:x], action[:effect_param][:y])
-              puts "DisB4 Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
+              #puts "DisB4 Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
               displacement = CGPointApplyAffineTransform(displacement, rotation)
-              displacement = CGPointMake(displacement.x, displacement.y * -1)
-              puts "DisAf Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
+              displacement = CGPointMake(displacement.x, displacement.y)
+              #puts "DisAf Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
               toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
               new_toy = new_toy(toy_in_scene)
 
@@ -276,6 +371,7 @@ class PlayScene < SKScene
               @create_actions.each do |create_action|
                 if create_action[:toy] == new_toy.name
                   #trigger event
+                  create_action = create_action.clone
                   create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
                   if @actions_to_be_fired
                     @actions_to_be_fired << create_action
@@ -285,9 +381,18 @@ class PlayScene < SKScene
                   puts "create action "+ create_action.to_s
                 end
               end
-              @toy_hash[action[:effect_param][:id]] << new_toy
-              while @toy_hash[action[:effect_param][:id]].length > MAX_CREATES
-                to_remove = @toy_hash[action[:effect_param][:id]].shift
+              @toy_hash[id] << new_toy
+              @toys_count[id] = 0 unless @toys_count[id]
+
+              @toy_hash[id].delete_if do |check_toy|
+                bool = check_toy.userData[:uniqueID] == -1
+                puts "UniqueID: " + check_toy.userData[:uniqueID].to_s
+                puts "Is dead?: " + bool.to_s
+                bool
+              end
+
+              while @toy_hash[id].length - @toys_count[id] > MAX_CREATES
+                to_remove = @toy_hash[id].delete_at(@toys_count[id])
                 fadeOut = SKAction.fadeOutWithDuration(0.7)
                 remove = SKAction.removeFromParent()
                 sequence = SKAction.sequence([fadeOut, remove])
@@ -300,6 +405,7 @@ class PlayScene < SKScene
             toy.physicsBody.send(effect, param)
           end
         end
+        puts "Deleted: " + delete.to_s
         delete
       end
     end
@@ -307,7 +413,7 @@ class PlayScene < SKScene
     if @actions_to_be_fired
       @actions_to_fire += @actions_to_be_fired
     end
-
+    @actions_to_be_fired = []
   end
 
   def scale_force_mass(param, mass)
@@ -441,7 +547,7 @@ class PlayScene < SKScene
     @edges.each do |edge|
       case edge
         when CirclePart
-          puts "PlayScene - don't add circles yet"
+          puts "PlayScene"
           body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
           body.dynamic = false
           body.contactTestBitMask = 1
@@ -521,6 +627,8 @@ class PlayScene < SKScene
       id = toy_in_scene.template.identifier
       @toy_hash[id] = [] unless @toy_hash[id]
       @toy_hash[id] << toy # add the toy (can be multiple toys of the same type)
+      @toys_count[id] = 0 unless @toys_count[id]
+      @toys_count[id] += 1
     end
   end
 
@@ -731,5 +839,9 @@ class PlayScene < SKScene
   def paused= (value)
     @paused = value
   end
+
+  # def delegate= (controler)
+  #   @delegate = controler
+  # end
 
 end

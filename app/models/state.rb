@@ -35,6 +35,54 @@ class State
     #save
   end
 
+  def load_scene_actions(pos= @scenes[@currentscene])
+    if pos.is_a? SceneTemplate
+      scene = pos
+    else
+      scene = @scenes[pos]
+    end
+    actions = get_actions_from_toys(scene.toys)
+    scene.add_actions(actions)
+  end
+
+  def get_actions_from_toys(toys)
+    actions = []
+    checked = []
+    toys.each do |toy|
+      actions << return_toy_actions(toy, checked)
+    end
+    actions.flatten!
+    actions
+  end
+
+  def return_toy_actions(in_toy, completed=[])
+    if in_toy.is_a? ToyInScene
+      toy = in_toy.template
+    else
+      toy = in_toy
+    end
+    if completed.include?(toy.identifier)
+      return []
+    else
+      completed << toy.identifier
+    end
+    actions = toy.actions.clone
+    toy.actions.each do |action|
+      if action[:effect_type] == :create_new_toy
+        create_toy = (@toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first
+        #puts "Found Created Toy"
+        create_actions = return_toy_actions(create_toy, completed)
+        create_actions.each do |creaction|
+          if !actions.include?(creaction)
+               actions << creaction
+          end
+        end
+      end
+    end
+    actions.flatten!
+    actions
+  end
+
   # Adds a scene and saves the updated state.
   def add_scene(scene)
     replaced = nil
@@ -55,12 +103,17 @@ class State
     #save
   end
 
+  def is_saving
+    return (not @thread.nil?)
+  end
+
   def save
     if @thread.nil?
       @thread = Thread.new {
       paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
       documents_path = paths.objectAtIndex(0) # Get the docs directory
-      file_path = documents_path.stringByAppendingPathComponent('state') # Add the file name
+      file_name = 'temp' + Time.now.to_s
+      file_path = documents_path.stringByAppendingPathComponent(file_name) # Add the file name
       puts "Writing image to #{file_path}"
       writeStream = NSOutputStream.outputStreamToFileAtPath(file_path, append: false)
       if writeStream
@@ -70,6 +123,8 @@ class State
         puts "saved #{bytes} bytes"
         writeStream.close
       end
+      state_file_path = documents_path.stringByAppendingPathComponent('state')
+      File.rename(file_path, state_file_path)
       @thread = nil
       }
     end
@@ -77,6 +132,9 @@ class State
   end
 
   def load
+    if not @thread.nil?
+      puts "Saving before loading?"
+    end
     @thread = "lock"
     paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
     documents_path = paths.objectAtIndex(0) # Get the docs directory
@@ -90,6 +148,12 @@ class State
       #puts "error value (not necessarily an error) #{error[0].localizedDescription}"
       readStream.close
       convert_from_json_compatible(json_state) if json_state
+    end
+    files = Dir.entries(documents_path)
+    files.each do |file_name|
+      if not file_name.match('temp').nil?
+        File.delete(documents_path.stringByAppendingPathComponent(file_name))
+      end
     end
     @thread = nil
   end
@@ -121,12 +185,12 @@ class State
     scenes = []
     if json_scenes
       json_scenes.each do |json_scene|
-        puts 'processing scene'
+        #puts 'processing scene'
         scenes << jsonToScene(json_scene)
       end
     end
     @scenes = scenes
-    @currentscene = scenes.length - 1
+    @currentscene = 0 #scenes.length - 1
   end
 
   def jsonToPart(json_part)
@@ -229,7 +293,8 @@ class State
     end
 
     unless toys.empty? and edges.empty?
-      scene = SceneTemplate.new(toys, edges, [], id, CGRectMake(0,0,0,0))
+      actions = [] #get_actions_from_toys(toys)
+      scene = SceneTemplate.new(toys, edges, actions, id, CGRectMake(0,0,0,0))
       scene
     end
   end

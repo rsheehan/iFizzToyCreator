@@ -8,10 +8,13 @@ class SceneCreatorView < CreatorView
 # @truly_selected is a stroke/toy which is currently being touched by the user
 # @selected is a stroke/toy which was touched and is now hilighted
   attr_writer :selected, :secondary_selected, :show_action_controller
-  attr_reader :actions
+  attr_reader :actions, :delegate
   attr_accessor :alpha_view
 
   DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
+  THRESHOLD = 50
+  NUM_SEGMENTS = 10
+  MAX_DIAGONAL_DRAG = 660
 
   # MODES for interaction  :scene, :toys_only, :force, :none
 
@@ -52,9 +55,15 @@ class SceneCreatorView < CreatorView
         end
         #@truly_selected = @selected = nil
         @delegate.selected_toy = @selected
+        # if @delegate.is_a?(ActionAdderViewController)
+        #   @delegate.start_action_flow
+        # end
         setNeedsDisplay
       when :toy_selected
         @delegate.selected_toy = @selected
+        if @delegate.is_a?(ActionAdderViewController)
+          @delegate.start_action_flow
+        end
       # @truly_selected has been set in ActionAdderViewController
       when :collision
         @current_tool = :grab
@@ -84,6 +93,7 @@ class SceneCreatorView < CreatorView
   def add_action(action)
     if !@actions.include?(action)
       @actions << action
+      @actions.flatten!
     end
   end
 
@@ -178,15 +188,15 @@ class SceneCreatorView < CreatorView
     setNeedsDisplay
   end
 
-  # A touch in show actions mode
-  def touch_begin_show_actions
-    # Check to see if the touch is near a toy
-    @truly_selected = close_toy(@current_point)
-
-    if @truly_selected
-      @show_action_controller.show_action_list(@truly_selected)
-    end
-  end
+  # # A touch in show actions mode
+  # def touch_begin_show_actions
+  #   # Check to see if the touch is near a toy
+  #   @truly_selected = close_toy(@current_point)
+  #
+  #   if @truly_selected
+  #     @show_action_controller.show_action_list(@truly_selected)
+  #   end
+  # end
 
   # A touch in scene mode
   def touch_begin_scene
@@ -202,11 +212,14 @@ class SceneCreatorView < CreatorView
     end
   end
 
-  # A touch in toys only mode
+  # A touch in toys only mode - (used for action adder)
   def touch_begin_toys_only
     @truly_selected = close_toy(@current_point)
     if @truly_selected
       @selected = @truly_selected
+      if @delegate.is_a?(ActionAdderViewController)
+        #@delegate.start_action_flow
+      end
       self.mode = :toy_selected
     else
       self.mode = :toys_only
@@ -249,6 +262,10 @@ class SceneCreatorView < CreatorView
       when :grab
         case @mode
           when :toys_only, :scene, :toy_selected
+            if @delegate.is_a?(ActionAdderViewController)
+              @drag = true
+              @delegate.close_popover
+            end
             touch_move_scene(point)
           else
             @current_point = point
@@ -290,6 +307,8 @@ class SceneCreatorView < CreatorView
   end
 
   def touchesEnded(touches, withEvent: event)
+    touch = touches.anyObject
+    point = touch.locationInView(self)
     return unless @valid_start_location
     case @current_tool
       when :squiggle, :line
@@ -299,7 +318,7 @@ class SceneCreatorView < CreatorView
       when :grab
         case @mode
           when :toys_only, :scene
-            touch_end_scene
+            touch_end_scene(point)
           when :force
             touch_end_force
           when :rotation
@@ -309,6 +328,11 @@ class SceneCreatorView < CreatorView
           when :collision
             touch_end_collision
           when :create_new_toy
+            @drag = false
+          when :toy_selected
+            if @delegate.is_a?(ActionAdderViewController) and not @drag and @selected.close_enough(point)
+              @delegate.reopen_action_flow
+            end
             @drag = false
         end
       when :circle
@@ -322,12 +346,17 @@ class SceneCreatorView < CreatorView
   end
 
   # Called when the touch ends for a scene.
-  def touch_end_scene
+  def touch_end_scene(point)
     if @truly_selected
       change_position_of(@truly_selected, to: @truly_selected.position)
       if @truly_selected.is_a?(ToyInScene)
         @toys_in_scene.delete(@truly_selected)
         @toys_in_scene << @truly_selected
+        if @delegate.is_a?(ActionAdderViewController)
+          if @truly_selected.close_enough(point)
+            @delegate.reopen_action_flow
+          end
+        end
       else
         @strokes.delete(@truly_selected)
         @strokes << @truly_selected
@@ -359,21 +388,20 @@ class SceneCreatorView < CreatorView
     vector = @current_point - @selected.position
     radians = (Math::PI - (Math.atan2(vector.y,vector.x)*-1))
 
+    radians = round_radians(radians)
+
     if radians > Math::PI
       radians = (Math::PI*2 - radians)
     else
       radians *= -1
     end
-
-    magnitude = radians
-
-    @delegate.rotation = magnitude
+    
+    @delegate.rotation = radians
     @delegate.close_modal_view
   end
 
   # [ID, Displacement.x, displacement.y, zoom, angle]
   def end_create_toy
-    @delegate.close_modal_view
     results = {}
     results[:id] = @selected.template.identifier
     disp = @secondary_selected.position - @selected.position
@@ -385,6 +413,7 @@ class SceneCreatorView < CreatorView
     @secondary_selected = nil
     @delegate.selected_toy = @selected
     @delegate.create_new_toy = results
+    @delegate.close_modal_view
   end
 
   # Called when the touch ends for a collision toy selection.
@@ -483,7 +512,8 @@ class SceneCreatorView < CreatorView
 
     clockwise = true
 
-    puts "Degrees: " + (radians*180/Math::PI).to_s
+    #puts "Degrees: " + (radians*180/Math::PI).to_s
+    radians = round_radians(radians)
 
     CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
     if(radians > 0 and radians < Math::PI)
@@ -576,10 +606,13 @@ class SceneCreatorView < CreatorView
     case @mode
       when :force
         if @current_point && @selected
+          @current_point = round_coordinates(@current_point, @selected.position)
+          @current_point = snap_to_45(@current_point, @selected.position)
           draw_force_arrow(context, @selected.position, @current_point)
         end
       when :explosion
         if @current_point && @selected
+          @current_point = round_coordinates(@current_point, @selected.position)
           #draw_force_arrow(context, @selected.position, @current_point)
           length = Math.hypot(@selected.position.x - @current_point.x, @selected.position.y - @current_point.y)
           draw_force_circle(context, @selected.position, length)
@@ -596,6 +629,60 @@ class SceneCreatorView < CreatorView
           @selected.position = @current_point
         end
     end
+  end
+
+  def snap_to_45(point, selected)
+    delta = point - selected
+    magnitude = Math.hypot(*delta)
+    angle = Math.atan2(delta.y, delta.x)
+    angle /= (Math::PI/4)
+    angle = angle.round(0)
+    angle *= (Math::PI/4)
+    x = magnitude * Math.cos(angle)
+    y = magnitude * Math.sin(angle)
+    new_point = CGPointMake(x, y)
+    new_point = new_point + selected
+    change_mag = Math.hypot(*(new_point-point))
+    if change_mag > THRESHOLD
+      return point
+    end
+    new_point
+  end
+
+  def round_coordinates(point, selected)
+    displacement = point - selected
+    length =  Math.hypot(*displacement)
+    angle = Math.atan2(displacement.y, displacement.x)
+    puts "Length: " + length.to_s
+
+    length = (length/(MAX_DIAGONAL_DRAG/NUM_SEGMENTS)).round(0) * (MAX_DIAGONAL_DRAG/NUM_SEGMENTS)
+    if length == 0
+      length = (MAX_DIAGONAL_DRAG/NUM_SEGMENTS)
+    end
+
+    x = length * Math.cos(angle)
+    y = length * Math.sin(angle)
+
+    rounded_displacement = CGPointMake(x, y)
+    rounded_point = rounded_displacement + selected
+    rounded_point
+  end
+
+  def round_radians(num)
+    new_num = (num/(Math::PI/NUM_SEGMENTS)).round(0)*(Math::PI/NUM_SEGMENTS)
+    diff = (new_num - Math::PI).abs
+    if diff < 0.0001 and num > Math::PI
+      new_num = Math::PI + Math::PI/180
+    elsif new_num == 0
+      if num < 1
+        new_num = (Math::PI/NUM_SEGMENTS)
+      else
+        new_num = Math::PI*2 - (Math::PI/NUM_SEGMENTS)
+      end
+    end
+    #puts "PIE: " + Math::PI.to_s
+    puts "Radians rounded: " + new_num.to_s
+    new_num
   end
 
   def clear
