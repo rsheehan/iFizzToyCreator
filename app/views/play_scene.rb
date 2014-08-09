@@ -103,73 +103,96 @@ class PlayScene < SKScene
           if toy.userData[:front] and toy.physicsBody != nil
 
             case toy.userData[:front]
+
               when Constants::Front::Right
-
-                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dx > 0 #unflip if going in front direction
-                  #remove all toy wheels and joints from scene
-                  toy.userData[:flippedWheels].each do |wheel|
-                    wheel.runAction(SKAction.removeFromParent())
-                  end
-                  toy.userData[:flippedJoints].each do |joint|
-                    physicsWorld.removeJoint(joint)
-                  end
-                  toy.userData[:flippedJoints] = []
-
-                  toy.physicsBody.velocity = toy.userData[:flipped_toy].physicsBody.velocity
-                  toy.position = toy.userData[:flipped_toy].position
-                  toy.userData[:flipped_toy].removeFromParent
-                  addChild(toy)
-                  #add wheels and joints
-                  toy.userData[:wheels].each do |wheel|
-                    wheel.position = CGPointMake(toy.position.x+wheel.userData[:xPos],toy.position.y+wheel.userData[:yPos])
-                    addChild(wheel)
-                    axle = SKPhysicsJointPin.jointWithBodyA(toy.physicsBody, bodyB: wheel.physicsBody, anchor: wheel.position)
-                    physicsWorld.addJoint(axle)
-                    toy.userData[:joints] << axle
-                  end
-                  toy.userData[:flipped] = false
-
-                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dx < 0 #flip toy if it is traveling away from front and not already flipped
-                  #remove all toy wheels and joints from scene
-                  toy.userData[:wheels].each do |wheel|
-                    wheel.runAction(SKAction.removeFromParent())
-                  end
-                  toy.userData[:joints].each do |joint|
-                    physicsWorld.removeJoint(joint)
-                  end
-                  toy.userData[:joints] = []
-
-                  #toy.xScale = -1 #runAction(SKAction.scaleXTo(-1, duration: 0))
-                  #toy.physicsBody = toy.userData[:flippedBody]
-                  new_toy = toy.userData[:flipped_toy]
-                  new_toy.physicsBody.velocity = toy.physicsBody.velocity
-                  new_toy.position = toy.position
-                  toy.removeFromParent
-                  addChild(new_toy)
-
-                  #add new wheels and joints
-                  toy.userData[:flippedWheels].each do |wheel|
-                    wheel.position = CGPointMake(toy.position.x+wheel.userData[:xPos],toy.position.y+wheel.userData[:yPos])
-                    addChild(wheel)
-                    axle = SKPhysicsJointPin.jointWithBodyA(new_toy.physicsBody, bodyB: wheel.physicsBody, anchor: wheel.position)
-                    physicsWorld.addJoint(axle)
-                    toy.userData[:flippedJoints] << axle
-                  end
-
-                  toy.userData[:flipped] = true
-
+                #unflip if going in front direction
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dx > 0.1
+                  unflipToy(toy)
+                #flip toy if it is traveling away from front and not already flipped
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dx < 0.1
+                  flipToy(toy)
                 end
               when Constants::Front::Left
-
+                #unflip if going in front direction
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dx < 0.1
+                  unflipToy(toy)
+                  #flip toy if it is traveling away from front and not already flipped
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dx > 0.1
+                  flipToy(toy)
+                end
               when Constants::Front::Up
-
+                #unflip if going in front direction
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy > 0.1
+                  unflipToy(toy)
+                  #flip toy if it is traveling away from front and not already flipped
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy < 0.1
+                  flipToy(toy)
+                end
               when Constants::Front::Bottom
-
+                #unflip if going in front direction
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy < 0.1
+                  unflipToy(toy)
+                  #flip toy if it is traveling away from front and not already flipped
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy > 0.1
+                  flipToy(toy)
+                end
             end
           end
         end
       end
     end
+  end
+
+  def unflipToy(toy)
+    #remove all toy wheels and joints from scene
+    toy.userData[:flippedWheels].each do |wheel|
+      wheel.runAction(SKAction.removeFromParent())
+    end
+    toy.userData[:flippedJoints].each do |joint|
+      physicsWorld.removeJoint(joint)
+    end
+    toy.userData[:flippedJoints] = []
+
+    toy.physicsBody.velocity = toy.userData[:flipped_toy].physicsBody.velocity
+    toy.position = toy.userData[:flipped_toy].position
+    toy.userData[:flipped_toy].removeFromParent
+    addChild(toy)
+    #add wheels and joints
+    toy.userData[:wheels].each do |wheel|
+      wheel.position = CGPointMake(toy.position.x+wheel.userData[:xPos],toy.position.y+wheel.userData[:yPos])
+      addChild(wheel)
+      axle = SKPhysicsJointPin.jointWithBodyA(toy.physicsBody, bodyB: wheel.physicsBody, anchor: wheel.position)
+      physicsWorld.addJoint(axle)
+      toy.userData[:joints] << axle
+    end
+    toy.userData[:flipped] = false
+  end
+
+  def flipToy(toy)
+    #remove all toy wheels and joints from scene
+    toy.userData[:wheels].each do |wheel|
+      wheel.runAction(SKAction.removeFromParent())
+    end
+    toy.userData[:joints].each do |joint|
+      physicsWorld.removeJoint(joint)
+    end
+    toy.userData[:joints] = []
+
+    new_toy = toy.userData[:flipped_toy]
+    new_toy.physicsBody.velocity = toy.physicsBody.velocity
+    new_toy.position = toy.position
+    toy.removeFromParent
+    addChild(new_toy)
+
+    #add new wheels and joints
+    toy.userData[:flippedWheels].each do |wheel|
+      wheel.position = CGPointMake(toy.position.x+wheel.userData[:xPos],toy.position.y+wheel.userData[:yPos])
+      addChild(wheel)
+      axle = SKPhysicsJointPin.jointWithBodyA(new_toy.physicsBody, bodyB: wheel.physicsBody, anchor: wheel.position)
+      physicsWorld.addJoint(axle)
+      toy.userData[:flippedJoints] << axle
+    end
+    toy.userData[:flipped] = true
   end
 
 # This is called once per frame.
@@ -682,7 +705,6 @@ class PlayScene < SKScene
       #give the wheel the same name and id as the toy
       wheel_node.name = toy_in_scene.template.identifier
       wheel_node.userData = toy.userData.clone
-      puts "init normal wheel - "+( wheel.position.x - toy.position.x).to_s+', '+( wheel.position.y - toy.position.y).to_s
       wheel_node.userData[:xPos] = (wheel.position.x - toy.position.x)
       wheel_node.userData[:yPos] = (wheel.position.y - toy.position.y)
       # then the body
@@ -702,7 +724,11 @@ class PlayScene < SKScene
     #add flipped physicsbody if traveling forward
     if toy_in_scene.template.always_travels_forward
       image = get_image(toy_in_scene)
-      flipped_image = flipImageHorizontally(image)
+      if toy_in_scene.template.front == Constants::Front::Left or toy_in_scene.template.front == Constants::Front::Right
+        flipped_image = flipImage(image,true)
+      else
+        flipped_image = flipImage(image,false)
+      end
       flipped_toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(flipped_image))
       flipped_toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
       flipped_toy.userData = {score: 0, uniqueID: toy_in_scene.uid} #add unique id to allow for single collision
@@ -713,7 +739,6 @@ class PlayScene < SKScene
 
       if physics_points.length == 0
         flipped_toy.physicsBody =  SKPhysicsBody.bodyWithCircleOfRadius(1)
-        toy.userData[:flippedBody] = SKPhysicsBody.bodyWithCircleOfRadius(1)
       else
         path = CGPathCreateMutable()
         CGPathMoveToPoint(path, nil, *physics_points[0])
@@ -727,16 +752,10 @@ class PlayScene < SKScene
         pnter[0] = transform
         flipped_Path = CGPathCreateCopyByTransformingPath(path, pnter)
 
-        toy.userData[:flippedBody] = SKPhysicsBody.bodyWithPolygonFromPath(flipped_Path)
-        toy.userData[:flippedBody].contactTestBitMask = 1
-
         flipped_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(flipped_Path)
         flipped_toy.physicsBody.contactTestBitMask = 1
 
         #properties
-        toy.userData[:flippedBody].allowsRotation = toy_in_scene.template.can_rotate
-        toy.userData[:flippedBody].dynamic = !(toy_in_scene.template.stuck)
-
         flipped_toy.physicsBody.allowsRotation = toy_in_scene.template.can_rotate
         flipped_toy.physicsBody.dynamic = !(toy_in_scene.template.stuck)
 
@@ -753,7 +772,6 @@ class PlayScene < SKScene
           wheel_node.name = toy_in_scene.template.identifier
           wheel_node.userData = toy.userData.clone
 
-          puts "init flipped wheel - "+( wheel.position.x - flipped_toy.position.x).to_s+', '+( wheel.position.y - flipped_toy.position.y).to_s
           wheel_node.userData[:xPos] = ( wheel.position.x - flipped_toy.position.x)
           wheel_node.userData[:yPos] = ( wheel.position.y - flipped_toy.position.y)
           # then the body
@@ -784,12 +802,17 @@ class PlayScene < SKScene
     toy
   end
 
-  def flipImageHorizontally(image)
+  def flipImage(image, horizontal)
     UIGraphicsBeginImageContext(image.size)
     context = UIGraphicsGetCurrentContext()
 
-    CGContextTranslateCTM(context, image.size.width, 0.0)
-    CGContextScaleCTM(context, -1.0, 1.0)
+    if horizontal
+      CGContextTranslateCTM(context, image.size.width, 0.0)
+      CGContextScaleCTM(context, -1.0, 1.0)
+    else
+      CGContextTranslateCTM(context, 0.0, image.size.height)
+      CGContextScaleCTM(context, 1.0, -1.0)
+    end
 
     image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
 
