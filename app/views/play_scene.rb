@@ -70,6 +70,10 @@ class PlayScene < SKScene
     end
   end
 
+  def get_toy_in_scene(node)
+    return @toys.select{|toy| toy.uid == node.userData[:uniqueID] and toy.template.identifier == node.name}.first
+  end
+
   def add_toy_touch_action(action)
     if @toy_touch_actions
       @toy_touch_actions << action
@@ -100,7 +104,8 @@ class PlayScene < SKScene
     @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
       toyArray.each do |toy|
         if toy.userData != nil and toy.userData[:uniqueID] != -1
-          if toy.userData[:front] and toy.physicsBody != nil
+          if toy.userData[:front] and toy.physicsBody != nil and not toy.physicsBody.isResting
+            #puts "Velocity = "+toy.physicsBody.velocity.dx.to_s+", "+toy.physicsBody.velocity.dy.to_s
 
             case toy.userData[:front]
 
@@ -122,18 +127,18 @@ class PlayScene < SKScene
                 end
               when Constants::Front::Up
                 #unflip if going in front direction
-                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy > 0.1
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy > 1
                   unflipToy(toy)
                   #flip toy if it is traveling away from front and not already flipped
-                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy < 0.1
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy < 1
                   flipToy(toy)
                 end
               when Constants::Front::Bottom
                 #unflip if going in front direction
-                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy < 0.1
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy < 1
                   unflipToy(toy)
                   #flip toy if it is traveling away from front and not already flipped
-                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy > 0.1
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy > 1
                   flipToy(toy)
                 end
             end
@@ -155,11 +160,21 @@ class PlayScene < SKScene
 
     toy.physicsBody.velocity = toy.userData[:flipped_toy].physicsBody.velocity
     toy.position = toy.userData[:flipped_toy].position
+    if toy.userData[:flipped_toy].physicsBody.allowsRotation
+      toy.zRotation = toy.userData[:flipped_toy].zRotation
+    end
     toy.userData[:flipped_toy].removeFromParent
     addChild(toy)
     #add wheels and joints
     toy.userData[:wheels].each do |wheel|
       wheel.position = CGPointMake(toy.position.x+wheel.userData[:xPos],toy.position.y+wheel.userData[:yPos])
+      if toy.userData[:flipped_toy].physicsBody.allowsRotation
+        translateTransform = CGAffineTransformMakeTranslation(toy.position.x, toy.position.y)
+        toyinscene = get_toy_in_scene(toy)
+        rotationTransform = CGAffineTransformMakeRotation(toy.userData[:flipped_toy].zRotation + (toyinscene.angle))
+        customRotation = CGAffineTransformConcat(CGAffineTransformConcat( CGAffineTransformInvert(translateTransform), rotationTransform), translateTransform)
+        wheel.position = CGPointApplyAffineTransform(wheel.position, customRotation)
+      end
       addChild(wheel)
       axle = SKPhysicsJointPin.jointWithBodyA(toy.physicsBody, bodyB: wheel.physicsBody, anchor: wheel.position)
       physicsWorld.addJoint(axle)
@@ -181,12 +196,22 @@ class PlayScene < SKScene
     new_toy = toy.userData[:flipped_toy]
     new_toy.physicsBody.velocity = toy.physicsBody.velocity
     new_toy.position = toy.position
+    if toy.physicsBody.allowsRotation
+      new_toy.zRotation = toy.zRotation
+    end
     toy.removeFromParent
     addChild(new_toy)
 
     #add new wheels and joints
     toy.userData[:flippedWheels].each do |wheel|
       wheel.position = CGPointMake(toy.position.x+wheel.userData[:xPos],toy.position.y+wheel.userData[:yPos])
+      if toy.physicsBody.allowsRotation
+        translateTransform = CGAffineTransformMakeTranslation(toy.position.x, toy.position.y)
+        toyinscene = get_toy_in_scene(toy)
+        rotationTransform = CGAffineTransformMakeRotation(toy.zRotation + toyinscene.angle)
+        customRotation = CGAffineTransformConcat(CGAffineTransformConcat( CGAffineTransformInvert(translateTransform), rotationTransform), translateTransform)
+        wheel.position = CGPointApplyAffineTransform(wheel.position, customRotation)
+      end
       addChild(wheel)
       axle = SKPhysicsJointPin.jointWithBodyA(new_toy.physicsBody, bodyB: wheel.physicsBody, anchor: wheel.position)
       physicsWorld.addJoint(axle)
@@ -426,7 +451,8 @@ class PlayScene < SKScene
               end
           end
           if send
-            param = scale_force_mass(param, toy.physicsBody.mass)
+            puts "mass "+toy.userData[:mass].to_s
+            param = scale_force_mass(param, toy.userData[:mass])
             toy.physicsBody.send(effect, param)
           end
         end
@@ -461,7 +487,7 @@ class PlayScene < SKScene
     partsArray = toy_in_scene.template.exploded
     timer = force * TIMER_SCALE
 
-    force = scale_force_mass(force, toy.physicsBody.mass)
+    force = scale_force_mass(force, toy.userData[:mass])
     partsArray.each do |part|
       #position = centre_part(part, toy.position)
       templates << ToyTemplate.new([part], new_name)
@@ -694,6 +720,8 @@ class PlayScene < SKScene
     toy.userData[:wheels] = []
     toy.userData[:joints] = []
     toy.userData[:flipped] = false
+    #store mass in userdata as it doesn't change to get around race condition with flipping toy
+    toy.userData[:mass] = toy.physicsBody.mass
 
     # now any wheels
     toy_in_scene.add_wheels_in_scene(self).each do |wheel|
@@ -718,8 +746,6 @@ class PlayScene < SKScene
       toy.userData[:wheels] << wheel_node
       toy.userData[:joints] << axle
     end
-
-    toy.userData[:normalBody] = toy.physicsBody
 
     #add flipped physicsbody if traveling forward
     if toy_in_scene.template.always_travels_forward
