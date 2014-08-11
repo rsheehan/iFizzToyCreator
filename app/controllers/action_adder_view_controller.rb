@@ -16,7 +16,7 @@ class ActionAdderViewController < UIViewController
   BOTTOM = 552
   LEFT = 10
 
-  attr_writer :state, :scene_creator_view_controller
+  attr_writer :state, :scene_creator_view_controller, :back_from_modal_view
 
   # TODO: undo/redo for placing, moving, resizing toys
   # Make sure that a list of added toys is maintained. These are removed when
@@ -64,16 +64,8 @@ class ActionAdderViewController < UIViewController
     hide_sides
 
     #add popover to prompt to select a toy
-    if not @selected_toy.nil?
+    if not @selected_toy.nil? and not @back_from_modal_view
       start_action_flow
-    else
-      @main_view.selected = nil
-      content = TextPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
-      content.setTitle('Tap a toy to begin')
-      content.delegate = self
-      @popover = UIPopoverController.alloc.initWithContentViewController(content)
-      @popover.delegate = self
-      @popover.presentPopoverFromRect(CGRectMake(@main_view.center.x-5,@main_view.frame.origin.y,10,1) , inView: self.view, permittedArrowDirections: UIPopoverArrowDirectionUp, animated:true)
     end
 
     #load all button actions to button images?

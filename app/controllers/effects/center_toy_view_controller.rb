@@ -61,7 +61,9 @@ class CenterToyViewController < UIViewController
 
   def action_flow_back
     #cancel adding effect
+    @main_view.delegate.back_from_modal_view = true
     @main_view.delegate.close_modal_view
     @main_view.delegate.reopen_action_flow
+    @main_view.delegate.back_from_modal_view = false
   end
 end
