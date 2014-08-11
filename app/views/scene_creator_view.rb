@@ -7,6 +7,9 @@ class SceneCreatorView < CreatorView
 
 # @truly_selected is a stroke/toy which is currently being touched by the user
 # @selected is a stroke/toy which was touched and is now hilighted
+# @secondary_selected is used for create_new_toy file positioning the toy
+# @alpha_view is used to set the alpha for everything but @selected and @secondary_selected
+
   attr_writer :selected, :secondary_selected, :show_action_controller
   attr_reader :actions, :delegate
   attr_accessor :alpha_view
@@ -16,7 +19,8 @@ class SceneCreatorView < CreatorView
   NUM_SEGMENTS = 10
   MAX_DIAGONAL_DRAG = 660
 
-  # MODES for interaction  :scene, :toys_only, :force, :none
+  # MODES for standard views :scene, (:toys_only, :toy_selected {Only ACTION ADDER modes})
+  # MODES for action/effects :force, :explosion, :rotation, :create_new_toy
 
   def initWithFrame(frame)
     super
@@ -61,17 +65,9 @@ class SceneCreatorView < CreatorView
         setNeedsDisplay
       when :toy_selected
         @delegate.selected_toy = @selected
-        if @delegate.is_a?(ActionAdderViewController)
+        if @mode.nil?
           @delegate.start_action_flow
         end
-      # @truly_selected has been set in ActionAdderViewController
-      when :collision
-        @current_tool = :grab
-        @delegate.selected_toy = @selected
-        setNeedsDisplay
-      when :show_actions
-        @selected = nil
-        setNeedsDisplay
       else
         @current_point = nil
     end
@@ -79,12 +75,7 @@ class SceneCreatorView < CreatorView
     @mode = mode
   end
 
-  ## So we can keep convenient track of the label at the top of the view
-  #def addSubview(label)
-  #  super
-  #  @label = label
-  #end
-
+  # Changes name for label located at top of the screen
   def change_label_text_to(name)
     @label.text = name
   end
@@ -123,6 +114,7 @@ class SceneCreatorView < CreatorView
     temp
   end
 
+  # Inserts toys to scene from scene loading or drop from toy box
   def add_toy(toy)
     undoManager.registerUndoWithTarget(self, selector: 'remove_toy:', object: toy)
     @toys_in_scene << toy
@@ -132,6 +124,7 @@ class SceneCreatorView < CreatorView
     setNeedsDisplay
   end
 
+  # Removes toys from scene
   def remove_toy(toy)
     undoManager.registerUndoWithTarget(self, selector: 'add_toy:', object: toy)
     @toys_in_scene.delete(toy)
@@ -161,24 +154,29 @@ class SceneCreatorView < CreatorView
     end
   end
 
+  # touches, NSSet of UITouch Events
+  # Called when clicked on view
   def touchesBegan(touches, withEvent: event)
+
+    #Get Touch coordinates
     touch = touches.anyObject
     point = touch.locationInView(self)
+
+    #Check for Validity
     return unless valid_touch_location?(point)
+
+    # Act Dependent on mode
     @current_point = point
     case @current_tool
       when :squiggle, :line, :circle
         @points = [@current_point]
+
       when :grab
         case @mode
           when :toys_only, :toy_selected
             touch_begin_toys_only
           when :scene
             touch_begin_scene
-          when :collision
-            touch_begin_collision
-          when :show_actions
-            touch_begin_show_actions
           when :create_new_toy
             if @selected.close_enough(@current_point)
               @drag = true
@@ -188,20 +186,11 @@ class SceneCreatorView < CreatorView
     setNeedsDisplay
   end
 
-  # # A touch in show actions mode
-  # def touch_begin_show_actions
-  #   # Check to see if the touch is near a toy
-  #   @truly_selected = close_toy(@current_point)
-  #
-  #   if @truly_selected
-  #     @show_action_controller.show_action_list(@truly_selected)
-  #   end
-  # end
-
   # A touch in scene mode
   def touch_begin_scene
     # Check to see if the touch is near a toy
     @truly_selected = close_toy(@current_point)
+
     # Check to see if the touch is near a LineStroke
     unless @truly_selected
       @truly_selected = @strokes.reverse.detect { |stroke| stroke.close_to?(@current_point) }
@@ -217,18 +206,10 @@ class SceneCreatorView < CreatorView
     @truly_selected = close_toy(@current_point)
     if @truly_selected
       @selected = @truly_selected
-      if @delegate.is_a?(ActionAdderViewController)
-        #@delegate.start_action_flow
-      end
       self.mode = :toy_selected
     else
       self.mode = :toys_only
     end
-  end
-
-  # A touch in collision mode
-  def touch_begin_collision
-    @secondary_selected = close_toy(@current_point)
   end
 
   # So we can start lines from off the edge of the view.
@@ -247,6 +228,7 @@ class SceneCreatorView < CreatorView
     end
   end
 
+  # Touch point moved on view without releasing
   def touchesMoved(touches, withEvent: event)
     return unless @valid_start_location
     touch = touches.anyObject
@@ -306,19 +288,31 @@ class SceneCreatorView < CreatorView
     end
   end
 
+  # Touch lifted off view
   def touchesEnded(touches, withEvent: event)
+    # Get point on view
     touch = touches.anyObject
     point = touch.locationInView(self)
+
+    #Ensures valid location
     return unless @valid_start_location
+
+
     case @current_tool
+      # Adds line to background
       when :squiggle, :line
         add_stroke(LineStroke.new(@points, @current_colour, @line_size))
         @points = nil
         setNeedsDisplay
+
       when :grab
         case @mode
           when :toys_only, :scene
-            touch_end_scene(point)
+            touch_end_scene
+            if @delegate.is_a?(ActionAdderViewController) and not @drag and @selected.close_enough(point)
+              @delegate.reopen_action_flow
+            end
+            @drag = false
           when :force
             touch_end_force
           when :rotation
@@ -330,11 +324,13 @@ class SceneCreatorView < CreatorView
           when :create_new_toy
             @drag = false
           when :toy_selected
+            #Opens popover if selected has not been dragged
             if @delegate.is_a?(ActionAdderViewController) and not @drag and @selected.close_enough(point)
               @delegate.reopen_action_flow
             end
             @drag = false
         end
+      # Adds circle to background
       when :circle
         centre = @points[0]
         edge = @points.size < 2 ? centre : @points[1]
@@ -346,17 +342,12 @@ class SceneCreatorView < CreatorView
   end
 
   # Called when the touch ends for a scene.
-  def touch_end_scene(point)
+  def touch_end_scene
     if @truly_selected
       change_position_of(@truly_selected, to: @truly_selected.position)
       if @truly_selected.is_a?(ToyInScene)
         @toys_in_scene.delete(@truly_selected)
         @toys_in_scene << @truly_selected
-        if @delegate.is_a?(ActionAdderViewController)
-          if @truly_selected.close_enough(point)
-            @delegate.reopen_action_flow
-          end
-        end
       else
         @strokes.delete(@truly_selected)
         @strokes << @truly_selected
@@ -377,6 +368,7 @@ class SceneCreatorView < CreatorView
     @delegate.close_modal_view
   end
 
+  # Returns explosion strength to delegate
   def touch_end_explosion
     vector = @current_point - @selected.position
     magnitude = Math.sqrt(vector.x**2 + vector.y**2)
@@ -384,6 +376,7 @@ class SceneCreatorView < CreatorView
     @delegate.close_modal_view
   end
 
+  # Returns Rotation strength to delegate
   def touch_end_rotation
     vector = @current_point - @selected.position
     radians = (Math::PI - (Math.atan2(vector.y,vector.x)*-1))
@@ -401,6 +394,7 @@ class SceneCreatorView < CreatorView
   end
 
   # [ID, Displacement.x, displacement.y, zoom, angle]
+  # When create toy
   def end_create_toy
     results = {}
     results[:id] = @selected.template.identifier
@@ -420,12 +414,11 @@ class SceneCreatorView < CreatorView
   def touch_end_collision
     if @secondary_selected
       @delegate.colliding_toy = @secondary_selected
-      #@delegate.close_modal_view
     end
   end
 
+  # Required
   def touchesCancelled(touches, withEvent: event)
-
   end
 
   # Needed to allow both the pinch and rotate gesture recognizers to both work (individually).
@@ -459,14 +452,14 @@ class SceneCreatorView < CreatorView
     setNeedsDisplay
   end
 
+  # Draws arrow for force size of "Force" effect
   def draw_force_arrow(context, start, finish)
-    #CGContextSetLineWidth(context, 10)
     arrow_size = 50
 
+    # Get vector
     dx = finish.x - start.x
-    #puts "FinY: " + finish.y.to_s + ", StarY: " + start.y.to_s + ", DiffY: " + (finish.y - start.y).to_s
     dy = finish.y - start.y
-    #puts "DY: " + dy.to_s
+
     combined = dx.abs + dy.abs
     length = Math.hypot(dx, dy)
     if length < arrow_size
@@ -474,6 +467,8 @@ class SceneCreatorView < CreatorView
       dx = length * (dx/combined)
       dy = length * (dy/combined)
     end
+
+    # Creates points for arrow
     arrow_points = []
     arrow_points << CGPointMake(0, -5) << CGPointMake(length - arrow_size, -5) << CGPointMake(length - arrow_size, -40)
     arrow_points << CGPointMake(length, 0)
@@ -495,6 +490,7 @@ class SceneCreatorView < CreatorView
     CGContextDrawPath(context, KCGPathFill)
   end
 
+  # Circle used for explosion effect
   def draw_force_circle(context, center, radius)
     rectangle = CGRectMake(center.x - radius, center.y - radius, radius*2, radius*2)
     CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
@@ -503,16 +499,19 @@ class SceneCreatorView < CreatorView
     CGContextStrokePath(context)
   end
 
+  # Rotation arrow used for rotation effect
   def draw_rotate_circle(context, center, point)
     radius = 200
 
+    #get Vector
     dpoint = point - center
 
+    # Find angle
     radians = (Math::PI - (Math.atan2(dpoint.y,dpoint.x)*-1))
 
     clockwise = true
 
-    #puts "Degrees: " + (radians*180/Math::PI).to_s
+    # Round to sections
     radians = round_radians(radians)
 
     CGContextSetStrokeColorWithColor(context,UIColor.redColor.CGColor)
@@ -528,6 +527,7 @@ class SceneCreatorView < CreatorView
     draw_rotate_circle_arrow(context, center, radius, radians-Math::PI, clockwise)
   end
 
+  # Draw end arrow for circle
   def draw_rotate_circle_arrow(context,center, length, angle, clockwise)
 
     arrow_points = []
@@ -555,6 +555,7 @@ class SceneCreatorView < CreatorView
     CGContextDrawPath(context, KCGPathFill)
   end
 
+  # Visual Display of rotation before user interaction
   def draw_static_rotate_circle(context, center)
     radius = 200
     upper_angle = Math::PI + Math::PI/8
@@ -570,46 +571,62 @@ class SceneCreatorView < CreatorView
 
   end
 
+  # Draws non-iOS UI Elements
   def drawRect(rect)
-    #super
     context = UIGraphicsGetCurrentContext()
+
+    # Change Alpha of background if it hasnt been set
     if @alpha_view
-      #puts "Alpha: " + @alpha_view.to_s
       CGContextSetAlpha(context, @alpha_view)
     end
+
     # now draw the added toys
     CGContextBeginTransparencyLayer(context, nil)
     @toys_in_scene.each { |toy| toy.draw(context) if toy != @selected }
+    # Drawing Edges
     @strokes.each { |stroke| stroke.draw(context) if stroke != @selected }
     CGContextEndTransparencyLayer(context)
+
+    # Restores Alpha
     if @alpha_view
       CGContextSetAlpha(context, 1.0)
     end
+
     if @secondary_selected
       CGContextBeginTransparencyLayer(context, nil)
       setup_context(context, true)
       @secondary_selected.draw(context)
       CGContextEndTransparencyLayer(context)
     end
+
+    # Draws what is selected on top
     if @selected
       CGContextBeginTransparencyLayer(context, nil)
       setup_context(context, true)
       @selected.draw(context)
       CGContextEndTransparencyLayer(context)
     end
+
+    # Item currently being drawn
     if @points
       CGContextBeginTransparencyLayer(context, nil)
       setup_context(context)
       draw_partial_thing(context)
       CGContextEndTransparencyLayer(context)
     end
+
+    # If an effect needs a visual representation when applying, perform that here
     case @mode
+
+      # Displays an arrow from selected to touched position
       when :force
         if @current_point && @selected
           @current_point = round_coordinates(@current_point, @selected.position)
           @current_point = snap_to_45(@current_point, @selected.position)
           draw_force_arrow(context, @selected.position, @current_point)
         end
+
+      # Explosion size with radius between selected and finger
       when :explosion
         if @current_point && @selected
           @current_point = round_coordinates(@current_point, @selected.position)
@@ -617,13 +634,15 @@ class SceneCreatorView < CreatorView
           length = Math.hypot(@selected.position.x - @current_point.x, @selected.position.y - @current_point.y)
           draw_force_circle(context, @selected.position, length)
         end
-      when :rotation
 
+      # Rotation starting from left side, top implies clockwise, bottom anti-clockwise
+      when :rotation
         if @current_point && @selected
            draw_rotate_circle(context, @selected.position, @current_point)
         else
           draw_static_rotate_circle(context, @selected.position)
         end
+
       when :create_new_toy
         if @current_point and @drag
           @selected.position = @current_point
@@ -631,8 +650,9 @@ class SceneCreatorView < CreatorView
     end
   end
 
-  def snap_to_45(point, selected)
-    delta = point - selected
+  # If close enough, locks vector to a 45 degree, otherwise leaves it alone
+  def snap_to_45(point, selected_point)
+    delta = point - selected_point
     magnitude = Math.hypot(*delta)
     angle = Math.atan2(delta.y, delta.x)
     angle /= (Math::PI/4)
@@ -649,8 +669,9 @@ class SceneCreatorView < CreatorView
     new_point
   end
 
-  def round_coordinates(point, selected)
-    displacement = point - selected
+  # Rounds the magnitude of the vector to nearest segment
+  def round_coordinates(point, selected_point)
+    displacement = point - selected_point
     length =  Math.hypot(*displacement)
     angle = Math.atan2(displacement.y, displacement.x)
     puts "Length: " + length.to_s
@@ -664,17 +685,19 @@ class SceneCreatorView < CreatorView
     y = length * Math.sin(angle)
 
     rounded_displacement = CGPointMake(x, y)
-    rounded_point = rounded_displacement + selected
+    rounded_point = rounded_displacement + selected_point
     rounded_point
   end
 
-  def round_radians(num)
-    new_num = (num/(Math::PI/NUM_SEGMENTS)).round(0)*(Math::PI/NUM_SEGMENTS)
+  # Rounds radians to nearest Segment
+  def round_radians(rads)
+    new_num = (rads/(Math::PI/NUM_SEGMENTS)).round(0)*(Math::PI/NUM_SEGMENTS)
     diff = (new_num - Math::PI).abs
-    if diff < 0.0001 and num > Math::PI
+    diff_2_pi =(new_num - Math::PI*2).abs
+    if diff < 0.0001 and rads > Math::PI
       new_num = Math::PI + Math::PI/180
-    elsif new_num == 0
-      if num < 1
+    elsif new_num == 0 or diff_2_pi < 0.0001
+      if rads < 1
         new_num = (Math::PI/NUM_SEGMENTS)
       else
         new_num = Math::PI*2 - (Math::PI/NUM_SEGMENTS)
@@ -685,6 +708,7 @@ class SceneCreatorView < CreatorView
     new_num
   end
 
+  # remove everything from screen without saving
   def clear
     undoManager.registerUndoWithTarget(self, selector: 'unclear:', object: [@toys_in_scene, @strokes])
 
@@ -697,6 +721,7 @@ class SceneCreatorView < CreatorView
     setNeedsDisplay
   end
 
+  # Have the ability to undo clear just in case
   def unclear(object)
     toys = object[0]
     toys.each do |toy|

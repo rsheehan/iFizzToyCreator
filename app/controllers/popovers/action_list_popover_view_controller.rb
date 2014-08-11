@@ -57,14 +57,11 @@ class ActionListPopoverViewController < UIViewController
     #reload actions and resize?
     if @state and @selected and @toy_actions
       @toy_actions = @selected.template.actions
-      # @state.scenes[@state.currentscene].actions.each do |action|
-      #   if action[:toy] == @selected.template.identifier
-      #     @toy_actions << action
-      #   end
-      # end
     end
     @table_view.reloadData
     resizeTV
+    @table_view.cellForRowAtIndexPath(NSIndexPath.indexPathForRow(0, inSection:0)).hidden = @stuck_switch.on?
+    @table_view.cellForRowAtIndexPath(NSIndexPath.indexPathForRow(3, inSection:0)).hidden = (not @travel_switch.on?)
   end
 
   def viewWillDisappear(animated)
@@ -136,11 +133,7 @@ class ActionListPopoverViewController < UIViewController
 
   def tableView(tv, numberOfRowsInSection: section)
     if section == 0
-      if @selected.template.always_travels_forward
-        4
-      else
-        3
-      end
+      4
     else
       @toy_actions.length
     end
@@ -148,7 +141,13 @@ class ActionListPopoverViewController < UIViewController
 
   def tableView(tv, heightForRowAtIndexPath: indexPath)
     if indexPath.section == 0
-      40
+      if indexPath.row == 0 and @selected.template.stuck
+        0
+      elsif indexPath.row == 3 and not @selected.template.always_travels_forward
+        0
+      else
+        40
+      end
     else
       90
     end
@@ -202,8 +201,10 @@ class ActionListPopoverViewController < UIViewController
   def tableView(tv, cellForRowAtIndexPath: index_path)
     if index_path.section == 0
       cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
+      puts "Cell: " + cell.to_s
       cell.font = UIFont.systemFontOfSize(16)
-      case index_path.row
+      position = index_path.row
+      case position
         when 0
           cell.text = Language::CAN_ROTATE
           #check toy property and set init val
@@ -503,6 +504,9 @@ class ActionListPopoverViewController < UIViewController
   def stuck_switch_changed
     #set template property
     @selected.template.stuck = @stuck_switch.on?
+    @table_view.beginUpdates
+    @table_view.endUpdates
+    @table_view.cellForRowAtIndexPath(NSIndexPath.indexPathForRow(0, inSection:0)).hidden = @stuck_switch.on?
   end
 
   def rotate_switch_changed
@@ -511,16 +515,9 @@ class ActionListPopoverViewController < UIViewController
 
   def travel_switch_changed
     @selected.template.always_travels_forward = @travel_switch.on?
-    indexPath = NSIndexPath.indexPathForRow(3, inSection:0)
-    if @travel_switch.on?
-      if not @table_view.cellForRowAtIndexPath(indexPath)
-        @table_view.insertRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimationBottom)
-      end
-    else
-      if @table_view.cellForRowAtIndexPath(indexPath)
-      @table_view.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimationBottom)
-      end
-    end
+    @table_view.beginUpdates
+    @table_view.endUpdates
+    @table_view.cellForRowAtIndexPath(NSIndexPath.indexPathForRow(3, inSection:0)).hidden = (not @travel_switch.on?)
   end
 
   def tableView(tv,  editingStyleForRowAtIndexPath: index)

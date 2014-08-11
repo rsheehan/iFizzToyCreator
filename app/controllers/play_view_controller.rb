@@ -6,6 +6,7 @@ class PlayViewController < UIViewController
   BOTTOM = 552
   LEFT = 10
   #RIGHT = 939
+  EMPTY_ICON_INSET = UIScreen.mainScreen.scale != 1.0 ? 20 : 10
 
   attr_writer :state
 
@@ -274,13 +275,22 @@ class PlayViewController < UIViewController
           toy = t
         end
       end
+
       if index < 2 or (index == 2 and actions.size == 3)
-        rect = CGRectMake(0, index*image.size.height/[actions.size,3].min, image.size.width, image.size.height/[actions.size,3].min)
+        rect = CGRectMake(EMPTY_ICON_INSET, EMPTY_ICON_INSET+index*(image.size.height-2*EMPTY_ICON_INSET)/[actions.size,3].min, image.size.width-2*EMPTY_ICON_INSET, (image.size.height-2*EMPTY_ICON_INSET)/[actions.size,3].min)
         aspect = toy.image.size.width / toy.image.size.height
         if (rect.size.width / aspect <= rect.size.height)
+          offset = rect.size.height
           rect.size = CGSizeMake(rect.size.width, rect.size.width/aspect)
+          #make sure image is centered in height
+          offset = (offset - rect.size.width/aspect)/2
+          rect.origin = CGPointMake(rect.origin.x, rect.origin.y+offset)
         else
+          offset = rect.size.width
           rect.size = CGSizeMake(rect.size.height * aspect, rect.size.height)
+          #make sure image is centered in width
+          offset = (offset - rect.size.height*aspect)/2
+          rect.origin = CGPointMake(rect.origin.x+offset, rect.origin.y)
         end
         toy.image.drawInRect(rect)
 

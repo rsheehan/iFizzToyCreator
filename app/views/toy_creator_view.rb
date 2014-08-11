@@ -1,5 +1,8 @@
 class ToyCreatorView < CreatorView
 
+  # Make toys View
+  # Used for construction of toys
+
   def initWithFrame(frame)
     super
     @line_size = ToyTemplate::TOY_LINE_SIZE
@@ -11,14 +14,14 @@ class ToyCreatorView < CreatorView
   # Transfers the required toy information for the physics world
   # and also produces the toy image.
   # The points are a fraction of the size of the original drawing (as is the image).
+  # Returns list of all parts orientated around center of drawing
   def gather_toy_info
     return nil if @strokes.size == 0
+
     # get the info
     left, right, top, bottom = extreme_points #.map { |value| value / 2.0 }
-    #p [left, right, top, bottom]
-    width = (right - left)/2 + @line_size
-    height = (bottom - top)/2 + @line_size
     @centre_in_view = CGPointMake((left + right)/2, (top + bottom)/2)
+
     # now make all points in all parts relative to the centre, the centre becomes the origin
     parts = []
     @strokes.each do |stroke|
@@ -27,21 +30,14 @@ class ToyCreatorView < CreatorView
       case stroke
         when CircleStroke
           radius = stroke.radius * ToyTemplate::IMAGE_SCALE
-          #radius = (radius*ToyTemplate::ACCURACY).to_i / ToyTemplate::ACCURACY
           part = CirclePart.new(position * ToyTemplate::IMAGE_SCALE, radius, colour)
-        #puts part
         when LineStroke
           points = stroke.points.map { |p| (p + position) * ToyTemplate::IMAGE_SCALE }
-          #points.each { |p| puts "(#{p.x}, #{p.y})" }
-          part = PointsPart.new(points, colour) # position/ToyTemplate::IMAGE_SCALE, .map { |p| p/ToyTemplate::IMAGE_SCALE },
+          part = PointsPart.new(points, colour)
       end
       parts << part
     end
-    ## get random identifier
-    #id = rand(2**63)
-    #ToyTemplate.new(parts, id) #, image)
     parts
-    # save the ToyTemplate
   end
 
   # Traverses the parts and determines the extreme values.
@@ -58,6 +54,8 @@ class ToyCreatorView < CreatorView
     [left, right, top, bottom]
   end
 
+  # Draws what will be the hull in SpriteKit
+  # Used in DEBUG mode
   def draw_convex_hull(path)
     context = UIGraphicsGetCurrentContext()
     UIColor.redColor.set
@@ -105,6 +103,7 @@ class ToyCreatorView < CreatorView
     end
   end
 
+  # Initial Call to draw non-iOS UI elements
   def drawRect(rect)
     super
     toy_parts = gather_toy_info
@@ -112,7 +111,10 @@ class ToyCreatorView < CreatorView
       toy = ToyPhysicsBody.new(toy_parts)
       if toy.points_in_paths > 0
         hull = toy.convex_hull
-        draw_convex_hull(hull) if hull.length > 2
+        #Only in debug!!
+        if Constants::DEBUG
+          draw_convex_hull(hull) if hull.length > 2
+        end
       end
     end
   end
@@ -133,6 +135,7 @@ class ToyCreatorView < CreatorView
     end
   end
 
+  # Removes all lines from screen
   def clear
     undoManager.registerUndoWithTarget(self, selector: 'unclear:', object: @strokes)
     @strokes = []
@@ -142,6 +145,7 @@ class ToyCreatorView < CreatorView
     setNeedsDisplay
   end
 
+  # Used for undo clear
   def unclear(strokes)
     strokes.each do |stroke|
       add_stroke(stroke)

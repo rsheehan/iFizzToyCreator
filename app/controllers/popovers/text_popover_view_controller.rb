@@ -12,32 +12,32 @@ class TextPopoverViewController < UIViewController
     #back button
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
     @back_button.setImage(UIImage.imageNamed(:back_arrow), forState: UIControlStateNormal)
-    @back_button.frame = [[5, 5], [20,20]]
+    @back_button.frame = [[5, 5], [30,30]]
     @back_button.addTarget(self, action: 'back:', forControlEvents: UIControlEventTouchUpInside)
 
     @margin = @back_button.frame.size.width
 
     #title
-    @title = UILabel.alloc.initWithFrame([[5,5],[@width-10,20]])
+    @title = UILabel.alloc.initWithFrame([[5,5],[@width-10,30]])
     if @title_text
       @title.setText(@title_text)
     else
-      @title.setText('Explosion')
+      @title.setText(Language::EXPLOSION)
     end
     @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
-    @title.setFont(UIFont.boldSystemFontOfSize(16))
+    @title.setFont(UIFont.boldSystemFontOfSize(18))
     @title.textAlignment = NSTextAlignmentCenter
     view.addSubview(@title)
     view.addSubview(@back_button)
 
     #title separator
     separator = CALayer.layer
-    separator.frame = CGRectMake(5, 29.0, @width, 1.0)
+    separator.frame = CGRectMake(5, 40.0, @width, 1.0)
     separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
     self.view.layer.addSublayer(separator)
 
     #text instruction
-    @instruction = UITextView.alloc.initWithFrame([[5,30],[@width-10,0]])
+    @instruction = UITextView.alloc.initWithFrame([[5,45],[@width-10,0]])
     if @instr_text
       @instruction.setText(@instr_text)
     end
@@ -78,7 +78,7 @@ class TextPopoverViewController < UIViewController
     #@instruction.frame = frame
     puts 'resize'
     if @instr_text.nil?
-      self.preferredContentSize = CGSizeMake(@width,29)
+      self.preferredContentSize = CGSizeMake(@width,40)
       return
     end
     size = @instruction.sizeThatFits(CGSizeMake(@instruction.frame.size.width, 1000))

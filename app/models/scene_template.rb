@@ -26,6 +26,7 @@ class SceneTemplate
   end
 
   def add_actions(actions)
+    @actions = []
     if actions.kind_of?(Array)
       actions.each do |action|
         if !@actions.include?(action)
