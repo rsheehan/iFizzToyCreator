@@ -43,6 +43,7 @@ class State
     end
     actions = get_actions_from_toys(scene.toys)
     scene.add_actions(actions)
+    actions
   end
 
   def get_actions_from_toys(toys)
@@ -163,7 +164,10 @@ class State
     json_toys = @toys.map { |toy| toy.to_json_compatible }
     json_state[:toys] = json_toys
     # here we will eventually do the scenes as well
-    json_scenes = @scenes.map { |scene| scene.to_json_compatible }
+    @scenes.delete_if{|scene| not (scene.is_a? SceneTemplate)}
+    json_scenes = @scenes.map { |scene| if scene.is_a? SceneTemplate
+                                          scene.to_json_compatible
+                                        end }
     json_state[:scenes] = json_scenes
 
     json_state
@@ -275,6 +279,9 @@ class State
   end
 
   def jsonToScene(json_scene)
+    if json_scene.nil?
+      return nil
+    end
     id = json_scene[:id]
 
 
