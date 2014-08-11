@@ -60,6 +60,8 @@ class ActionListPopoverViewController < UIViewController
     end
     @table_view.reloadData
     resizeTV
+    @table_view.cellForRowAtIndexPath(NSIndexPath.indexPathForRow(0, inSection:0)).hidden = @stuck_switch.on?
+    @table_view.cellForRowAtIndexPath(NSIndexPath.indexPathForRow(3, inSection:0)).hidden = (not @travel_switch.on?)
   end
 
   def viewWillDisappear(animated)
