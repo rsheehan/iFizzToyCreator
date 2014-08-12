@@ -326,7 +326,7 @@ class SceneCreatorView < CreatorView
           when :toy_selected
             #Opens popover if selected has not been dragged
             if @delegate.is_a?(ActionAdderViewController) and not @drag and @selected.close_enough(point)
-              @delegate.reopen_action_flow
+              @delegate.start_action_flow
             end
             @drag = false
         end
