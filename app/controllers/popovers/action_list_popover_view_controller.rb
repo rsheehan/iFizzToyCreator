@@ -212,6 +212,9 @@ class ActionListPopoverViewController < UIViewController
           @rotate_switch.on = @selected.template.can_rotate
           cell.accessoryView = @rotate_switch
           @rotate_switch.addTarget(self,action:'rotate_switch_changed', forControlEvents:UIControlEventValueChanged)
+          if @selected.template.stuck
+            cell.hidden = true
+          end
         when 1
           cell.text = Language::STUCK
           @stuck_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
@@ -228,6 +231,9 @@ class ActionListPopoverViewController < UIViewController
           #show 4 way switch for direction
           cell.text = Language::FRONT
           cell.accessoryView = frontDirectionControl(CGRectMake(0,0,0,0))
+          if not @selected.template.always_travels_forward
+            cell.hidden = true
+          end
       end
       cell
 
