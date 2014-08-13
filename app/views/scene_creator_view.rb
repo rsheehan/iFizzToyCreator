@@ -665,7 +665,7 @@ class SceneCreatorView < CreatorView
     x = magnitude * Math.cos(angle)
     y = magnitude * Math.sin(angle)
     new_point = CGPointMake(x, y)
-    new_point = new_point + selected
+    new_point = new_point + selected_point
     change_mag = Math.hypot(*(new_point-point))
     if change_mag > THRESHOLD
       return point
