@@ -18,12 +18,14 @@ class PlayViewController < UIViewController
     location_of_play = [95, 0]
     @size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @play_view = SKView.alloc.initWithFrame([location_of_play, @size_of_play])
-    @play_view.showsDrawCount = true
-    @play_view.showsNodeCount = true
-    @play_view.showsFPS = true
-    #@play_view.showsPhysics = true
+    if Constants::DEBUG
+      @play_view.showsDrawCount = true
+      @play_view.showsNodeCount = true
+      @play_view.showsFPS = true
+      @play_view.showsPhysics = true
+    end
     view.addSubview(@play_view)
-    @play_view.showsPhysics = true
+
     @button_actions = {} # keys = buttons, values = list of actions for that button
     setup_sides
     @timers = []
