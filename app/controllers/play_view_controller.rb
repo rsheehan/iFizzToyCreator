@@ -146,6 +146,7 @@ class PlayViewController < UIViewController
     @button_actions.each_key do |button|
       @button_actions[button] = []
     end
+    refresh_side_buttons
     if not @label.nil?
       @label.dismissPopoverAnimated(true)
       @label = nil
@@ -256,6 +257,15 @@ class PlayViewController < UIViewController
     button.enabled = false
     panel.addSubview(button)
     button
+  end
+
+  def refresh_side_buttons
+    all_buttons = [@left_panel.subviews, @right_panel.subviews].flatten
+    all_buttons.each do |button|
+      button.setImage(UIImage.imageNamed('side_button'), forState: UIControlStateNormal)
+      button.setImage(UIImage.imageNamed('side_button_selected'), forState: UIControlStateHighlighted)
+    end
+
   end
 
   def get_btn_image_with_actions(actions, selected)
