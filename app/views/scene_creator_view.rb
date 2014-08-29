@@ -309,7 +309,7 @@ class SceneCreatorView < CreatorView
         case @mode
           when :toys_only, :scene
             touch_end_scene
-            if @delegate.is_a?(ActionAdderViewController) and not @drag and @selected.close_enough(point)
+            if @delegate.is_a?(ActionAdderViewController) and not @drag and @selected and @selected.close_enough(point)
               @delegate.reopen_action_flow
             end
             @drag = false
