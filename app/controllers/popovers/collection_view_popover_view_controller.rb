@@ -7,8 +7,8 @@ class CollectionViewPopoverViewController < UIViewController
     WIDTH = 350
     MAX_HEIGHT = 350
 
-    ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
-    EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble, :scene_shift]
+    ACTIONS = [:toy_touch, :touch, :collision, :timer, :when_created, :score_reaches, :loud_noise, :shake]
+    EFFECTS = [:apply_force, :explosion, :delete_effect, :apply_torque, :create_new_toy, :score_adder, :play_sound, :text_bubble, :scene_shift]
     TOYBUTTON = "ToyButton"
 
     def loadView

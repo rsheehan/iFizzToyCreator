@@ -132,8 +132,10 @@ class CreatorView < UIView
 
   def reset_undo
     undoManager.removeAllActions unless undoManager.nil?
-    @delegate.can_undo(false)
-    @delegate.can_redo(false)
+    if @delegate
+      @delegate.can_undo(false)
+      @delegate.can_redo(false)
+    end
   end
 
   def undo
