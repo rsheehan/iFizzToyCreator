@@ -190,6 +190,9 @@ class ToyInScene
 
   def animate(timer)
     if timer.userInfo[1] < @how_many_times
+      if not @animate_position
+        @animate_position = []
+      end
       @animate_position += timer.userInfo[0]
     else
       timer.invalidate
