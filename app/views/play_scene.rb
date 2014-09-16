@@ -820,9 +820,10 @@ class PlayScene < SKScene
     #trigger any create actions
     @create_actions.each do |action|
       if action[:toy] == toy.name
+        new_action = action.clone
         #trigger event
-        action[:action_param] = [nil, toy.userData[:uniqueID]]
-        add_actions_for_update([action])
+        new_action[:action_param] = [nil, toy.userData[:uniqueID]]
+        add_actions_for_update([new_action])
       end
     end
     toy
