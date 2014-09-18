@@ -237,7 +237,7 @@ class SceneCreatorView < CreatorView
       when :squiggle
         a = @points[-1]
         b = point
-        if (b - a).magnitude > 10.0
+        if (b - a).magnitude > Constants::MAGNITUDE_DISTANCE_BETWEEN_POINTS
           @points << point
           setNeedsDisplay
         end
@@ -300,7 +300,30 @@ class SceneCreatorView < CreatorView
 
     case @current_tool
       # Adds line to background
-      when :squiggle, :line
+      # Adds line to background
+      when :squiggle
+        # Do B-spline curve here
+        # Make sure that curve start at first point and more than 5 points available
+        @points.unshift(@points.at(0))
+        @points.unshift(@points.at(0))
+        @points << @points.at(@points.size - 1)
+        @points << @points.at(@points.size - 1)
+
+        newPoints = []
+        smallStep = 5
+        # Define B-spline curve
+        (2...@points.size-1).each do |i|
+          (1..smallStep).each do |j|
+            qPoint = p_spline(i, 1.0*j/smallStep)
+            newPoints << CGPoint.new(qPoint.at(0), qPoint.at(1))
+          end
+        end
+        @points = newPoints
+        add_stroke(LineStroke.new(@points, @current_colour, @line_size))
+        @points = nil
+        setNeedsDisplay
+
+      when :line
         add_stroke(LineStroke.new(@points, @current_colour, @line_size))
         @points = nil
         setNeedsDisplay
