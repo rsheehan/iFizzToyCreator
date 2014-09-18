@@ -59,10 +59,14 @@ class ToyCreatorView < CreatorView
   def draw_convex_hull(path)
     context = UIGraphicsGetCurrentContext()
     UIColor.redColor.set
-    CGContextSetLineWidth(context, 1)
+    #CGContextSetStrokeColorWithColor(UIColor.yellowColor)
+    CGContextSetLineWidth(context, 2)
     first = true
     hold_first = nil
     path.each do |point|
+
+      CGContextSetLineWidth(context, 2)
+
       point = point * 4 + @centre_in_view
       #puts "x: #{point.x}, y: #{point.y}"
       if first
@@ -71,9 +75,13 @@ class ToyCreatorView < CreatorView
         CGContextMoveToPoint(context, point.x, point.y)
       else
         CGContextAddLineToPoint(context, point.x, point.y)
+        CGContextAddEllipseInRect(context, CGRectMake(point.x-5, point.y-5, 10, 10))
+        CGContextAddLineToPoint(context, point.x, point.y)
       end
     end
     CGContextAddLineToPoint(context, hold_first.x, hold_first.y)
+    CGContextAddEllipseInRect(context, CGRectMake(hold_first.x-5, hold_first.y-5, 10, 10))
+
     CGContextStrokePath(context)
   end
 

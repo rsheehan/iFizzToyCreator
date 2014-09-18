@@ -139,8 +139,8 @@ class ToyPhysicsBody
     if path.length < 2
       return []
     end
-    if path.length == 2
 
+    if path.length == 2
       dline = path[0] - path[1]
       len = Math.sqrt( dline.x ** 2 + dline.y ** 2)
       new_points = []
@@ -155,27 +155,19 @@ class ToyPhysicsBody
         new_points[2] = CGPointMake(path[1].x-2, path[1].y)
         new_points[3] = CGPointMake(path[1].x+2, path[1].y)
       end
-
-      # new_points[0] = path[0]
-      # new_points[3] = path[1]
-      #
-      #
-      # puts "Length: " + len.to_s
-      # puts "DLine: X " + dline.x.to_s + ", Y " + dline.y.to_s
-      # dline = dline / (len/2)
-      #
-      # new_points[1] = CGPointMake(path[0].x - dline.x, path[0].y + dline.y)
-      # new_points[2] = CGPointMake(path[1].x - dline.x, path[1].y + dline.y)
-
       path = new_points
     end
+
     next_pts = []
+
     # get leftmost point
     left = 0
     for i in 1..path.length-1
       left = i if path[i].x < path[left].x
     end
+
     p = left
+
     loop do
       q = (p + 1) % path.length # move around the list
       for i in 0..path.length-1
@@ -185,16 +177,35 @@ class ToyPhysicsBody
       p = q
       break if p == left
     end
-    while next_pts.length > 12
-      #puts "1 number of points in convex hull: #{next_pts.length}"
-      next_pts = reduce_points(next_pts)
+
+    epsilon = 0.2
+    while next_pts.length > Constants::MAX_CONVEX_HULL_POINTS
+      next_pts = reduce_points_2(next_pts, epsilon)
+      epsilon = epsilon + 0.2
     end
-    #puts "2 number of points in convex hull: #{next_pts.length}"
     next_pts
   end
 
-  DISTANCE_OFF_PATH = 4
+  # Added by Minh
+  def reduce_points_2(path_of_points, epsilon)
+    puts "reduce points"
+    x = []
+    y = []
+    path_of_points.each do |p|
+      x << p.x
+      y << p.y
+    end
+    zx, zy = RDP::simplify(x, y, epsilon)
 
+    new_path = []
+    for i in 0 ... zx.size
+      new_path << CGPointMake(zx[i], zy[i])
+    end
+    new_path
+  end
+
+  #Previously implemented reduce points
+  DISTANCE_OFF_PATH = 4
   def reduce_points(path_of_points)
     a, mid  = path_of_points[0..1]
     # find the distance from b to segment a-c
@@ -223,12 +234,6 @@ class ToyPhysicsBody
   end
 
   def convex_hull_for_physics(scale)
-    #dwidth = 0# size.width / 2
-    #dheight = 0 #size.height / 2
-    # reduce to the standard size
-    #points = convex_hull.map {|p| p * ToyTemplate::IMAGE_SCALE }
-    # fix positions according to (0,0) of the image size.
-    # everything has to be up and to the right (I think)
     points = convex_hull.map { |p| CGPointMake(p.x, -p.y) * scale }
     points.reverse
   end
