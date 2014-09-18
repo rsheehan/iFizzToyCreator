@@ -85,7 +85,7 @@ class CreatorView < UIView
       when :squiggle
         a = @points[-1]
         b = point
-        if (b - a).magnitude > 10.0
+        if (b - a).magnitude > 20.0
           @points << point
           setNeedsDisplay
         end
@@ -104,10 +104,34 @@ class CreatorView < UIView
   def touchesEnded(touches, withEvent: event)
     return unless @valid_start_location
     case @current_tool
-      when :squiggle, :line
+      when :squiggle
+        # Do B-spline curve here
+        # Make sure that curve start at first point and more than 5 points available
+        @points.unshift(@points.at(0))
+        @points.unshift(@points.at(0))
+        @points << @points.at(@points.size - 1)
+        @points << @points.at(@points.size - 1)
+
+        newPoints = []
+        smallStep = 5
+        # Define B-spline curve
+        (2...@points.size-1).each do |i|
+          (1..smallStep).each do |j|
+            qPoint = p_spline(i, 1.0*j/smallStep)
+            newPoints << CGPoint.new(qPoint.at(0), qPoint.at(1))
+          end
+        end
+        @points = newPoints
+        #@current_colour = @current_colour.colorWithAlphaComponent(rand(1000)/1000.0)
         add_stroke(LineStroke.new(@points, @current_colour, @line_size))
         @points = nil
         setNeedsDisplay
+
+      when :line
+        add_stroke(LineStroke.new(@points, @current_colour, @line_size))
+        @points = nil
+        setNeedsDisplay
+
       when :grab
         if @truly_selected
           change_position_of(@truly_selected, to: @truly_selected.position)
@@ -298,6 +322,34 @@ class CreatorView < UIView
       draw_partial_thing(context)
       CGContextEndTransparencyLayer(context)
     end
+  end
+
+  def b_spline(i, t)
+    case i
+      when -2
+        return (((-t+3)*t-3)*t+1)/6.0
+      when -1
+        return (((3*t-6)*t)*t+4)/6.0
+      when 0
+        return (((-3*t+3)*t+3)*t+1)/6.0
+      when 1
+        return (t*t*t)/6.0
+      else
+        return 0.0
+    end
+  end
+
+  def p_spline(i, t)
+    px = 0
+    py = 0
+    # go for -2 -1 0 1
+    (-2..1).each do |j|
+      #puts "bspline at (#{j}, #{t}) is #{b_spline(j, t)}"
+      px = px + b_spline(j, t) * @points.at(i + j).x
+      py = py + b_spline(j, t) * @points.at(i + j).y
+    end
+    #puts "x = #{px} and y = #{py}"
+    return [px, py]
   end
 
 end
