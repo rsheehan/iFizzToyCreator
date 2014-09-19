@@ -302,6 +302,12 @@ class SceneCreatorView < CreatorView
       # Adds line to background
       # Adds line to background
       when :squiggle
+
+        # To reduce the points making the scene
+        while @points.size > Constants::MAX_CONTROLLED_POINTS_FOR_A_CURVE
+          @points = removeHalfPoints(@points)
+        end
+
         # Do B-spline curve here
         # Make sure that curve start at first point and more than 5 points available
         @points.unshift(@points.at(0))

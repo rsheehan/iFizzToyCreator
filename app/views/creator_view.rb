@@ -85,7 +85,7 @@ class CreatorView < UIView
       when :squiggle
         a = @points[-1]
         b = point
-        if (b - a).magnitude > 20.0
+        if (b - a).magnitude > Constants::MAGNITUDE_DISTANCE_BETWEEN_POINTS
           @points << point
           setNeedsDisplay
         end
@@ -101,10 +101,27 @@ class CreatorView < UIView
     end
   end
 
+  def removeHalfPoints(points)
+    newPoints = []
+    counter = 0
+    points.each do |item|
+      if counter % 2 == 0
+        newPoints << item
+      end
+      counter = counter + 1
+    end
+    newPoints
+  end
+
   def touchesEnded(touches, withEvent: event)
     return unless @valid_start_location
     case @current_tool
       when :squiggle
+        # To reduce the points making the toys
+        while @points.size > Constants::MAX_CONTROLLED_POINTS_FOR_A_CURVE
+          @points = removeHalfPoints(@points)
+        end
+
         # Do B-spline curve here
         # Make sure that curve start at first point and more than 5 points available
         @points.unshift(@points.at(0))
