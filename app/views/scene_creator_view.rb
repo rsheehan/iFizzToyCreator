@@ -29,6 +29,7 @@ class SceneCreatorView < CreatorView
     @current_tool = :grab # was :line
     @toys_in_scene = []
     @actions = []
+    @boundaries = [1,1,1,1]
     self.backgroundColor = DEFAULT_SCENE_COLOUR
     pinch_recognizer = UIPinchGestureRecognizer.alloc.initWithTarget(self, action: 'zoom_selected:')
     pinch_recognizer.delegate = self
@@ -37,19 +38,38 @@ class SceneCreatorView < CreatorView
     self
   end
 
+  #set gravity from the config
+  def setGravity(gravity)
+    @gravity = gravity
+  end
+
+  #set boundaries from the config
+  def setBoundaries(boundaries)
+    @boundaries = boundaries
+  end
+
+  #set background image from the config popup
+  def setBackground(backgroundImage)
+    if backgroundImage != nil
+      @backgroundImage = backgroundImage.scale_to_fill(self.frame.size)
+      #p "frame size = #{frame.size.width}"
+
+      self.backgroundColor = UIColor.colorWithPatternImage(@backgroundImage)
+    else
+      @backgroundImage = nil
+      self.backgroundColor = DEFAULT_SCENE_COLOUR
+    end
+
+  end
+
   # The different modes this view can represent.
   # scene - the scene construction mode
   # toys_only - toys can be selected, moved, resized but not strokes
   # toy_selected - a toy in toys_only mode has been selected
   # force - a force arrow can be shown for the selected toy (nothing movable)
   def mode=(mode)
-    #puts @delegate
-    #puts "current mode: #@mode - mode requested #{mode}"
-    #puts @selected
-
     case mode
       when :scene
-
       when :toys_only
         @current_tool = :grab
         if @selected.is_a?(ToyInScene)
@@ -91,7 +111,9 @@ class SceneCreatorView < CreatorView
   # Similar to gathering the toy info in ToyCreatorView but the scale is 1.
   def gather_scene_info
     id = rand(2**60).to_s
-    SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds)
+    gravity = CGVectorMake(1,1)
+    #p "gather info boundary #{@boundaries}"
+    SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds, @gravity, @boundaries, @backgroundImage)
   end
 
   # Turns the strokes making up the edges (including circles) into Parts.

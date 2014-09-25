@@ -62,6 +62,15 @@ class Language
   FRONT         = 'Front'
   ALWAYS_TRAVELS_FORWARD = 'Always Travels Forward'
 
+  #Scene properties
+  GRAVITY       = 'Gravity'
+  WIND          = 'Wind Direction'
+  LEFT_BOUNDARY          = 'Left boundary on/off'
+  RIGHT_BOUNDARY          = 'Right boundary on/off'
+  TOP_BOUNDARY          = 'Top boundary on/off'
+  BOTTOM_BOUNDARY          = 'Bottom boundary on/off'
+  BACK_GROUND_IMAGE   = 'Background Image'
+
   # Commands
   CHOOSE_TOUCH_BUTTON  = 'Choose the button for this action.'
   TOUCH_FORCE          = 'Touch to show force direction and strength.'

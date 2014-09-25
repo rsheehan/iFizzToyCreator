@@ -24,6 +24,7 @@ class PlayViewController < UIViewController
       @play_view.showsFPS = true
       @play_view.showsPhysics = true
     end
+    @play_view.showsFPS = true
     view.addSubview(@play_view)
 
     @button_actions = {} # keys = buttons, values = list of actions for that button
@@ -132,12 +133,22 @@ class PlayViewController < UIViewController
 
 
   def update_play_scene(scene=@state.scenes[@state.currentscene])
+    p "update play scene: #{@state.scenes[@state.currentscene]}"
     return unless @play_view # this is because of the orientation bug being worked around in app_delegate
     @play_scene = PlayScene.alloc.initWithSize(@play_view.frame.size)
     @play_scene.physicsWorld.contactDelegate = @play_scene
     @play_scene.delegate = self
+
+    # set scene gravity
+    @play_scene.setGravity(scene.gravity)
+    @play_scene.setBoundaries(scene.boundaries)
+
     # this is purely for development only uses the first scene
     @state.load_scene_actions(scene)
+
+    # add background image
+    @play_scene.backgroundImage = scene.background
+
     # add the toys to the scene
     @play_scene.toys = scene.toys
     # add the edges to the scene

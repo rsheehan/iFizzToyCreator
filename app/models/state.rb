@@ -279,10 +279,17 @@ class State
   end
 
   def jsonToScene(json_scene)
+    puts "json to scene"
     if json_scene.nil?
       return nil
     end
+
     id = json_scene[:id]
+
+    #load gravity
+    gravity = json_scene[:gravity]
+
+    boundaries = json_scene[:boundaries]
 
 
     edges = []
@@ -301,7 +308,7 @@ class State
 
     unless toys.empty? and edges.empty?
       actions = [] #get_actions_from_toys(toys)
-      scene = SceneTemplate.new(toys, edges, actions, id, CGRectMake(0,0,0,0))
+      scene = SceneTemplate.new(toys, edges, actions, id, CGRectMake(0,0,0,0), gravity, boundaries)
       scene
     end
   end

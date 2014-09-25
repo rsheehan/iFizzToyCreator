@@ -18,6 +18,18 @@ module CreatorViewControllerModule
   #  #setup_mode_buttons
   #end
 
+  # code to enable orientation changes
+  #def supportedInterfaceOrientations
+  #  UIInterfaceOrientationMaskPortrait
+  #end
+
+  #def shouldAutorotateToInterfaceOrientation(orientation)
+  #  if orientation == UIDeviceOrientationPortraitUpsideDown || orientation == UIDeviceOrientationPortrait
+  #    return false
+   # end
+  #  true
+  #end
+
   def viewDidAppear(animated)
     super
     @main_view.reset_undo
@@ -170,6 +182,32 @@ module CreatorViewControllerModule
     @tool_buttons.each do |key, value|
       value.selected = (key == name)
     end
+  end
+
+  # fire config of the scene
+  def config
+    content = SceneConfigPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+    content.setTitle("Scene Properties")
+    content.delegate = self
+    content.enterState(@state)
+    show_popover(content)
+  end
+
+  def show_popover(content)
+    @popover = UIPopoverController.alloc.initWithContentViewController(content)
+    @popover.delegate = self
+    viewy = self.view
+    frame = CGRectMake(view.bounds.size.width/3,0,0,220)
+    @popover.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
+  end
+
+  def close_popover
+    if not @popover.nil?
+      @popover_type = nil
+      @popover.dismissPopoverAnimated(true)
+    end
+    disableButtons
+    hide_sides
   end
 
   # Change mode to grab.

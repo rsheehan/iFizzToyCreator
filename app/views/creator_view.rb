@@ -130,14 +130,15 @@ class CreatorView < UIView
         @points << @points.at(@points.size - 1)
 
         newPoints = []
-        smallStep = 5
+        smallStep = Constants::SMALL_BSPLINE_STEPS
         # Define B-spline curve
         (2...@points.size-1).each do |i|
           (1..smallStep).each do |j|
-            qPoint = p_spline(i, 1.0*j/smallStep)
-            newPoints << CGPoint.new(qPoint.at(0), qPoint.at(1))
+            qPoint = p_spline(i, j/smallStep)
+            newPoints << CGPoint.new(qPoint[0], qPoint[1])
           end
         end
+        @points = nil
         @points = newPoints
         #@current_colour = @current_colour.colorWithAlphaComponent(rand(1000)/1000.0)
         add_stroke(LineStroke.new(@points, @current_colour, @line_size))
@@ -368,5 +369,4 @@ class CreatorView < UIView
     #puts "x = #{px} and y = #{py}"
     return [px, py]
   end
-
 end

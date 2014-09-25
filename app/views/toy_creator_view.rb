@@ -118,9 +118,9 @@ class ToyCreatorView < CreatorView
     unless toy_parts.nil?
       toy = ToyPhysicsBody.new(toy_parts)
       if toy.points_in_paths > 0
-        hull = toy.convex_hull
-        #Only in debug!!
         if Constants::DEBUG
+          hull = toy.convex_hull
+          #Only in debug!!
           draw_convex_hull(hull) if hull.length > 2
         end
       end

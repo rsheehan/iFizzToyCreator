@@ -8,10 +8,18 @@ class PlayScene < SKScene
   attr_reader :loaded_toys # ToyInScene not put into play straight away
   attr_reader :mutex
   attr_writer :scores, :delegate
+  attr_writer :backgroundImage
 
   TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
   MAX_CREATES = 10
+
+  TOP=0
+  BOTTOM=1
+  LEFT=2
+  RIGHT=3
+  SWITCH_ON=1
+  SWITCH_OFF=0
 
   def didMoveToView(view)
     @actions_to_fire = []
@@ -31,8 +39,7 @@ class PlayScene < SKScene
       create_scene_contents
       @content_created = true
     end
-    #@physicsWorld.gravity = CGVectorMake(0, -5)
-    physicsWorld.gravity = CGVectorMake(0, -4)
+
   end
 
   def create_scene_contents
@@ -44,8 +51,60 @@ class PlayScene < SKScene
     @mutex = Mutex.new
     @scores = {}
     @toys_count = {}
+
     add_edges
     add_toys
+  end
+
+
+
+  # Set gravity of the scene
+  def setGravity(gravity)
+    physicsWorld.gravity = gravity
+  end
+
+  # Det boundaries of the scene
+  def setBoundaries(boundaries)
+    puts "boundaries: #{boundaries}"
+    # top edge
+    if(boundaries[TOP]==SWITCH_ON)
+      body = SKPhysicsBody.bodyWithEdgeFromPoint([frame.origin.x,frame.size.height], toPoint: [frame.size.width, frame.size.height])
+      body.contactTestBitMask = 1
+      node = SKNode.node
+      node.hidden = true
+      node.physicsBody = body
+      addChild(node)
+    end
+
+    # bottom edge
+    if(boundaries[BOTTOM]==SWITCH_ON)
+      body = SKPhysicsBody.bodyWithEdgeFromPoint([frame.origin.x,frame.origin.y], toPoint: [frame.size.width,frame.origin.y])
+      body.contactTestBitMask = 1
+      node = SKNode.node
+      node.hidden = true
+      node.physicsBody = body
+      addChild(node)
+    end
+
+    # left edge
+    if(boundaries[LEFT]==SWITCH_ON)
+      body = SKPhysicsBody.bodyWithEdgeFromPoint([frame.origin.x,frame.origin.y], toPoint: [frame.origin.x,frame.size.height])
+      body.contactTestBitMask = 1
+      node = SKNode.node
+      node.hidden = true
+      node.physicsBody = body
+      addChild(node)
+    end
+
+    # right edge
+    if(boundaries[RIGHT]==SWITCH_ON)
+      body = SKPhysicsBody.bodyWithEdgeFromPoint([frame.size.width,frame.origin.y], toPoint: [frame.size.width,frame.size.height])
+      body.contactTestBitMask = 1
+      node = SKNode.node
+      node.hidden = true
+      node.physicsBody = body
+      addChild(node)
+    end
   end
 
   # Actions are added here to be fired at the update
@@ -589,12 +648,12 @@ class PlayScene < SKScene
   end
 
   def add_edges
-    create_image
+    create_background_image
     # then do the static physics stuff for the edges
     # first I currently use a frame around the outside
     #walls = CGRectMake(*frame.origin, frame.size.width, frame.size.height - AppDelegate::TAB_HEIGHT)
-    self.physicsBody = SKPhysicsBody.bodyWithEdgeLoopFromRect(frame)
-    self.physicsBody.contactTestBitMask = 1
+    #self.physicsBody = SKPhysicsBody.bodyWithEdgeLoopFromRect(frame)
+
     @edges.each do |edge|
       case edge
         when CirclePart
@@ -625,21 +684,22 @@ class PlayScene < SKScene
   end
 
 # Create an image for the whole background
-  def create_image
-    #left_bottom = CGPointMake(frame.size.width, frame.size.height)
-    #p left_bottom
-    #left_bottom = convertPointFromView(left_bottom)
-    #p CGPointMake(left_bottom.x, left_bottom.y)
+  def create_background_image
+
     screen_scale = UIScreen.mainScreen.scale
-    #return toy_in_scene.image if screen == 1.0
-    ##puts "rescaling"
-    #return toy_in_scene.template.create_image(toy_in_scene.zoom / screen)
+
     frame_size = CGSizeMake(frame.size.width / screen_scale, frame.size.height / screen_scale)
     UIGraphicsBeginImageContextWithOptions(frame_size, true, 0.0) #frame.size, true, 0.0)
     context = UIGraphicsGetCurrentContext()
     setup_context(context)
     SceneCreatorView::DEFAULT_SCENE_COLOUR.set
-    CGContextFillRect(context, CGRectMake(0, 0, frame_size.width, frame_size.height)) #size.width-100, size.height-100))
+
+    if @backgroundImage != nil
+      @backgroundImage.drawInRect(CGRectMake(0, 0, frame_size.width, frame_size.height))
+    else
+      CGContextFillRect(context, CGRectMake(0, 0, frame_size.width, frame_size.height)) #size.width-100, size.height-100))
+    end
+
     @edges.each do |edge|
       edge.colour.set
       # circles
@@ -659,7 +719,14 @@ class PlayScene < SKScene
           end
       end
     end
+
     background = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(UIGraphicsGetImageFromCurrentImageContext()))
+
+    #texture = SKTexture.textureWithImageNamed("bground.jpg")
+    #background = SKSpriteNode.spriteNodeWithTexture(texture)
+    #background.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMidY(self.frame))
+    #addChild(background)
+
     UIGraphicsEndImageContext()
     background.position = CGPointMake(size.width/2, size.height/2)
     background.blendMode = SKBlendModeReplace # background image doesn't need any alpha

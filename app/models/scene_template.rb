@@ -4,8 +4,8 @@
 # TODO: separate the edge and background stuff into BackgroundTemplate
 class SceneTemplate
 
-  attr_reader :toys, :edges, :actions, :identifier, :image
-  attr_writer :identifier, :bounds
+  attr_reader :toys, :edges, :actions, :identifier, :image, :gravity, :background, :boundaries
+  attr_writer :identifier, :bounds, :gravity, :background, :boundaries
 
   WIDTH = 834
   HEIGHT = 712
@@ -13,16 +13,35 @@ class SceneTemplate
   IMAGE_SCALE = 0.25 # this is the scale factor when a toy image is first created.
   ACCURACY = 100.0   # the rounding factor for the data
 
-  def initialize(toys, edges, actions, identifier, bounds)
+  TOP=0
+  BOTTOM=1
+  LEFT=2
+  RIGHT=3
+  SWITCH_ON=1
+  SWITCH_OFF=0
+
+  def initialize(toys, edges, actions, identifier, bounds, gravity=nil, boundaries=nil, background=nil)
     @identifier = identifier
     @toys = toys    # each of type ToyInScene
     @edges = edges  # each of type ToyPart - either Circle or Points
     @actions = actions   # each a Hash
-    #puts "SceneTemplate actions"
     @bounds = bounds
-    #p actions
-    # possibly create an image of the scene for the scene box view
-    @image = create_image(0.35)
+
+    @background = background
+
+    if boundaries!=nil
+      *@boundaries = *boundaries
+    else
+      @boundaries = [1,1,1,1]
+    end
+
+    # possibly create an image of the scene for the scene box view, the small version
+    @image = create_image(Constants::SMALLER_SIZED_SAVED_SCENE)
+
+    @gravity = gravity
+    if @gravity == nil
+      @gravity = CGVectorMake(Constants::DEFAULT_GRAVITY_X, Constants::DEFAULT_GRAVITY_Y)
+    end
   end
 
   def add_actions(actions)
@@ -56,6 +75,8 @@ class SceneTemplate
       json_edges << edge_part.to_json_compatible
     end
     json_scene[:edges] = json_edges
+    json_scene[:gravity] = @gravity
+    json_scene[:background] = @background
 
     #actions will go here
 
@@ -71,6 +92,7 @@ class SceneTemplate
   end
 
   def update_image
+    # create small image
     @image = create_image(0.35)
   end
 
@@ -78,9 +100,43 @@ class SceneTemplate
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     context = UIGraphicsGetCurrentContext()
     setup_context(context, scale)
+    colour = UIColor.redColor
+    colour.set
+
+    #left
+    if @boundaries[LEFT]==SWITCH_ON
+      CGContextFillRect(context, CGRectMake(0, 0, Constants::SMALL_GAP, size.height))
+    end
+
+    #top
+    if @boundaries[TOP]==SWITCH_ON
+      CGContextFillRect(context, CGRectMake(0, 0, size.width, Constants::SMALL_GAP))
+    end
+
+    #bottom
+    if @boundaries[BOTTOM]==SWITCH_ON
+      CGContextFillRect(context, CGRectMake(0, size.height-Constants::SMALL_GAP, size.width, Constants::SMALL_GAP))
+    end
+
+    #right
+    if @boundaries[RIGHT]==SWITCH_ON
+      CGContextFillRect(context, CGRectMake(size.width-Constants::SMALL_GAP, 0, Constants::SMALL_GAP, size.height))
+    end
+
     colour = SceneCreatorView::DEFAULT_SCENE_COLOUR
     colour.set
-    CGContextFillRect(context, CGRectMake(0,0, *size))
+
+    p @background
+    if @background != nil
+      rectangle = CGRectMake(Constants::SMALL_GAP, Constants::SMALL_GAP, size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP)
+      #backgroundImage = @background.scale_to_fill([size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP])
+      #CGContextDrawImage(context, [[0,0],[100,100]], @background.CGImage)
+      @background.drawInRect(rectangle)
+    else
+
+      CGContextFillRect(context, CGRectMake(Constants::SMALL_GAP, Constants::SMALL_GAP, size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP))
+    end
+
     @edges.each do |part|
       colour = UIColor.colorWithRed(part.red, green: part.green, blue: part.blue, alpha: 1.0)
       colour.set
@@ -97,16 +153,16 @@ class SceneTemplate
           end
       end
     end
+
     @toys.each do |toy|
       #draw toy image at position and scale and rotation
       if toy
         draw_toy(context,toy,scale)
       end
-
     end
+
     image = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
-    #puts "ToyTemplate image: #{image.size.width}, #{image.size.height}"
     image
   end
 

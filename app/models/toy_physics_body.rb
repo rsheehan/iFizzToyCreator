@@ -135,6 +135,7 @@ class ToyPhysicsBody
 # Uses Jarvis's algorithm - http://www.geeksforgeeks.org/convex-hull-set-1-jarviss-algorithm-or-wrapping/
 # Assumes path has at least 3 points.
   def convex_hull(path = @all_points)
+    puts "convex_hull"
     # Turn Two points into Four
     if path.length < 2
       return []
@@ -188,14 +189,14 @@ class ToyPhysicsBody
 
   # Added by Minh
   def reduce_points_2(path_of_points, epsilon)
-    puts "reduce points"
+    #puts "reduce points"
     x = []
     y = []
     path_of_points.each do |p|
       x << p.x
       y << p.y
     end
-    zx, zy = RDP::simplify(x, y, epsilon)
+    zx, zy = RDP.simplify(x, y, epsilon)
 
     new_path = []
     for i in 0 ... zx.size
