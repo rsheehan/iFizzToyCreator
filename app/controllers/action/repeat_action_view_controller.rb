@@ -39,7 +39,7 @@ class RepeatActionViewController < UIViewController
     picker_view = UIPickerView.alloc.initWithFrame([[0,45],[@width,150]])
     picker_view.dataSource = self
     picker_view.delegate = self
-    picker_view.selectRow(30001, inComponent: 0, animated: false)
+    picker_view.selectRow(304, inComponent: 0, animated: false) # initialised at 4
     view.addSubview(picker_view)
 
     #textview
@@ -51,28 +51,57 @@ class RepeatActionViewController < UIViewController
     view.addSubview(text_view)
 
     #sec label
-    sec_label = UILabel.alloc.initWithFrame([[@width/2,picker_view.frame.origin.y+picker_view.frame.size.height/2-10],[@width/2,20]])
+    sec_label = UILabel.alloc.initWithFrame([[@width/2,picker_view.frame.origin.y+picker_view.frame.size.height/2-10],[@width/2,25]])
     sec_label.text = 'Seconds'
     sec_label.textAlignment = UITextAlignmentCenter
     sec_label.setFont(UIFont.systemFontOfSize(20))
     view.addSubview(sec_label)
 
+    ran_label = UILabel.alloc.initWithFrame([[0, picker_view.frame.origin.y+picker_view.frame.size.height+5],[@width/2,25]])
+    ran_label.text = 'Random Interval:'
+    ran_label.textAlignment = UITextAlignmentCenter
+    ran_label.setFont(UIFont.systemFontOfSize(20))
+    view.addSubview(ran_label)
+
+    @random_switch = UISwitch.alloc.initWithFrame([[3*@width/4,picker_view.frame.origin.y+picker_view.frame.size.height],[@width/4,20]])
+    @random_switch.on = true
+    @random_switch.addTarget(self,action:'random_switch_changed', forControlEvents:UIControlEventValueChanged)
+    view.addSubview(@random_switch)
+
     #buttons to cancel and done
     done_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
     done_button.setTitle('Continue', forState: UIControlStateNormal)
-    done_button.frame = [[0,picker_view.frame.origin.y+picker_view.frame.size.height+5],[@width,20]]
+    done_button.frame = [[0,picker_view.frame.origin.y+picker_view.frame.size.height+65],[@width,20]]
     done_button.addTarget(self, action: 'done', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(done_button)
 
-    @selected_secs = 1
+    #@selected_secs = 1
+    @selected_secs = picker_view.selectedRowInComponent(0) % 300 + 1
 
-    self.preferredContentSize = [@width, done_button.frame.origin.y+done_button.frame.size.height+5]
+    self.preferredContentSize = [@width, done_button.frame.origin.y+done_button.frame.size.height+50]
+  end
+
+  def random_switch_changed
+    # for simplicity,
+    # if @selected_secs is negative, say -5, it is randomly executed with average of about 5 seconds
+    # if @selected_secs is positive, say +5, it will run exactly every 5 seconds
+    if @random_switch.isOn
+      p "click on"
+    else
+      p "click off"
+    end
+
+
   end
 
   # Back to the action adder to make a new one.
   def done
-    puts('repeat every '+ @selected_secs.to_s+' s')
-    @delegate.submit_number(@selected_secs)
+    if @random_switch.isOn
+      @delegate.submit_number(-1*@selected_secs)
+    else
+      @delegate.submit_number(@selected_secs)
+    end
+
   end
 
   # Back to the action adder to make a new one.
@@ -90,11 +119,11 @@ class RepeatActionViewController < UIViewController
   end
 
   def pickerView(pickerView, titleForRow:row, forComponent:component)
-    return (row % 300).to_s
+    return (row % 300 + 1).to_s
   end
 
   def pickerView(pickerView, didSelectRow:row, inComponent:component)
-      @selected_secs = row % 300
+      @selected_secs = row % 300 + 1
   end
 
 end

@@ -193,6 +193,7 @@ class ToyInScene
       if not @animate_position
         @animate_position = 0
       end
+      # Minh comment: this piece below is not safe, need recheck.
       @animate_position += timer.userInfo[0]
     else
       timer.invalidate

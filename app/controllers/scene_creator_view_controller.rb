@@ -8,12 +8,9 @@ class SceneCreatorViewController < UIViewController
   attr_reader :main_view
 
   def loadView # preferable to viewDidLoad because not using xib
-    p "scene load view"
-    # Can call super this time as super is not UIViewController
 
-    # about to convert the self.view to the SceneCreatorView
-    #@bounds=CGRectMake(0,0,1000,1000)
     self.view = UIView.alloc.initWithFrame(@bounds)
+    self.view.accessibilityLabel = 'sceneView'
     location_of_play = [95, 0]
     size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @main_view = SceneCreatorView.alloc.initWithFrame([location_of_play, size_of_play])
@@ -159,20 +156,18 @@ class SceneCreatorViewController < UIViewController
   end
 
   def save_scene
-    p 'save scene'
-    @main_view.setGravity(@state.scenes[@state.currentscene].gravity)
-    if @state.scenes[@state.currentscene].background != nil
-      @main_view.setBackground(@state.scenes[@state.currentscene].background)
+    p "save scene #{@state.scenes[@state.currentscene]} current scene: #{@state.currentscene}"
+    if @state.scenes[@state.currentscene] != nil
+      @main_view.setGravity(@state.scenes[@state.currentscene].gravity)
+      if @state.scenes[@state.currentscene].background != nil
+        @main_view.setBackground(@state.scenes[@state.currentscene].background)
+      end
+      scene = @main_view.gather_scene_info
+      scene.identifier = @id
+      unless scene.edges.empty? and scene.toys.empty?
+        @state.add_scene(scene)
+      end
     end
-
-    #p "scene is saved: boundary = #{@state.scenes[@state.currentscene].boundaries}"
-
-    scene = @main_view.gather_scene_info
-    scene.identifier = @id
-    unless scene.edges.empty? and scene.toys.empty?
-      @state.add_scene(scene)
-    end
-    # p "scene is saved: boundary = #{scene.boundaries}"
   end
 
   def new

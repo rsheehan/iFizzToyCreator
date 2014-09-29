@@ -27,4 +27,7 @@ class Constants
   SMALLER_SIZED_SAVED_SCENE = 0.35
   SMALL_GAP = 2
 
+  # transition effects between scenes
+  TRANSITION_EFFECT = SKTransition.revealWithDirection( SKTransitionDirectionLeft,  duration: 1 ) # for how many seconds
+
 end

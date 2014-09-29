@@ -8,17 +8,9 @@ class CenterToyViewController < UIViewController
   def viewDidAppear(animated)
     #Refresh UIView for moved toy
     @toy_origin = @selected.position
-    # toy_center = CGPointMake(100, 0)
-    # center = @main_view.center
-    # center_diff = center - toy_center
-    # #@selected.change_position(true_center)
-    # @diff = center_diff - @toy_origin
     @duration = 0.8
     @delay = 0.1
     lowerAlpha = 0.05
-    #transform = CGAffineTransformMakeTranslation(diff.x, diff.y)
-    #puts "Diff , X: " + transform.tx.to_s + ", Y: " + transform.ty.to_s
-    #@scene_creat@=or_view_controller.main_view.shift_view_by(@diff)
     @selected.move_to(@main_view.center, @duration, @delay)
 
     @how_many_times = @duration/@delay
@@ -38,8 +30,6 @@ class CenterToyViewController < UIViewController
   end
 
   def viewWillDisappear(animated)
-    #@scene_creator_view_controller.main_view.shift_view_by(@diff*-1)
-    #@selected.change_position(@toy_origin)
     @popover.dismissPopoverAnimated(true)
     @selected.move_to(@toy_origin + CGPointMake(100, 0), @duration, @delay)
     @timer = NSTimer.scheduledTimerWithTimeInterval(@delay, target: self, selector: "animate:", userInfo: [@delta_alpha*-1, 0], repeats: true)

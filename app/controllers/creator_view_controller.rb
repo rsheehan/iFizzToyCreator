@@ -168,6 +168,9 @@ module CreatorViewControllerModule
 
   def setup_button(image_name, position, super_view)
     button = UIButton.buttonWithType(UIButtonTypeCustom)
+    #p "button name #{image_name}"
+    #button.setTitle(image_name, forState: UIControlStateNormal)
+    button.accessibilityLabel = image_name
     button.setImage(UIImage.imageNamed(image_name), forState: UIControlStateNormal)
     button.setImage(UIImage.imageNamed(image_name + '_selected'), forState: UIControlStateSelected) rescue puts 'rescued'
     button.sizeToFit

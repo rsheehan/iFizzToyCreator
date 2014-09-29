@@ -22,9 +22,9 @@ class ActionListPopoverViewController < UIViewController
 
     #make table view filled with all actions that have selected as the toy
     if @toy_actions.size > 3
-      tvHeight = 200 + 4*40+ 30+50
+      tvHeight = 200 + 5*40+ 30+50
     else
-      tvHeight = 80 * @toy_actions.size  + 4*40+ 30+50
+      tvHeight = 80 * @toy_actions.size  + 5*40+ 30+50
     end
 
     @table_view = UITableView.alloc.initWithFrame([[0, 5], [WIDTH, tvHeight]])
@@ -133,7 +133,7 @@ class ActionListPopoverViewController < UIViewController
 
   def tableView(tv, numberOfRowsInSection: section)
     if section == 0
-      4
+      5
     else
       @toy_actions.length
     end
@@ -215,18 +215,21 @@ class ActionListPopoverViewController < UIViewController
           if @selected.template.stuck
             cell.hidden = true
           end
+
         when 1
           cell.text = Language::STUCK
           @stuck_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
           @stuck_switch.on = @selected.template.stuck
           cell.accessoryView = @stuck_switch
           @stuck_switch.addTarget(self,action:'stuck_switch_changed', forControlEvents:UIControlEventValueChanged)
+
         when 2
           cell.text = Language::ALWAYS_TRAVELS_FORWARD
           @travel_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
           @travel_switch.on = @selected.template.always_travels_forward
           cell.accessoryView = @travel_switch
           @travel_switch.addTarget(self,action:'travel_switch_changed', forControlEvents:UIControlEventValueChanged)
+
         when 3
           #show 4 way switch for direction
           cell.text = Language::FRONT
@@ -234,6 +237,14 @@ class ActionListPopoverViewController < UIViewController
           if not @selected.template.always_travels_forward
             cell.hidden = true
           end
+
+        when 4
+          cell.text = 'Affected by Gravity'
+          @gravity_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
+          @gravity_switch.on = @selected.template.gravity
+          cell.accessoryView = @gravity_switch
+          @gravity_switch.addTarget(self,action:'gravity_switch_changed', forControlEvents:UIControlEventValueChanged)
+
       end
       cell
 
@@ -513,6 +524,14 @@ class ActionListPopoverViewController < UIViewController
     @table_view.beginUpdates
     @table_view.endUpdates
     @table_view.cellForRowAtIndexPath(NSIndexPath.indexPathForRow(0, inSection:0)).hidden = @stuck_switch.on?
+  end
+
+  def gravity_switch_changed
+    p 'gravity_switch_changed'
+    #set template property
+    @selected.template.gravity = @gravity_switch.on?
+    @table_view.beginUpdates
+    @table_view.endUpdates
   end
 
   def rotate_switch_changed

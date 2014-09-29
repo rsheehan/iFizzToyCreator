@@ -12,6 +12,8 @@ class PlayScene < SKScene
 
   TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
+
+
   MAX_CREATES = 10
 
   TOP=0
@@ -22,6 +24,7 @@ class PlayScene < SKScene
   SWITCH_OFF=0
 
   def didMoveToView(view)
+    p 'start play scene'
     @actions_to_fire = []
     if not @create_actions
       @create_actions = []
@@ -160,6 +163,7 @@ class PlayScene < SKScene
 
   def checkFront
     # #after simulating physics see if need to flip node?
+    #p "(#{rand(10)})"
     @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
       toyArray.each do |toy|
         if toy.userData != nil and toy.userData[:uniqueID] != -1
@@ -202,6 +206,16 @@ class PlayScene < SKScene
                 end
             end
           end
+
+          # remove toys if toys fall out of the frame
+          if toy.position.y > frame.size.height || toy.position.y < frame.origin.y || toy.position.x > frame.size.width || toy.position.x < frame.origin.x
+            #p "remove toy #{toy.userData[:uniqueID]}"
+            remove = SKAction.removeFromParent()
+            apply_action_to_toy(toy, remove)
+            toy.userData[:uniqueID] = -1
+            self.paused = true
+          end
+
         end
       end
     end
@@ -282,6 +296,8 @@ class PlayScene < SKScene
 # This is called once per frame.
 # Most screen logic goes here.
   def update(current_time)
+
+    # check everything before a scene is drawn
     checkFront
 
     # Places sound actions at the front
@@ -358,6 +374,7 @@ class PlayScene < SKScene
 
             when :scene_shift
               @delegate.scene_shift(param)
+              p "scene shift"
 
             when :text_bubble
               position = view.convertPoint(toy.position, fromScene: self)
@@ -500,6 +517,7 @@ class PlayScene < SKScene
                 bool
               end
 
+              # remove toys when it reaches to some particular MAX_CREATES value
               while @toy_hash[id].length - @toys_count[id] > MAX_CREATES
                 to_remove = @toy_hash[id].delete_at(@toys_count[id])
                 fadeOut = SKAction.fadeOutWithDuration(0.7)
@@ -734,6 +752,7 @@ class PlayScene < SKScene
   end
 
   def add_toys
+    p 'add toys'
     @toy_hash = {}
     @loaded_toys = {}
     @toys.each do |toy_in_scene|
@@ -783,6 +802,7 @@ class PlayScene < SKScene
     #properties
     toy.physicsBody.allowsRotation = toy_in_scene.template.can_rotate;
     toy.physicsBody.dynamic = !(toy_in_scene.template.stuck)
+    toy.physicsBody.affectedByGravity = toy_in_scene.template.gravity
 
     toy.userData[:wheels] = []
     toy.userData[:joints] = []

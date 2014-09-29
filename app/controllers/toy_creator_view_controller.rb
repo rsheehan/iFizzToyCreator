@@ -7,7 +7,9 @@ class ToyCreatorViewController < UIViewController
   
   def loadView # preferable to viewDidLoad because not using xib
     # Can call super this time as super is not UIViewController
+
     self.view = UIView.alloc.initWithFrame(@bounds)
+    self.view.accessibilityLabel = 'toyView'
     #puts "value is 123"
     location_of_play = [95, 0]
     size_of_play = [@bounds.size.width - 190, @bounds.size.height]

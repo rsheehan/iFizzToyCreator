@@ -24,8 +24,7 @@ class ActionAdderViewController < UIViewController
   # reverting to SceneCreatorViewController or PlayViewController.
 
   def loadView # preferable to viewDidLoad because not using xib
-    # Do not call super.
-    #@view_mode = :nothing_chosen
+
     action_over_view = UIView.alloc.init
     self.view = action_over_view
 
@@ -38,16 +37,14 @@ class ActionAdderViewController < UIViewController
     setup_sides
 
     @main_view = @scene_creator_view_controller.main_view
-    @main_view.add_delegate(self)
-    @main_view.mode = :toys_only # only toys can be selected
 
-    #setup mode buttons - show actions and properties
-    position = [10, 10]
-
-    #position[0] += CGRectGetWidth(@show_actions_btn.frame) + 10
-
-
-    view.addSubview(@main_view)
+    # check for @ma
+    if @main_view != nil
+      @main_view.add_delegate(self)
+      @main_view.mode = :toys_only # only toys can be selected
+      position = [10, 10]
+      view.addSubview(@main_view)
+    end
   end
 
   def bounds_for_view=(bounds)
@@ -55,29 +52,29 @@ class ActionAdderViewController < UIViewController
   end
 
   def viewDidAppear(animated)
-    @button_toys = {}
-    @main_view.change_label_text_to(Language::ACTION_ADDER)
-    @main_view.add_delegate(self)
-    @main_view.mode = :toys_only # only toys can be selected
-    view.addSubview(@main_view)
-    super # MUST BE CALLED
-
-    hide_sides
-
-    #add popover to prompt to select a toy
-    if not @selected_toy.nil? and not @back_from_modal_view
-      start_action_flow
+    p "view appear mainview is #{@main_view}"
+    if @main_view == nil
+      @main_view = @scene_creator_view_controller.main_view
     end
-
-    #load all button actions to button images?
-    reload_button_image_hash
-    draw_all_buttons
-
-    #if @view_mode == :nothing_chosen
-    #enable_action_buttons(false)
-    #enable_effect_buttons(false)
-    #end
-    #self.selected_toy = nil
+    if @main_view == nil
+      alert = UIAlertView.alloc.initWithTitle("Alert", message:"You have not selected any scene, click Make scenes button below", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
+      alert.show
+    else
+      @button_toys = {}
+      @main_view.change_label_text_to(Language::ACTION_ADDER)
+      @main_view.add_delegate(self)
+      @main_view.mode = :toys_only # only toys can be selected
+      view.addSubview(@main_view)
+      super # MUST BE CALLED
+      hide_sides
+      #add popover to prompt to select a toy
+      if not @selected_toy.nil? and not @back_from_modal_view
+        start_action_flow
+      end
+      #load all button actions to button images?
+      reload_button_image_hash
+      draw_all_buttons
+    end
   end
 
   def reload_button_image_hash
@@ -180,7 +177,7 @@ class ActionAdderViewController < UIViewController
   end
 
   def show_actions
-    puts 'SHOW ACTIONS'
+    p 'SHOW ACTIONS'
     if(@selected_toy)
       #show modal with view of all associated actions and effects
       action_list_view_controller = ActionListViewController.alloc.initWithNibName(nil, bundle: nil)
@@ -195,7 +192,7 @@ class ActionAdderViewController < UIViewController
   end
 
   def show_properties
-    puts 'Show properties'
+    p 'Show properties'
     if(@selected_toy)
       prop_list_view_controller = PropertyListViewController.alloc.initWithNibName(nil, bundle: nil)
       prop_list_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
