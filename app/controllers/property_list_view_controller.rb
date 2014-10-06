@@ -11,7 +11,7 @@ class PropertyListViewController < UIViewController
   def loadView
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, WIDTH]])
-    view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
     # add toy view at top
 
     @selected.update_image
@@ -29,7 +29,7 @@ class PropertyListViewController < UIViewController
 
     #make table view filled with all actions that have selected as the toy
     @table_view = UITableView.alloc.initWithFrame([[@current_xpos, 120], [WIDTH - @current_xpos, WIDTH]])
-    @table_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    @table_view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
     @table_view.dataSource = self
     @table_view.delegate = self
     @table_view.rowHeight = 95

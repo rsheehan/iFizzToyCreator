@@ -36,12 +36,12 @@ class ActionCell < UITableViewCell
     # Creates and adds label bounds
     @action_text_view = UILabel.alloc.initWithFrame(CGRectMake(boundsX, boundsY+y_space+img_size, width/2, 15))
     @action_text_view.setTextAlignment(UITextAlignmentCenter)
-    @action_text_view.setFont(UIFont.systemFontOfSize(14))
+    @action_text_view.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
     self.contentView.addSubview(@action_text_view)
 
     @effect_text_view = UILabel.alloc.initWithFrame(CGRectMake(boundsX+width/2,boundsY+y_space+img_size,width/2, 15))
     @effect_text_view.setTextAlignment(UITextAlignmentCenter)
-    @effect_text_view.setFont(UIFont.systemFontOfSize(14))
+    @effect_text_view.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
     self.contentView.addSubview(@effect_text_view)
 
     self

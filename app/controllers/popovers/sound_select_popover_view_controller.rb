@@ -10,7 +10,7 @@ class SoundSelectPopoverViewController < UIViewController
     @height = 300
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
-    view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
 
     #back button
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
@@ -24,7 +24,7 @@ class SoundSelectPopoverViewController < UIViewController
     #title
     @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,30]])
     @title.setText('Choose Sound')
-    @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+    @title.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
     @title.setFont(UIFont.boldSystemFontOfSize(18))
     view.addSubview(@title)
 
@@ -35,15 +35,15 @@ class SoundSelectPopoverViewController < UIViewController
     self.view.layer.addSublayer(separator)
 
     #make table view filled with all actions that have selected as the toy
-    if Constants::SOUND_NAMES.length > 3
-      tvHeight = 160
+    if Constants::SOUND_NAMES.length * 45 > MAX_HEIGHT/2
+      tvHeight = MAX_HEIGHT/2
     else
       tvHeight = 45 * Constants::SOUND_NAMES.length
     end
 
     #table view for sound
     @table_view = UITableView.alloc.initWithFrame([[0, 45], [@width, tvHeight]])
-    @table_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    @table_view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
     @table_view.dataSource = self
     @table_view.delegate = self
     @table_view.rowHeight = 45

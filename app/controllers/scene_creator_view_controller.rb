@@ -168,6 +168,7 @@ class SceneCreatorViewController < UIViewController
         @state.add_scene(scene)
       end
     end
+    p "finished save scene"
   end
 
   def new

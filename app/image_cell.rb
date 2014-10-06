@@ -18,7 +18,7 @@ class ImageCell < UICollectionViewCell
     # Set Text
     @text_view = UILabel.alloc.initWithFrame(CGRectMake(0,frame.size.height-15,frame.size.width, 15))
     @text_view.setTextAlignment(UITextAlignmentCenter)
-    @text_view.setFont(UIFont.systemFontOfSize(14))
+    @text_view.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
     addSubview(@text_view)
   end
 

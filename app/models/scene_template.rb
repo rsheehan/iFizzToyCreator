@@ -133,7 +133,6 @@ class SceneTemplate
       #CGContextDrawImage(context, [[0,0],[100,100]], @background.CGImage)
       @background.drawInRect(rectangle)
     else
-
       CGContextFillRect(context, CGRectMake(Constants::SMALL_GAP, Constants::SMALL_GAP, size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP))
     end
 

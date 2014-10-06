@@ -191,13 +191,15 @@ class ToyInScene
   def animate(timer)
     if timer.userInfo[1] < @how_many_times
       if not @animate_position
-        @animate_position = 0
+        #@animate_position = 0
+        #@animate_position = CGPointMake(0,0)
+      else
+        # Minh comment: this piece below is not safe, need recheck.
+        @animate_position += timer.userInfo[0]
       end
-      # Minh comment: this piece below is not safe, need recheck.
-      @animate_position += timer.userInfo[0]
+
     else
       timer.invalidate
-      #@timer = nil
       @animate_position = nil
       return
     end

@@ -9,7 +9,7 @@ class ActionListViewController < UIViewController
     def loadView
       # Do not call super.
       self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, WIDTH]])
-      view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+      view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
       setup_button(:back, [LITTLE_GAP, LITTLE_GAP])
 
       #make array of actions that relate to the selected toy
@@ -21,7 +21,7 @@ class ActionListViewController < UIViewController
       end
       #make table view filled with all actions that have selected as the toy
       @table_view = UITableView.alloc.initWithFrame([[@current_xpos, 0], [WIDTH - @current_xpos, WIDTH+95]])
-      @table_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+      @table_view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
       @table_view.dataSource = self
       @table_view.delegate = self
       @table_view.rowHeight = 95

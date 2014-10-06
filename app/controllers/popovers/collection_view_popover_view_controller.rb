@@ -8,13 +8,13 @@ class CollectionViewPopoverViewController < UIViewController
     MAX_HEIGHT = 350
 
     ACTIONS = [:toy_touch, :touch, :collision, :timer, :when_created, :score_reaches, :loud_noise, :shake]
-    EFFECTS = [:apply_force, :explosion, :delete_effect, :apply_torque, :create_new_toy, :score_adder, :play_sound, :text_bubble, :scene_shift]
+    EFFECTS = [:apply_force, :explosion, :delete_effect, :apply_torque, :create_new_toy, :score_adder, :play_sound, :text_bubble, :scene_shift, :move_towards, :move_away]
     TOYBUTTON = "ToyButton"
 
     def loadView
       # Do not call super.
       self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, MAX_HEIGHT]])
-      view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+      view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
 
       #default mode value
       if @mode.nil?
@@ -37,7 +37,7 @@ class CollectionViewPopoverViewController < UIViewController
       else
         @title.setText(Language::CHOOSE_TRIGGER)
       end
-      @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+      @title.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
       @title.setFont(UIFont.boldSystemFontOfSize(18))
       view.addSubview(@title)
 
@@ -48,7 +48,7 @@ class CollectionViewPopoverViewController < UIViewController
       self.view.layer.addSublayer(separator)
 
       @col_view = UICollectionView.alloc.initWithFrame([[0, 40], [WIDTH, WIDTH]], collectionViewLayout: UICollectionViewFlowLayout.alloc.init)
-      @col_view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+      @col_view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
       @col_view.registerClass(ImageCell, forCellWithReuseIdentifier: "ImgCell")
       @col_view.registerClass(ToyButton, forCellWithReuseIdentifier: TOYBUTTON)
       @col_view.dataSource = self
@@ -85,7 +85,7 @@ class CollectionViewPopoverViewController < UIViewController
       case @mode
         when :effects
           return EFFECTS.size
-        when :toys
+        when :toys, :move_towards, :move_away
           @state.toys.length
         else
           return ACTIONS.size
@@ -101,7 +101,7 @@ class CollectionViewPopoverViewController < UIViewController
           cell = cv.dequeueReusableCellWithReuseIdentifier("ImgCell", forIndexPath: index_path)
           cell.image = UIImage.imageNamed(EFFECTS[item])
           cell.text = name_for_label(EFFECTS[item])
-        when :toys
+        when :toys, :move_towards, :move_away
           cell = cv.dequeueReusableCellWithReuseIdentifier("ImgCell", forIndexPath: index_path)
           @state.toys[item].update_image
           cell.image = @state.toys[item].image
@@ -121,8 +121,9 @@ class CollectionViewPopoverViewController < UIViewController
       case @mode
         when :effects
           img_size = UIImage.imageNamed(EFFECTS[item]).size
-          CGSizeMake(img_size.width,img_size.height+10)
-        when :toys
+          #CGSizeMake(img_size.width,img_size.height+10)
+          CGSizeMake(75,75)
+        when :toys, :move_towards, :move_away
           CGSizeMake(75,75)
         else
           img_size = UIImage.imageNamed(ACTIONS[item]).size
@@ -137,12 +138,17 @@ class CollectionViewPopoverViewController < UIViewController
     # And the methods for the UICollectionViewDelegate protocol.
     def collectionView(cv, didSelectItemAtIndexPath: index_path)
       item = index_path.row
+      #puts "collectionView message mode: #{@mode}"
       case @mode
+        # add action to toys here
         when :effects
+          puts "effect"
           @delegate.makeEffect(EFFECTS[item])
-        when :toys
+        when :toys, :move_towards, :move_away
+          puts "toys"
           @delegate.chose_toy(item)
         else
+          puts "other"
           @delegate.makeTrigger(ACTIONS[item])
       end
     end
@@ -185,6 +191,12 @@ class CollectionViewPopoverViewController < UIViewController
           Language::TEXT_BUBBLE
         when :scene_shift
           Language::SCENE_SHIFT
+        when :move_towards
+          Language::MOVE_TOWARDS_OTHERS
+        when :move_away
+          Language::MOVE_AWAY_OTHERS
+        else
+          :unknown
       end
     end
 

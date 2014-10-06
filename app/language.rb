@@ -12,6 +12,9 @@ class Language
   TRIGGER         = 'Trigger'
   EFFECT          = 'Effect'
   SCORE_TRIGGER   = 'Score Trigger'
+  FORCE_TITLE     = 'Force'
+  EXPLOSION_TITLE = 'Explosion'
+  ROTATION_TITLE  = 'Rotation'
 
   # View labels
   TOY_MAKER       = 'Toy Maker'
@@ -40,7 +43,7 @@ class Language
   REPEAT        = 'timer'     # Repeat?
   HOLD          = 'hold'
   SCORE_REACHES = 'score'
-  WHEN_CREATED  = 'created'
+  WHEN_CREATED  = 'after created'
   SHAKE         = 'shake'
   LOUD_NOISE    = 'noise'
   TOY_TOUCH     = 'tap toy'
@@ -55,6 +58,8 @@ class Language
   PLAY_SOUND    = 'sound'
   TEXT_BUBBLE   = 'text'
   SCENE_SHIFT   = 'scene'
+  MOVE_TOWARDS_OTHERS  = 'towards'
+  MOVE_AWAY_OTHERS  = 'move away'
 
   #Property names
   CAN_ROTATE    = 'Can Rotate'
@@ -87,4 +92,6 @@ class Language
   CHOOSE_TIMER         = 'Timer Trigger'
   CHOOSE_SCORE         = 'Enter the change in score'
   TEXT_COMMAND         = 'Enter the text to show'
+  MOVE_TOWARDS         = 'Choose the toy this will move towards'
+  MOVE_AWAY            = 'Choose the toy this will move away from'
 end

@@ -6,12 +6,14 @@ class RepeatActionViewController < UIViewController
   BIG_GAP = 40
   MAX_HEIGHT = 800
 
+  @textLabel = 'Repeat every'
+
   def loadView
     @width = 300
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
 
-    view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
 
     #back button
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
@@ -25,7 +27,7 @@ class RepeatActionViewController < UIViewController
     #title
     @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,30]])
     @title.setText(Language::CHOOSE_TIMER)
-    @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+    @title.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
     @title.setFont(UIFont.boldSystemFontOfSize(18))
     view.addSubview(@title)
 
@@ -45,8 +47,8 @@ class RepeatActionViewController < UIViewController
     #textview
     text_view = UILabel.alloc.initWithFrame([[0,picker_view.frame.origin.y+picker_view.frame.size.height/2-13],[@width/2-20,26]])
     text_view.setFont(UIFont.systemFontOfSize(20))
-    text_view.text = 'Repeat every'
-    text_view.backgroundColor = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    text_view.text = @textLabel
+    text_view.backgroundColor = Constants::LIGHT_BLUE_GRAY
     text_view.textAlignment = NSTextAlignmentCenter
     view.addSubview(text_view)
 
@@ -79,6 +81,10 @@ class RepeatActionViewController < UIViewController
     @selected_secs = picker_view.selectedRowInComponent(0) % 300 + 1
 
     self.preferredContentSize = [@width, done_button.frame.origin.y+done_button.frame.size.height+50]
+  end
+
+  def setLabel(newLabel)
+    @textLabel = newLabel
   end
 
   def random_switch_changed

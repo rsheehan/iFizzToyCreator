@@ -7,7 +7,7 @@ class PlayPopoverViewController < UIViewController
     @width = 300
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
-    view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
 
     #back button
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
@@ -22,8 +22,8 @@ class PlayPopoverViewController < UIViewController
     if @instr_text
       @instruction.setText(@instr_text)
     end
-    @instruction.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
-    @instruction.setFont(UIFont.systemFontOfSize(14))
+    @instruction.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
+    @instruction.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
     @instruction.textAlignment = NSTextAlignmentCenter
     view.addSubview(@instruction)
 

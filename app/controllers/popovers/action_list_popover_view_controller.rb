@@ -15,20 +15,20 @@ class ActionListPopoverViewController < UIViewController
   def loadView
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, 40]])
-    view.backgroundColor =  UIColor.colorWithRed(0.95, green: 0.95, blue: 0.95, alpha: 1.0)
+    view.backgroundColor = Constants::LIGHT_GRAY
 
     #make array of actions that relate to the selected toy
     @toy_actions = @selected.template.actions
 
     #make table view filled with all actions that have selected as the toy
     if @toy_actions.size > 3
-      tvHeight = 200 + 5*40+ 30+50
+      tvHeight = MAX_HEIGHT
     else
       tvHeight = 80 * @toy_actions.size  + 5*40+ 30+50
     end
 
     @table_view = UITableView.alloc.initWithFrame([[0, 5], [WIDTH, tvHeight]])
-    @table_view.backgroundColor =  UIColor.colorWithRed(0.95, green: 0.95, blue: 0.95, alpha: 1.0)
+    @table_view.backgroundColor = Constants::LIGHT_GRAY
     @table_view.dataSource = self
     @table_view.delegate = self
 
@@ -292,6 +292,7 @@ class ActionListPopoverViewController < UIViewController
           action_cell.action_text = Language::TOY_TOUCH
           action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
         else
+          action_cell.action_text = :unknown
       end
       action_cell.effect_image = UIImage.imageNamed(action[:effect_type]+".png")
       action_cell.sound_button = nil
@@ -353,7 +354,12 @@ class ActionListPopoverViewController < UIViewController
           action_cell.effect_text = Language::TEXT_BUBBLE
         when :scene_shift
           action_cell.effect_text = Language::SCENE_SHIFT
+        when :move_towards
+          action_cell.effect_text = Language::MOVE_TOWARDS_OTHERS
+        when :move_away
+          action_cell.effect_text = Language::MOVE_AWAY_OTHERS
         else
+          action_cell.action_text = "unknown"
       end
       action_cell
     end
@@ -377,13 +383,38 @@ class ActionListPopoverViewController < UIViewController
     2
   end
 
+  # to draw force applied on the toys.
   def drawForce(vector, inImage:image)
     UIGraphicsBeginImageContext(image.size)
     image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
     context = UIGraphicsGetCurrentContext()
 
     # max  x and y 500?
-    draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
+    # Minh comments: vector magnitude is found to be very large, say 250000
+    # why?
+
+    if vector.x > 0 || vector.y > 0
+      draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
+    else
+      # draw a random force
+      (-1..1).each do |i|
+        (-1..1).each do |j|
+          if (i == j || i == -j) && (i != 0)
+            vector = CGPointMake(100000*i, 100000*j)
+            puts "draw vector #{vector}"
+            # draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
+            draw_force_arrow(context,CGPointMake(image.size.width/2, image.size.height/2),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
+          end
+        end
+      end
+      # vector = CGPointMake(0, 25500)
+      # draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
+      #
+      # vector = CGPointMake(0, -25500)
+      # draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
+
+    end
+
 
     newImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
@@ -564,7 +595,7 @@ class ActionListPopoverViewController < UIViewController
   def tableView(tv, viewForHeaderInSection:section)
     if section == 0
       h_view = UIView.alloc.initWithFrame(CGRectMake(0, 0, tv.frame.size.width, 30))
-      h_view.backgroundColor =  UIColor.colorWithRed(0.95, green: 0.95, blue: 0.95, alpha: 1.0)
+      h_view.backgroundColor = Constants::LIGHT_GRAY
       #title
       @p_title = UILabel.alloc.initWithFrame([[10,5],[WIDTH-5,20]])
       @p_title.setText(Language::PROPERTIES)
@@ -580,7 +611,7 @@ class ActionListPopoverViewController < UIViewController
       h_view
     else
       h_view = UIView.alloc.initWithFrame(CGRectMake(0, 0, tv.frame.size.width, 50))
-      h_view.backgroundColor =  UIColor.colorWithRed(0.95, green: 0.95, blue: 0.95, alpha: 1.0)
+      h_view.backgroundColor = Constants::LIGHT_GRAY
 
       #title
       @a_title = UILabel.alloc.initWithFrame([[10,5],[WIDTH-5,20]])

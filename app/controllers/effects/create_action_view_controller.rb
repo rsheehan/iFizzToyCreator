@@ -21,8 +21,22 @@ class CreateActionViewController < UIViewController
     command_label.text = Language::DRAG_CREATE_TOY
     command_label.textAlignment = NSTextAlignmentCenter
     view.addSubview(command_label)
+
+    setup_random_button
+
     setup_done
     @main_view.setNeedsDisplay
+  end
+
+  def setup_random_button
+    @random_view = UIView.alloc.initWithFrame(
+        CGRectMake(@bounds.size.width-190-95, 0, 95, 95)) # @bounds.size.width - 95 - 85, @bounds.size.height - 95, 190, 95))
+    position = [10, 10]
+
+    button = setup_button(:random, position, @random_view)
+    position[0] += CGRectGetWidth(button.frame) + 10
+
+    view.addSubview(@random_view)
   end
 
   def setup_done
@@ -50,6 +64,11 @@ class CreateActionViewController < UIViewController
 
   def done
     @main_view.end_create_toy
+  end
+
+  def random
+    puts "random location is set"
+    @main_view.end_create_toy(true)
   end
 
   def bounds_for_view=(bounds)

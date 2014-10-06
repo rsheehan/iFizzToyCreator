@@ -1,16 +1,11 @@
 class ToyCreatorViewController < UIViewController
-
   include CreatorViewControllerModule
-
   MODES = [:toy, :new]
-
   
   def loadView # preferable to viewDidLoad because not using xib
     # Can call super this time as super is not UIViewController
-
     self.view = UIView.alloc.initWithFrame(@bounds)
     self.view.accessibilityLabel = 'toyView'
-    #puts "value is 123"
     location_of_play = [95, 0]
     size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @main_view = ToyCreatorView.alloc.initWithFrame([location_of_play, size_of_play])
@@ -53,7 +48,6 @@ class ToyCreatorViewController < UIViewController
     toybox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
     toybox_view_controller.delegate = self
     presentViewController(toybox_view_controller, animated: true, completion: nil)
-    #toybox_view_controller.setup_toys(@state.toys)
   end
 
   # Called when a toy image is clicked on in the toy box view.
@@ -70,7 +64,6 @@ class ToyCreatorViewController < UIViewController
           @main_view.add_stroke(CircleStroke.new(((part.position/ToyTemplate::IMAGE_SCALE)+ centre), part.radius/ ToyTemplate::IMAGE_SCALE, part.colour, 1))
         when PointsPart
           points = part.points.map { |p| p/ToyTemplate::IMAGE_SCALE+centre }
-          
           @main_view.add_stroke(LineStroke.new(points, part.colour, ToyTemplate::TOY_LINE_SIZE))
         else
       end
@@ -78,7 +71,6 @@ class ToyCreatorViewController < UIViewController
     @main_view.setNeedsDisplay
     #update id
     @id = toy.identifier
-    #dismiss modal
     dismissModalViewControllerAnimated(true, completion: nil)
   end
 

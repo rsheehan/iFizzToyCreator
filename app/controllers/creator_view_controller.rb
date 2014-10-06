@@ -135,7 +135,7 @@ module CreatorViewControllerModule
       yPos = button.frame.origin.y + button.frame.size.height
       position[1] += CGRectGetHeight(button.frame)
       label = UILabel.alloc.initWithFrame([[0, position[1]], [95, 14]])
-      label.font = UIFont.systemFontOfSize(12)
+      label.font = UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE)
       label.textColor = UIColor.whiteColor
       label.text = name_for_label(tool_name)
       label.textAlignment = NSTextAlignmentCenter

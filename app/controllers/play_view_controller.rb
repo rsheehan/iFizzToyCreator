@@ -183,10 +183,7 @@ class PlayViewController < UIViewController
           button.setImage(get_btn_image_with_actions(@button_actions[button],true), forState: UIControlStateSelected) rescue puts 'rescued'
 
         when :timer
-          #puts("Action",action)
-          #puts "timer: #{action[:action_param][0]}"
           @timers << NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "perform_action:", userInfo: action, repeats: true)
-          # @timers << NSTimer.scheduledTimerWithTimeInterval(action[:action_param][0], target: self, selector: "perform_action:", userInfo: action, repeats: true)
         when :collision
           @play_scene.add_collision(action)
         when :shake
@@ -197,7 +194,8 @@ class PlayViewController < UIViewController
             listen_to_mic
           end
         when :when_created
-          @play_scene.add_create_action(action)
+          @timers << NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "add_after_created_action:", userInfo: action, repeats: true)
+          #@play_scene.add_create_action(action)
         when :score_reaches
           @play_scene.add_score_action(action)
         when :toy_touch
@@ -397,18 +395,32 @@ class PlayViewController < UIViewController
   # this will run every second, if random then using if rand(1000) % 5 == 1 to fire for example
   def perform_action(timer)
     timeInterval = timer.userInfo[:action_param][0].to_i
-    #puts "timeInterval = #{timeInterval}"
+    puts "timeInterval = #{timeInterval}"
     if timeInterval >= 0
-      # not random
       time = Time.new
       if (time.sec + 60*time.min) % timeInterval == (timeInterval-1)
-        #put "fired"
         @play_scene.add_actions_for_update([timer.userInfo])
       end
     else
       # here is random, time interval is negative
       if rand(1000) % -timeInterval == 0
         @play_scene.add_actions_for_update([timer.userInfo])
+      end
+    end
+  end
+
+  def add_after_created_action(timer)
+    timeInterval = timer.userInfo[:action_param][0].to_i
+    puts "timeInterval = #{timeInterval}"
+    if timeInterval >= 0
+      time = Time.new
+      if (time.sec + 60*time.min) % timeInterval == (timeInterval-1)
+        @play_scene.add_create_action([timer.userInfo])
+      end
+    else
+      # here is random, time interval is negative
+      if rand(1000) % -timeInterval == 0
+        @play_scene.add_create_action([timer.userInfo])
       end
     end
   end

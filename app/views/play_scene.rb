@@ -54,7 +54,6 @@ class PlayScene < SKScene
     @mutex = Mutex.new
     @scores = {}
     @toys_count = {}
-
     add_edges
     add_toys
   end
@@ -296,7 +295,6 @@ class PlayScene < SKScene
 # This is called once per frame.
 # Most screen logic goes here.
   def update(current_time)
-
     # check everything before a scene is drawn
     checkFront
 
@@ -312,13 +310,17 @@ class PlayScene < SKScene
     end
 
     @actions_to_fire.each do |action|
+      # minh comment: all toys with the same type
       toy_id = action[:toy]
+
       toys = @toy_hash[toy_id] # all toys of the correct type
+      puts "toy hash id = #{toy_id}"
       if toys.nil?     # If the toy gets deleted after an action is added
         next
       end
       #if collision - remove all toys that are same but not collided
       if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches or action[:action_type] == :toy_touch
+        puts "when created"
         new_toys = []
         toys.each do |toy|
           if toy.userData[:uniqueID] == action[:action_param][1]
@@ -327,25 +329,37 @@ class PlayScene < SKScene
         end
         toys = new_toys
       end
+
+      ### Apply effects on toys for each action
       toys.delete_if do |toy| # toys here are SKSpriteNodes
         if toy.userData[:uniqueID] == -1
           delete = true
         else
           effect = action[:effect_type]
           param = action[:effect_param]
+          puts "effect #{effect}, param #{param}"
           delete = false
           send = false
+          #puts "Value param: #{param}"
           case effect
-
             when :apply_force
               # make force relative to the toy
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
-              param = CGPointApplyAffineTransform(param, rotation)
+              if(param.x.to_i == 0 && param.y.to_i == 0)
+                # random force applied
+                ranX = rand(Constants::GENERAL_TOY_FORCE) - Constants::GENERAL_TOY_FORCE / 2
+                ranY = rand(Constants::GENERAL_TOY_FORCE) - Constants::GENERAL_TOY_FORCE / 2
+                param = CGPointApplyAffineTransform(CGPointMake(ranX,ranY), rotation)
+              else
+                param = CGPointApplyAffineTransform(param, rotation)
+              end
+              puts "apply force at #{param}: (#{param.x},#{param.y})"
+
               send = true
               effect = "applyForce"
 
             when :explosion
-              #puts "Velocity Toy(B4 Dele): X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
+              #
               @mutex.synchronize do
                 if toy.userData[:uniqueID] != -1
                   explode_toy(toy, param)
@@ -355,7 +369,13 @@ class PlayScene < SKScene
               delete = true
 
             when :apply_torque
-              param *= toy.size.width/2  # Scale by opposing torque on toy
+              if param != Constants::RANDOM_HASH_KEY
+                param *= toy.size.width/2  # Scale by opposing torque on toy
+              else
+                #param = Constants::RANDOM_HASH_KEY.to_i % 4 - rand(2.0)
+                param = (rand(20.0) - 10)*toy.size.width/2 # Scale by opposing torque on toy
+              end
+
               effect = "applyTorque"
               send = true
 
@@ -372,6 +392,38 @@ class PlayScene < SKScene
               sound = SKAction.playSoundFileNamed(param, waitForCompletion: false)
               toy.runAction(sound)
 
+            when :move_towards
+              theOtherToy = nil
+              otherToys = @toy_hash[param] # all toys of the correct type
+              if otherToys != nil
+                otherToys.each do |otherToy|
+                  theOtherToy = otherToy
+                end
+              end
+              if theOtherToy != nil
+                xDirection = theOtherToy.position.x - toy.position.x
+                yDirection = theOtherToy.position.y - toy.position.y
+                length = Math.sqrt(xDirection*xDirection + yDirection*yDirection)
+                velocity = CGVectorMake(Constants::MOVE_TOWARDS_AND_AWAY_SPEED*xDirection/length, Constants::MOVE_TOWARDS_AND_AWAY_SPEED*yDirection/length)
+                toy.physicsBody.velocity = velocity
+              end
+
+            when :move_away
+              theOtherToy = nil
+              otherToys = @toy_hash[param] # all toys of the correct type
+              if otherToys != nil
+                otherToys.each do |otherToy|
+                  theOtherToy = otherToy
+                end
+              end
+              if theOtherToy != nil
+                xDirection = toy.position.x - theOtherToy.position.x
+                yDirection = toy.position.y - theOtherToy.position.y
+                length = Math.sqrt(xDirection*xDirection + yDirection*yDirection)
+                velocity = CGVectorMake(Constants::MOVE_TOWARDS_AND_AWAY_SPEED*xDirection/length, Constants::MOVE_TOWARDS_AND_AWAY_SPEED*yDirection/length)
+                toy.physicsBody.velocity = velocity
+              end
+
             when :scene_shift
               @delegate.scene_shift(param)
               p "scene shift"
@@ -385,21 +437,13 @@ class PlayScene < SKScene
                 @label.removeFromParent
               end
 
-              # text = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(14).fontDescriptor.postscriptName)
-              # text.position = CGPointMake(0, 0)
-              # text.fontSize = 14
-              # text.text = param
-              # text.fontColor = UIColor.blackColor
-
               @label = SKShapeNode.alloc.init
               num = Pointer.new(:float, 2)
               num[0] = 5
               bezier = UIBezierPath.bezierPathWithRoundedRect(CGRectMake(-20, -20, 40, 40), cornerRadius: num[0])
               @label.path = bezier.CGPath
-              @label.fillColor = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
-              #@label.addChild(text)
+              @label.fillColor = Constants::LIGHT_BLUE_GRAY
               @label.position = toy.position
-
               addChild(@label)
 
             when :score_adder
@@ -474,21 +518,21 @@ class PlayScene < SKScene
             when :create_new_toy
               id = action[:effect_param][:id]
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
-
               # Gets toy in scene from loaded toys
               toy_in_scene = @loaded_toys[id].select {|s| s.uid == action[:uid]}.first
-
               displacement = CGPointMake(action[:effect_param][:x], action[:effect_param][:y])
-              #puts "DisB4 Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
-              displacement = CGPointApplyAffineTransform(displacement, rotation)
-              displacement = CGPointMake(displacement.x, displacement.y)
-              #puts "DisAf Pos, X: " + displacement.x.to_s + ", Y: " + displacement.y.to_s
-              toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
-              new_toy = new_toy(toy_in_scene)
 
-
+              # if this is to be randomly created, put the position to be random on the screen
+              if displacement.x.to_i == Constants::RANDOM_HASH_KEY && displacement.y.to_i == Constants::RANDOM_HASH_KEY
+                toy_in_scene.position = CGPointMake(rand(self.size.width.to_i), rand(self.size.height.to_i))
+              else
+                displacement = CGPointApplyAffineTransform(displacement, rotation)
+                displacement = CGPointMake(displacement.x, displacement.y)
+                toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
+              end
+              new_toy = new_toy(toy_in_scene, true)
+              new_toy.color = UIColor.grayColor
               new_toy.zRotation = (new_toy.zRotation + toy.zRotation)
-
               new_toy.userData[:id] = rand(2**60).to_s
               new_toy.userData[:templateID] = toy_in_scene.uid
               new_toy.userData[:uniqueID] = rand(2**60).to_s
@@ -509,7 +553,6 @@ class PlayScene < SKScene
               end
               @toy_hash[id] << new_toy
               @toys_count[id] = 0 unless @toys_count[id]
-
               @toy_hash[id].delete_if do |check_toy|
                 bool = check_toy.userData[:uniqueID] == -1
                 puts "UniqueID: " + check_toy.userData[:uniqueID].to_s
@@ -523,7 +566,6 @@ class PlayScene < SKScene
                 fadeOut = SKAction.fadeOutWithDuration(0.7)
                 remove = SKAction.removeFromParent()
                 sequence = SKAction.sequence([fadeOut, remove])
-                #to_remove.runAction(sequence)
                 apply_action_to_toy(to_remove, sequence)
               end
           end
@@ -562,7 +604,15 @@ class PlayScene < SKScene
     new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
     partsArray = toy_in_scene.template.exploded
-    timer = force * TIMER_SCALE
+
+    #puts "force = #{force}"
+    #puts "force hash = #{Constants::RANDOM_HASH_KEY}"
+    if force.to_i == Constants::RANDOM_HASH_KEY.to_i
+      force = rand(Constants::RANDOM_HASH_KEY)/5.0
+      #puts "force = #{force}"
+    end
+
+    timer = Constants::TIME_AFTER_EXPLOSION #force * TIMER_SCALE
 
     force = scale_force_mass(force, toy.userData[:mass])
     partsArray.each do |part|
@@ -613,22 +663,20 @@ class PlayScene < SKScene
           new_sprite_toy.physicsBody.affectedByGravity = false
         end
       end
-      #puts "Velocity Toy: X: " + toy.physicsBody.velocity.dx.to_s + ",  Y: " + toy.physicsBody.velocity.dy.to_s
-      #puts "Velocity Before: X: " + new_sprite_toy.physicsBody.velocity.dx.to_s + ",  Y: " + new_sprite_toy.physicsBody.velocity.dy.to_s
-      new_sprite_toy.physicsBody.velocity = toy.physicsBody.velocity
-      #puts "Velocity After: X: " + new_sprite_toy.physicsBody.velocity.dx.to_s + ",  Y: " + new_sprite_toy.physicsBody.velocity.dy.to_s
-      new_sprite_toy.name = new_name
-      addChild(new_sprite_toy)
-      #puts "Mag: " + force.to_s
-      #puts "Force X: " + (force/displacement.x/20).to_s + ", Y: " + (-force/displacement.y/20).to_s
-      new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
-      @toy_hash[new_name] << new_sprite_toy
-      #puts "Timer: " + timer.to_s
-      fadeOut = SKAction.fadeOutWithDuration(timer)
-      remove = SKAction.removeFromParent()
-      seq = SKAction.sequence([fadeOut, remove])
-      if not DEBUG_EXPLOSIONS
-        new_sprite_toy.runAction(seq)
+
+      # Minh: I have fixed the problem here, sometime it crashed due to physicsBody not define
+      if new_sprite_toy.physicsBody != nil && toy.physicsBody != nil
+        new_sprite_toy.physicsBody.velocity = toy.physicsBody.velocity
+        new_sprite_toy.name = new_name
+        addChild(new_sprite_toy)
+        new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
+        @toy_hash[new_name] << new_sprite_toy
+        fadeOut = SKAction.fadeOutWithDuration(timer)
+        remove = SKAction.removeFromParent()
+        seq = SKAction.sequence([fadeOut, remove])
+        if not DEBUG_EXPLOSIONS
+          new_sprite_toy.runAction(seq)
+        end
       end
     end
     remove = SKAction.removeFromParent()
@@ -752,7 +800,6 @@ class PlayScene < SKScene
   end
 
   def add_toys
-    p 'add toys'
     @toy_hash = {}
     @loaded_toys = {}
     @toys.each do |toy_in_scene|
@@ -772,12 +819,16 @@ class PlayScene < SKScene
   def get_image(toy_in_scene) # this is largely a hack because retina mode seems to get it wrong
     screen = UIScreen.mainScreen.scale
     return toy_in_scene.image if screen == 1.0
-    #puts "rescaling"
     return toy_in_scene.template.create_image(toy_in_scene.zoom / screen)
   end
 
-  def new_toy(toy_in_scene)
+  def new_toy(toy_in_scene, darken = false)
     image = get_image(toy_in_scene)
+    if darken
+      imageWidth = image.size.width
+      image = image.darken()
+      image = image.scale_to([imageWidth,999])
+    end
     toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(image))
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)

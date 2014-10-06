@@ -11,17 +11,11 @@ class ExplosionActionViewController < CenterToyViewController
     @main_view = @scene_creator_view_controller.main_view
     @main_view.mode = :explosion
     view.addSubview(@main_view)
-    #@main_view.change_label_text_to(Language::EXPLOSION_ADDER)
     @main_view.selected = @selected
 
-    @popover_title = "Explosion"
+    @popover_title = Language::EXPLOSION_TITLE
     @popover_instr = Language::TOUCH_EXPLOSION
 
-    # command_label = UILabel.alloc.initWithFrame([[0, @bounds.size.height], [@bounds.size.width, 768 - @bounds.size.height]])
-    # command_label.backgroundColor = Constants::GOLD
-    # command_label.text = Language::TOUCH_EXPLOSION
-    # command_label.textAlignment = NSTextAlignmentCenter
-    # view.addSubview(command_label)
   end
 
   def bounds_for_view=(bounds)

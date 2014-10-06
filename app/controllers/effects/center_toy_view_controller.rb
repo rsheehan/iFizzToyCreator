@@ -21,6 +21,7 @@ class CenterToyViewController < UIViewController
     content.setTitle(@popover_title)
     content.setInstruction(@popover_instr)
     content.delegate = self
+    puts "TextPopoverViewController content"
     @popover = UIPopoverController.alloc.initWithContentViewController(content)
     @popover.passthroughViews = [@main_view, @scene_creator_view_controller.view] #not working? should allow dragging while popover open
     @popover.delegate = self
@@ -55,5 +56,20 @@ class CenterToyViewController < UIViewController
     @main_view.delegate.close_modal_view
     @main_view.delegate.reopen_action_flow
     @main_view.delegate.back_from_modal_view = false
+  end
+
+
+  # Add force when random parameters are selected
+  def addForce(force)
+    if @popover_title == Language::FORCE_TITLE
+      @main_view.delegate.force = force
+    elsif @popover_title == Language::ROTATION_TITLE
+      @main_view.delegate.rotation = Constants::RANDOM_HASH_KEY
+    elsif @popover_title == Language::EXPLOSION_TITLE
+      @main_view.delegate.explosion = Constants::RANDOM_HASH_KEY
+    end
+    @main_view.delegate.close_modal_view
+    #puts "***force = #{@popover_title}"
+
   end
 end

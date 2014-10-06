@@ -12,7 +12,7 @@ class NumericInputPopOverViewController < UIViewController
     @width = 350
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
-    view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
 
     #back button
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
@@ -30,7 +30,7 @@ class NumericInputPopOverViewController < UIViewController
     else
       @title.setText(Language::SCORE_TRIGGER)
     end
-    @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+    @title.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
     @title.setFont(UIFont.boldSystemFontOfSize(18))
     view.addSubview(@title)
 

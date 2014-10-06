@@ -28,13 +28,13 @@ class SceneConfigPopoverViewController < UIViewController
     else
       @title.setText(Language::EXPLOSION)
     end
-    @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+    @title.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
     @title.setFont(UIFont.boldSystemFontOfSize(18))
     @title.textAlignment = NSTextAlignmentCenter
     view.addSubview(@title)
 
     @table_view = UITableView.alloc.initWithFrame([[0, buttonHeight], [@width, @height - buttonHeight - margin]])
-    @table_view.backgroundColor =  UIColor.colorWithRed(0.95, green: 0.95, blue: 0.95, alpha: 1.0)
+    @table_view.backgroundColor = Constants::LIGHT_GRAY
     @table_view.dataSource = self
     @table_view.delegate = self
     @table_view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight

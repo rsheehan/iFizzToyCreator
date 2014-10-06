@@ -11,10 +11,9 @@ class DragActionViewController < CenterToyViewController
     @main_view = @scene_creator_view_controller.main_view
     @main_view.mode = :force
     view.addSubview(@main_view)
-    # @main_view.change_label_text_to(Language::FORCE_ADDER)
     @main_view.selected = @selected
 
-    @popover_title = "Force"
+    @popover_title = Language::FORCE_TITLE
     @popover_instr = Language::TOUCH_FORCE
 
   end

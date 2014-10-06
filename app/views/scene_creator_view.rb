@@ -450,12 +450,21 @@ class SceneCreatorView < CreatorView
 
   # [ID, Displacement.x, displacement.y, zoom, angle]
   # When create toy
-  def end_create_toy
+  def end_create_toy (random = false)
     results = {}
     results[:id] = @selected.template.identifier
     disp = @secondary_selected.position - @selected.position
-    results[:x] = disp.x
-    results[:y] = disp.y
+
+    # to handle randomly created toy
+    if random
+      results[:x] = Constants::RANDOM_HASH_KEY
+      results[:y] = Constants::RANDOM_HASH_KEY
+      puts "* new toy is create randomly at (#{results[:x]},#{results[:y]})"
+    else
+      results[:x] = disp.x
+      results[:y] = disp.y
+    end
+
     results[:zoom] = @selected.zoom
     results[:angle] = @selected.angle
     @selected = @secondary_selected

@@ -1,6 +1,5 @@
 # Create here to allow landscape only but still be able to use image picker
 class UITabBarControllerLandscape < UITabBarController
-
   def viewDidLoad
     @controllers = []
     icons = []
@@ -18,7 +17,7 @@ class UITabBarControllerLandscape < UITabBarController
     icons << icon_and_title(action_creator_view_controller, Language::ADD_ACTIONS, 'action_for_tab_bar')
     action_creator_view_controller.scene_creator_view_controller = scene_creator_view_controller
 
-    # Play
+    # Play View
     play_view_controller = PlayViewController.alloc.initWithNibName(nil, bundle: nil)
     @controllers << play_view_controller
     icons << icon_and_title(play_view_controller, Language::PLAY, 'play_for_tab_bar')
@@ -40,7 +39,6 @@ class UITabBarControllerLandscape < UITabBarController
     # Now set up my models
     @state = State.new
     @controllers.each { |controller| controller.state = @state }
-    #toy_creator_view_controller.state = state
 
     self.setViewControllers(@controllers, animated: true)
 
@@ -49,8 +47,6 @@ class UITabBarControllerLandscape < UITabBarController
     # first up then the buttons on the rhs are not active because it acts as if it is in portrait mode.
     self.selectedViewController = toy_creator_view_controller
     # CAN CHANGE TO scene_creator_view_controller
-    #@window.rootViewController = @tab_bar_controller
-
     tab_bar = self.tabBar
     icons.each_with_index { |icon, i| tab_bar.items[i].image = icon }
   end
@@ -64,7 +60,6 @@ class UITabBarControllerLandscape < UITabBarController
     while(@state.is_saving)
     end
   end
-
   # returns with the icon image
   def icon_and_title(controller, title, icon_name)
     controller.title = title

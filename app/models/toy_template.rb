@@ -72,7 +72,6 @@ class ToyTemplate
   def create_image(scale)
     # find the image size
     left, right, top, bottom = extreme_points
-    #p [left, right, top, bottom]
     extra = TOY_LINE_SIZE * IMAGE_SCALE
     size = CGSizeMake((right - left + extra) * scale, (bottom - top + extra) * scale)
     # make the image bitmap and draw all of the parts
@@ -119,6 +118,13 @@ class ToyTemplate
           end
       end
     end
+
+    # font = UIFont.fontWithName("HelveticaNeue-Bold", size: 8.0)
+    # fontHeight = font.pointSize
+    # text = @identifier.to_s
+    # UIColor.redColor.set
+    # text.drawAtPoint(CGPointMake(0, 0), withFont:font)
+
     image = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
     #puts "ToyTemplate image: #{image.size.width}, #{image.size.height}"

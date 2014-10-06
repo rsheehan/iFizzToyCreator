@@ -4,10 +4,11 @@ class TextPopoverViewController < UIViewController
 
   def loadView
     super
+    puts "TextPopoverViewController"
     @width = 300
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
-    view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
+    view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
 
     #back button
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
@@ -24,7 +25,7 @@ class TextPopoverViewController < UIViewController
     else
       @title.setText(Language::EXPLOSION)
     end
-    @title.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
+    @title.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
     @title.setFont(UIFont.boldSystemFontOfSize(18))
     @title.textAlignment = NSTextAlignmentCenter
     view.addSubview(@title)
@@ -41,14 +42,35 @@ class TextPopoverViewController < UIViewController
     if @instr_text
       @instruction.setText(@instr_text)
     end
-    @instruction.setBackgroundColor(UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0))
-    @instruction.setFont(UIFont.systemFontOfSize(14))
+    @instruction.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
+    @instruction.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
     @instruction.textAlignment = NSTextAlignmentCenter
     view.addSubview(@instruction)
+
+    random_label = UILabel.alloc.initWithFrame([[5,2*45 + 5],[@width/2-10,35]])
+    random_label.textAlignment = NSTextAlignmentCenter
+    random_label.text = 'Random Force:'
+    view.addSubview(random_label)
+
+    @random_switch = UISwitch.alloc.initWithFrame([[@width/2,2*45 + 5],[@width/2-10,35]])
+    @random_switch.tintColor = UIColor.grayColor
+    @random_switch.on = false
+    @random_switch.addTarget(self,action:'random_switch_changed:', forControlEvents:UIControlEventValueChanged)
+    view.addSubview(@random_switch)
 
     self.preferredContentSize = CGSizeMake(@width,@instruction.frame.size.height+@instruction.frame.origin.y+5)
     resizeViews
   end
+
+  def random_switch_changed(sender)
+    puts 'random_switch_changed'
+    if @random_switch.isOn
+      # assume when
+      @delegate.addForce( CGPointMake(0,0) )
+
+    end
+  end
+
 
   def back(sender)
     puts 'back'
@@ -86,8 +108,8 @@ class TextPopoverViewController < UIViewController
     frame.size.height = size.height
     @instruction.frame = frame
     #update preferred size
-    self.preferredContentSize = CGSizeMake(@width,@instruction.frame.size.height+@instruction.frame.origin.y+5)
-    puts 'done ' + size.height.to_s
+    self.preferredContentSize = CGSizeMake(@width,3*(@instruction.frame.size.height+10))
+
   end
 
 end
