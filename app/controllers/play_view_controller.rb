@@ -138,103 +138,97 @@ class PlayViewController < UIViewController
   def update_play_scene(scene=@state.scenes[@state.currentscene])
     #p "state = #{@state}"
     #p "total scenes = #{@state.scenes.size}"
-    p "++++ update play scene: #{@state.scenes[@state.currentscene]}"
+    #p "++++ update play scene: #{@state.scenes[@state.currentscene]}"
     if scene == nil
       scene=@state.scenes[0]
     end
-    return unless @play_view # this is because of the orientation bug being worked around in app_delegate
-    @play_scene = PlayScene.alloc.initWithSize(@play_view.frame.size)
-    @play_scene.physicsWorld.contactDelegate = @play_scene
-    @play_scene.delegate = self
+    if scene != nil
+      return unless @play_view # this is because of the orientation bug being worked around in app_delegate
+      @play_scene = PlayScene.alloc.initWithSize(@play_view.frame.size)
+      @play_scene.physicsWorld.contactDelegate = @play_scene
+      @play_scene.delegate = self
 
-    # set scene gravity
-    @play_scene.setGravity(scene.gravity)
-    @play_scene.setBoundaries(scene.boundaries)
+      # set scene gravity
+      @play_scene.setGravity(scene.gravity)
+      @play_scene.setBoundaries(scene.boundaries)
 
-    # this is purely for development only uses the first scene
-    @state.load_scene_actions(scene)
+      # this is purely for development only uses the first scene
+      @state.load_scene_actions(scene)
 
-    # add background image
-    @play_scene.backgroundImage = scene.background
+      # add background image
+      @play_scene.backgroundImage = scene.background
 
-    # add the toys to the scene
-    @play_scene.toys = scene.toys
-    # add the edges to the scene
-    @play_scene.edges = scene.edges #@state.scenes[@state.currentscene].edges
-    # also go through the actions checking for button actions and enabling the buttons
-    @button_actions.each_key do |button|
-      @button_actions[button] = []
-    end
-    refresh_side_buttons
-    if not @label.nil?
-      @label.dismissPopoverAnimated(true)
-      @label = nil
-    end
-    remove_actions
-    disableButtons
-    actions = @state.get_actions_from_toys(scene.toys)
-    actions.each do |action|
-      puts "action = #{action}"
-      case action[:action_type]
-        when :button
-          button = enable_button(action[:action_param])
-          #add_action_to_button
-          @button_actions[button] << action
-          #update image
-          button.setImage(get_btn_image_with_actions(@button_actions[button],false), forState: UIControlStateNormal)
-          button.setImage(get_btn_image_with_actions(@button_actions[button],true), forState: UIControlStateSelected) rescue puts 'rescued'
-
-        when :timer
-          @timers << NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "perform_action:", userInfo: action, repeats: true)
-        when :collision
-          @play_scene.add_collision(action)
-        when :shake
-          @shake_actions << action
-        when :loud_noise
-          @noise_actions << action
-          if not @listening
-            listen_to_mic
-          end
-        when :when_created
-          puts "*** create now"
-          # #@timers << NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "perform_action:", userInfo: action, repeats: true)
-          # #action[:action_type] = :timer
-          afterSeconds = action[:action_param][0].to_i
-          if afterSeconds < 0
-            afterSeconds = rand(-1*afterSeconds)*2
-          end
-          #
-          #@timers << NSTimer.scheduledTimerWithTimeInterval(afterSeconds, target: self, selector: "add_after_created_action:", userInfo: action, repeats: false)
-          @play_scene.add_create_action(action)
-        when :score_reaches
-          @play_scene.add_score_action(action)
-        when :toy_touch
-          @play_scene.add_toy_touch_action(action)
+      # add the toys to the scene
+      @play_scene.toys = scene.toys
+      # add the edges to the scene
+      @play_scene.edges = scene.edges #@state.scenes[@state.currentscene].edges
+      # also go through the actions checking for button actions and enabling the buttons
+      @button_actions.each_key do |button|
+        @button_actions[button] = []
       end
-    end
-
-    # end of development code
-
-    #p 'start scene transition'
-    #reveal = SKTransition.fadeWithDuration(3)
-    @play_view.presentScene(@play_scene, transition: Constants::TRANSITION_EFFECT)
-    @play_scene.paused = true
-    actions.each do |action|
-      case action[:effect_type]
-        when :explosion
-          # For each toy with exploded ref, verify exploded array is populated
-          toy = @state.toys.select {|s| s.identifier == action[:toy]}.first
-          if toy.exploded.size == 0
-            toy.populate_exploded
-          end
-        when :create_new_toy
-          uid = @play_scene.add_create_toy_ref(action[:effect_param], @state.toys.select {|s| s.identifier == action[:effect_param][:id]}.first)
-          action[:uid] = uid
-        when :score
-          @play_scene.scores[action[:toy]] = action[:effect_param]
+      refresh_side_buttons
+      if not @label.nil?
+        @label.dismissPopoverAnimated(true)
+        @label = nil
       end
+      remove_actions
+      disableButtons
+      actions = @state.get_actions_from_toys(scene.toys)
+      actions.each do |action|
+        case action[:action_type]
+          when :button
+            button = enable_button(action[:action_param])
+            @button_actions[button] << action
+            button.setImage(get_btn_image_with_actions(@button_actions[button],false), forState: UIControlStateNormal)
+            button.setImage(get_btn_image_with_actions(@button_actions[button],true), forState: UIControlStateSelected) rescue puts 'rescued'
+
+          when :timer
+            @timers << NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "perform_action:", userInfo: action, repeats: true)
+          when :collision
+            @play_scene.add_collision(action)
+          when :shake
+            @shake_actions << action
+          when :loud_noise
+            @noise_actions << action
+            if not @listening
+              listen_to_mic
+            end
+          when :when_created
+            afterSeconds = action[:action_param][0].to_i
+            if afterSeconds < 0
+              afterSeconds = rand(-1*afterSeconds)*2
+            end
+            @play_scene.add_create_action(action)
+          when :score_reaches
+            @play_scene.add_score_action(action)
+          when :toy_touch
+            @play_scene.add_toy_touch_action(action)
+        end
+      end
+
+      # end of development code
+
+      #p 'start scene transition'
+      #reveal = SKTransition.fadeWithDuration(3)
+      @play_view.presentScene(@play_scene, transition: Constants::TRANSITION_EFFECT)
+      @play_scene.paused = true
+      actions.each do |action|
+        case action[:effect_type]
+          when :explosion
+            # For each toy with exploded ref, verify exploded array is populated
+            toy = @state.toys.select {|s| s.identifier == action[:toy]}.first
+            if toy.exploded.size == 0
+              toy.populate_exploded
+            end
+          when :create_new_toy
+            uid = @play_scene.add_create_toy_ref(action[:effect_param], @state.toys.select {|s| s.identifier == action[:effect_param][:id]}.first)
+            action[:uid] = uid
+          when :score
+            @play_scene.scores[action[:toy]] = action[:effect_param]
+        end
+      end
+      @play_scene.paused = false
     end
-    @play_scene.paused = false
   end
 
   def bounds_for_view=(bounds)
