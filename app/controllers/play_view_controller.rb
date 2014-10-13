@@ -16,6 +16,7 @@ class PlayViewController < UIViewController
     self.view = play_over_view
 
     location_of_play = [95, 0]
+    #@bounds = CGSizeMake(2048,1536)
     @size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @play_view = SKView.alloc.initWithFrame([location_of_play, @size_of_play])
     if Constants::DEBUG
@@ -24,7 +25,7 @@ class PlayViewController < UIViewController
       @play_view.showsFPS = true
       @play_view.showsPhysics = true
     end
-    @play_view.showsFPS = true
+    #@play_view.showsFPS = true
     view.addSubview(@play_view)
 
     @button_actions = {} # keys = buttons, values = list of actions for that button
@@ -135,9 +136,9 @@ class PlayViewController < UIViewController
 
 
   def update_play_scene(scene=@state.scenes[@state.currentscene])
-    p "state = #{@state}"
-    p "total scenes = #{@state.scenes.size}"
-    p "update play scene: #{@state.scenes[@state.currentscene]}"
+    #p "state = #{@state}"
+    #p "total scenes = #{@state.scenes.size}"
+    p "++++ update play scene: #{@state.scenes[@state.currentscene]}"
     if scene == nil
       scene=@state.scenes[0]
     end
@@ -173,6 +174,7 @@ class PlayViewController < UIViewController
     disableButtons
     actions = @state.get_actions_from_toys(scene.toys)
     actions.each do |action|
+      puts "action = #{action}"
       case action[:action_type]
         when :button
           button = enable_button(action[:action_param])
@@ -194,8 +196,16 @@ class PlayViewController < UIViewController
             listen_to_mic
           end
         when :when_created
-          @timers << NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "add_after_created_action:", userInfo: action, repeats: true)
-          #@play_scene.add_create_action(action)
+          puts "*** create now"
+          # #@timers << NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: "perform_action:", userInfo: action, repeats: true)
+          # #action[:action_type] = :timer
+          afterSeconds = action[:action_param][0].to_i
+          if afterSeconds < 0
+            afterSeconds = rand(-1*afterSeconds)*2
+          end
+          #
+          #@timers << NSTimer.scheduledTimerWithTimeInterval(afterSeconds, target: self, selector: "add_after_created_action:", userInfo: action, repeats: false)
+          @play_scene.add_create_action(action)
         when :score_reaches
           @play_scene.add_score_action(action)
         when :toy_touch
@@ -395,7 +405,7 @@ class PlayViewController < UIViewController
   # this will run every second, if random then using if rand(1000) % 5 == 1 to fire for example
   def perform_action(timer)
     timeInterval = timer.userInfo[:action_param][0].to_i
-    puts "timeInterval = #{timeInterval}"
+    #puts "timeInterval = #{timeInterval}"
     if timeInterval >= 0
       time = Time.new
       if (time.sec + 60*time.min) % timeInterval == (timeInterval-1)
@@ -410,19 +420,7 @@ class PlayViewController < UIViewController
   end
 
   def add_after_created_action(timer)
-    timeInterval = timer.userInfo[:action_param][0].to_i
-    puts "timeInterval = #{timeInterval}"
-    if timeInterval >= 0
-      time = Time.new
-      if (time.sec + 60*time.min) % timeInterval == (timeInterval-1)
-        @play_scene.add_create_action([timer.userInfo])
-      end
-    else
-      # here is random, time interval is negative
-      if rand(1000) % -timeInterval == 0
-        @play_scene.add_create_action([timer.userInfo])
-      end
-    end
+    @play_scene.add_actions_for_update([timer.userInfo])
   end
 
   def scene_shift(scene_id)

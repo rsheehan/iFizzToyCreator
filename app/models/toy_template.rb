@@ -164,7 +164,8 @@ class ToyTemplate
 
   # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
 
-  def check_parts(parts,center)
+  def check_parts(parts, center)
+    #puts "center check part: #{center}"
     circle_parts = parts.select {|x| x.is_a? (CirclePart) }
     point_parts = parts.select {|x| x.is_a? (PointsPart) }
     if point_parts.length == 0

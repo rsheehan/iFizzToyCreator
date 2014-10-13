@@ -43,13 +43,13 @@ class TextPopoverViewController < UIViewController
       @instruction.setText(@instr_text)
     end
     @instruction.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
-    @instruction.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
+    @instruction.setFont(UIFont.systemFontOfSize(Constants::INSTRUCTION_LABEL_FONT_SIZE))
     @instruction.textAlignment = NSTextAlignmentCenter
     view.addSubview(@instruction)
 
     random_label = UILabel.alloc.initWithFrame([[5,2*45 + 5],[@width/2-10,35]])
     random_label.textAlignment = NSTextAlignmentCenter
-    random_label.text = 'Random Force:'
+    random_label.text = Language::RANDOM_FORCE_LABEL
     view.addSubview(random_label)
 
     @random_switch = UISwitch.alloc.initWithFrame([[@width/2,2*45 + 5],[@width/2-10,35]])
@@ -58,28 +58,24 @@ class TextPopoverViewController < UIViewController
     @random_switch.addTarget(self,action:'random_switch_changed:', forControlEvents:UIControlEventValueChanged)
     view.addSubview(@random_switch)
 
-    self.preferredContentSize = CGSizeMake(@width,@instruction.frame.size.height+@instruction.frame.origin.y+5)
+    #self.preferredContentSize = CGSizeMake(@width,@instruction.frame.size.height+@instruction.frame.origin.y+5)
+
     resizeViews
+
   end
 
   def random_switch_changed(sender)
-    puts 'random_switch_changed'
     if @random_switch.isOn
-      # assume when
       @delegate.addForce( CGPointMake(0,0) )
-
     end
   end
 
-
   def back(sender)
-    puts 'back'
     @delegate.action_flow_back
   end
 
   def setTitle(text)
     @title_text = text
-    #resize frames
     if @title
       @title.setText(@title_text)
     end
@@ -87,7 +83,6 @@ class TextPopoverViewController < UIViewController
 
   def setInstruction(text)
     @instr_text = text
-    #resize frames
     if @instruction
       @instruction.setText(@instr_text)
       resizeViews
@@ -95,21 +90,15 @@ class TextPopoverViewController < UIViewController
   end
 
   def resizeViews
-    #frame = @instruction.frame
-    #frame.size.height = @instruction.contentSize.height
-    #@instruction.frame = frame
-    puts 'resize'
     if @instr_text.nil?
-      self.preferredContentSize = CGSizeMake(@width,40)
+      self.preferredContentSize = CGSizeMake(@width,100)
       return
     end
     size = @instruction.sizeThatFits(CGSizeMake(@instruction.frame.size.width, 1000))
     frame = @instruction.frame
     frame.size.height = size.height
     @instruction.frame = frame
-    #update preferred size
-    self.preferredContentSize = CGSizeMake(@width,3*(@instruction.frame.size.height+10))
-
+    self.preferredContentSize = CGSizeMake(@width, (@random_switch.frame.origin.y + @random_switch.frame.size.height + Constants::SMALL_MARGIN))
   end
 
 end

@@ -84,13 +84,23 @@ class ActionAdderViewController < UIViewController
     @button_toys = {}
     #setup_sides
     draw_all_buttons
-    @state.scenes[@state.currentscene].toys.each do |toy|
-      @state.return_toy_actions(toy).each do |action|
-        if action[:action_type] == :button
-          add_toy_to_button(toy.template,action[:action_param])
+
+    #puts "current scene #{@state.currentscene}"
+
+    if @state.currentscene == nil
+      @state.currentscene = 0
+    end
+
+    if @state.scenes[@state.currentscene] != nil
+      @state.scenes[@state.currentscene].toys.each do |toy|
+        @state.return_toy_actions(toy).each do |action|
+          if action[:action_type] == :button
+            add_toy_to_button(toy.template,action[:action_param])
+          end
         end
       end
     end
+
   end
 
   def draw_all_buttons
@@ -284,6 +294,7 @@ class ActionAdderViewController < UIViewController
 
   def rotation=(force)
     action_type, action_param = get_action
+    #puts "action type = #{action_type} and param = #{action_param}"
     effect_type = :apply_torque
     if(force != Constants::RANDOM_HASH_KEY)
       effect_param = force * ROTATION_SCALE
@@ -609,12 +620,15 @@ class ActionAdderViewController < UIViewController
     case type
       when :touch
         #show button select
+
         @popover_type = :button
         content = ButtonSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
         show_popover(content)
-        @popover.passthroughViews += [@left_panel, @right_panel]
         show_sides
+
+        # Minh: fixed the code below, this makes it crash in io8
+        @popover.passthroughViews = [@left_panel, @right_panel]
         enableButtons
       when :timer
         #show timer popover

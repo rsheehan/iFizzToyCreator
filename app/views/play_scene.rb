@@ -49,6 +49,7 @@ class PlayScene < SKScene
     #removeAllChildren
     #self.backgroundColor = SceneCreatorView::DEFAULT_SCENE_COLOUR # no longer necessary, see create_image
     self.scaleMode = SKSceneScaleModeAspectFill
+
     self.physicsWorld.contactDelegate = self
     @paused = true
     @mutex = Mutex.new
@@ -110,11 +111,26 @@ class PlayScene < SKScene
   end
 
   # Actions are added here to be fired at the update
-  def add_actions_for_update(actions)
-    @actions_to_fire += actions
+  def add_actions_for_update(actions, delay = 0)
+    if delay != 0
+      if delay < 0
+        delay = rand(-delay) + (-delay/2)
+      end
+      NSTimer.scheduledTimerWithTimeInterval(delay.to_i, target: self, selector: "perform_action:", userInfo: actions, repeats: false)
+    else
+      @actions_to_fire += actions
+    end
+
+  end
+
+  # Minh add to allow action to be perform after a certain time of delay
+  def perform_action(timer)
+    @actions_to_fire += timer.userInfo
+    #puts "delay after 1 second"
   end
 
   def add_create_action(action)
+    puts "add create action #{action}"
     if @create_actions
       @create_actions << action
     else
@@ -162,15 +178,11 @@ class PlayScene < SKScene
 
   def checkFront
     # #after simulating physics see if need to flip node?
-    #p "(#{rand(10)})"
     @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
       toyArray.each do |toy|
         if toy.userData != nil and toy.userData[:uniqueID] != -1
           if toy.userData[:front] and toy.physicsBody != nil and not toy.physicsBody.isResting
-            #puts "Velocity = "+toy.physicsBody.velocity.dx.to_s+", "+toy.physicsBody.velocity.dy.to_s
-
             case toy.userData[:front]
-
               when Constants::Front::Right
                 #unflip if going in front direction
                 if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dx > 0.1
@@ -214,7 +226,6 @@ class PlayScene < SKScene
             toy.userData[:uniqueID] = -1
             self.paused = true
           end
-
         end
       end
     end
@@ -310,17 +321,20 @@ class PlayScene < SKScene
     end
 
     @actions_to_fire.each do |action|
+
       # minh comment: all toys with the same type
       toy_id = action[:toy]
 
       toys = @toy_hash[toy_id] # all toys of the correct type
-      puts "toy hash id = #{toy_id}"
+      #puts "toy hash id = #{toy_id}"
       if toys.nil?     # If the toy gets deleted after an action is added
         next
       end
       #if collision - remove all toys that are same but not collided
+      #if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches or action[:action_type] == :toy_touch
+
+      # What is this below code doing????
       if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches or action[:action_type] == :toy_touch
-        puts "when created"
         new_toys = []
         toys.each do |toy|
           if toy.userData[:uniqueID] == action[:action_param][1]
@@ -329,6 +343,8 @@ class PlayScene < SKScene
         end
         toys = new_toys
       end
+
+      #puts "action to fire: #{action}"
 
       ### Apply effects on toys for each action
       toys.delete_if do |toy| # toys here are SKSpriteNodes
@@ -516,6 +532,7 @@ class PlayScene < SKScene
               end
 
             when :create_new_toy
+              puts "create_new_toy"
               id = action[:effect_param][:id]
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               # Gets toy in scene from loaded toys
@@ -542,13 +559,19 @@ class PlayScene < SKScene
                 if create_action[:toy] == new_toy.name
                   #trigger event
                   create_action = create_action.clone
+                  timeDelay = create_action[:action_param][0]
                   create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
-                  if @actions_to_be_fired
-                    @actions_to_be_fired << create_action
-                  else
-                    @actions_to_be_fired = [create_action]
-                  end
-                  puts "create action "+ create_action.to_s
+                  add_actions_for_update([create_action],timeDelay)
+
+                  # create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
+                  # #create_action[:action_param][1] = new_toy.userData[:uniqueID]
+                  # if @actions_to_be_fired
+                  #   @actions_to_be_fired << create_action
+                  # else
+                  #   @actions_to_be_fired = [create_action]
+                  # end
+                  # puts "create action "+ create_action.to_s
+
                 end
               end
               @toy_hash[id] << new_toy
@@ -596,27 +619,26 @@ class PlayScene < SKScene
   end
 
   def explode_toy(toy, force)
+
     toy_in_scene = @toys.select {|s| s.template.identifier == toy.name and s.uid == toy.userData[:uniqueID]}.first
     if toy_in_scene.nil?
       toy_in_scene = loaded_toys[toy.name].select {|s| s.uid == toy.userData[:templateID]}.first
     end
+
     templates = []
     new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
     partsArray = toy_in_scene.template.exploded
 
-    #puts "force = #{force}"
-    #puts "force hash = #{Constants::RANDOM_HASH_KEY}"
     if force.to_i == Constants::RANDOM_HASH_KEY.to_i
       force = rand(Constants::RANDOM_HASH_KEY)/5.0
-      #puts "force = #{force}"
     end
 
     timer = Constants::TIME_AFTER_EXPLOSION #force * TIMER_SCALE
 
     force = scale_force_mass(force, toy.userData[:mass])
     partsArray.each do |part|
-      #position = centre_part(part, toy.position)
+      #
       templates << ToyTemplate.new([part], new_name)
       new_toy = ToyInScene.new(templates.last, toy_in_scene.zoom)
       new_toy.change_position(view.convertPoint(toy.position, fromScene: self))
@@ -633,16 +655,24 @@ class PlayScene < SKScene
       if part.is_a? PointsPart
         new_sprite_toy.zRotation = toy.zRotation
         new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
-        #puts "Toy Position X: " + new_toy.position.x.to_s + " Y: " +  new_toy.position.y.to_s #+ " , " + new_toy.position.
+
         physics_points = ToyPhysicsBody.new(new_toy.template.parts).convex_hull_for_physics(new_toy.zoom)
+
         if physics_points.length == 0
           new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
         else
           path = CGPathCreateMutable()
           CGPathMoveToPoint(path, nil, *physics_points[0])
-          physics_points[1..-1].each { |p| CGPathAddLineToPoint(path, nil, *p) }
+          physics_points[0..-1].each do |p|
+            # To fix the Assertion failed: (area > 1.19209290e-7F), function ComputeCentroid avoid crash
+            if p.x.abs > 1.0 && p.y.abs > 1.0
+              CGPathAddLineToPoint(path, nil, *p)
+            end
+          end
           new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+
         end
+
 
         if DEBUG_EXPLOSIONS
           new_sprite_toy.position = CGPointMake(new_sprite_toy.position.x+displacement.x*2, new_sprite_toy.position.y+displacement.y*2)
@@ -652,7 +682,7 @@ class PlayScene < SKScene
       elsif part.is_a? CirclePart
         wheel = new_toy.add_wheels_in_scene(self)[0]
         new_sprite_toy.hidden = false
-        #puts "Wheel Pos, X: " + new_toy.position.x.to_s + ", Y: " + new_toy.position.y.to_s
+
         new_sprite_toy.position = view.convertPoint(new_toy.position, toScene: self)
         body = SKPhysicsBody.bodyWithCircleOfRadius(wheel.radius)
         new_sprite_toy.physicsBody = body
@@ -664,7 +694,6 @@ class PlayScene < SKScene
         end
       end
 
-      # Minh: I have fixed the problem here, sometime it crashed due to physicsBody not define
       if new_sprite_toy.physicsBody != nil && toy.physicsBody != nil
         new_sprite_toy.physicsBody.velocity = toy.physicsBody.velocity
         new_sprite_toy.name = new_name
@@ -699,7 +728,9 @@ class PlayScene < SKScene
   end
 
   def draw_path_of_points(context, points)
-    screen_scale = UIScreen.mainScreen.scale # still the nasty hack
+    # Minh changed, due to ios 8.0 difference
+    screen_scale = 1.0 # UIScreen.mainScreen.scale
+    #screen_scale = UIScreen.mainScreen.scale # still the nasty hack
     CGContextSetLineWidth(context, ToyTemplate::TOY_LINE_SIZE/4 / screen_scale)
     first = true
     points.each do |point|
@@ -752,7 +783,9 @@ class PlayScene < SKScene
 # Create an image for the whole background
   def create_background_image
 
-    screen_scale = UIScreen.mainScreen.scale
+    # Minh changed, due to ios 8.0 difference
+    screen_scale = 1.0 # UIScreen.mainScreen.scale
+    #puts "$$$ screen scale = #{screen_scale}"
 
     frame_size = CGSizeMake(frame.size.width / screen_scale, frame.size.height / screen_scale)
     UIGraphicsBeginImageContextWithOptions(frame_size, true, 0.0) #frame.size, true, 0.0)
@@ -817,18 +850,20 @@ class PlayScene < SKScene
   end
 
   def get_image(toy_in_scene) # this is largely a hack because retina mode seems to get it wrong
-    screen = UIScreen.mainScreen.scale
+    #screen = UIScreen.mainScreen.scale
+    # Minh changed, due to ios 8.0 difference
+    screen = 1.0 # UIScreen.mainScreen.scale
     return toy_in_scene.image if screen == 1.0
     return toy_in_scene.template.create_image(toy_in_scene.zoom / screen)
   end
 
   def new_toy(toy_in_scene, darken = false)
     image = get_image(toy_in_scene)
-    if darken
-      imageWidth = image.size.width
-      image = image.darken()
-      image = image.scale_to([imageWidth,999])
-    end
+    # if darken
+    #   imageWidth = image.size.width
+    #   image = image.darken()
+    #   image = image.scale_to([imageWidth,999])
+    # end
     toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(image))
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)
@@ -955,12 +990,14 @@ class PlayScene < SKScene
 
     end
 
+    puts "trigger any create actions"
+
     #trigger any create actions
     @create_actions.each do |action|
       if action[:toy] == toy.name
-        #trigger event
-        action[:action_param] = [nil, toy.userData[:uniqueID]]
-        add_actions_for_update([action])
+        action[:action_param] = [action[:action_param][0], toy.userData[:uniqueID]]
+        # apply some delays
+        add_actions_for_update([action],action[:action_param][0])
       end
     end
     toy

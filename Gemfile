@@ -1,5 +1,5 @@
 source 'https://rubygems.org'
 gem 'rake'
-gem 'rdp'
-gem 'sugarcube'
+#gem 'teacup'
+#gem 'sugarcube'
 # Add your dependencies here:

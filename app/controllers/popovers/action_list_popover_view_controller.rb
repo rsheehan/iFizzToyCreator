@@ -20,14 +20,8 @@ class ActionListPopoverViewController < UIViewController
     #make array of actions that relate to the selected toy
     @toy_actions = @selected.template.actions
 
-    #make table view filled with all actions that have selected as the toy
-    if @toy_actions.size > 3
-      tvHeight = MAX_HEIGHT
-    else
-      tvHeight = 80 * @toy_actions.size  + 5*40+ 30+50
-    end
 
-    @table_view = UITableView.alloc.initWithFrame([[0, 5], [WIDTH, tvHeight]])
+    @table_view = UITableView.alloc.initWithFrame([[0, 5], [WIDTH, MAX_HEIGHT]])
     @table_view.backgroundColor = Constants::LIGHT_GRAY
     @table_view.dataSource = self
     @table_view.delegate = self
@@ -49,8 +43,6 @@ class ActionListPopoverViewController < UIViewController
     @edit_button.addTarget(self, action: 'edit:', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(@edit_button)
 
-    self.preferredContentSize = [WIDTH, @edit_button.frame.origin.y+@edit_button.frame.size.height+5]
-
   end
 
   def viewWillAppear(animated)
@@ -71,15 +63,16 @@ class ActionListPopoverViewController < UIViewController
   def resizeTV
     if @table_view and @toy_actions
       if @toy_actions.size > 2
-        tvHeight = 200 + 4*40+ 30+50
+        tvHeight = 200 + 5*40+ 30+50
       else
-        tvHeight = 80 * @toy_actions.size + 4*40 + 30+50
+        tvHeight = 80 * @toy_actions.size + 5*40 + 30+50
       end
 
       @table_view.setFrame([[0, 5], [WIDTH, tvHeight]])
       @action_button.setFrame([ [0, @table_view.frame.size.height+@table_view.frame.origin.y+5], [WIDTH/2,20]])
       @edit_button.setFrame(CGRectMake(WIDTH/2,@table_view.frame.size.height+@table_view.frame.origin.y+5, WIDTH/2,20))
-      self.preferredContentSize = [WIDTH, @edit_button.frame.origin.y+@edit_button.frame.size.height+5]
+      self.preferredContentSize = [WIDTH, @edit_button.frame.origin.y+@edit_button.frame.size.height + Constants::SMALL_MARGIN]
+      #self.preferredContentSize = [WIDTH, 800]
     end
   end
 
@@ -99,7 +92,7 @@ class ActionListPopoverViewController < UIViewController
   end
 
   def new_action(sender)
-    puts "new action"
+    #puts "new action"
     @state.save
     @delegate.new_action
   end
@@ -118,16 +111,12 @@ class ActionListPopoverViewController < UIViewController
 
   # The methods to implement the UICollectionViewDataSource protocol.
   def tableView(tv, commitEditingStyle: style, forRowAtIndexPath: index_path)
-    puts "Index Path: " + index_path.to_s
     tv.beginUpdates
     tv.deleteRowsAtIndexPaths([index_path], withRowAnimation: UITableViewRowAnimationAutomatic)
-    #delete action
     item = index_path.row
-
     #remove from toy
     @toy_actions.delete_at(item)
     tv.endUpdates
-    #resize?
     resizeTV
   end
 
@@ -156,15 +145,12 @@ class ActionListPopoverViewController < UIViewController
   def drawText(text, inImage:image, withFontName:fontname)
     UIGraphicsBeginImageContext(image.size)
     image.drawInRect(CGRectMake(0, 0,image.size.width,image.size.height))
-
     fontsize = 26
     font = UIFont.fontWithName(fontname, size: fontsize)
-
     UIColor.blackColor.set
-
     #center text in rect
     fontHeight = font.pointSize
-    yOffset = (image.size.height-2*EMPTY_ICON_TEXT_INSET_Y - fontHeight) / 2.0
+    yOffset = (image.size.height - 2*EMPTY_ICON_TEXT_INSET_Y - fontHeight) / 2.0
 
     if fontname == 'DBLCDTempBlack'
       yOffset = 1.5*yOffset
@@ -402,17 +388,10 @@ class ActionListPopoverViewController < UIViewController
           if (i == j || i == -j) && (i != 0)
             vector = CGPointMake(100000*i, 100000*j)
             puts "draw vector #{vector}"
-            # draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
             draw_force_arrow(context,CGPointMake(image.size.width/2, image.size.height/2),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
           end
         end
       end
-      # vector = CGPointMake(0, 25500)
-      # draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
-      #
-      # vector = CGPointMake(0, -25500)
-      # draw_force_arrow(context,CGPointMake(((-vector.x+500*250)/250000)*image.size.width, ((vector.y+500*250)/250000)*image.size.height),CGPointMake(((vector.x+500*250)/250000)*image.size.width, ((-vector.y+500*250)/250000)*image.size.height))
-
     end
 
 
@@ -422,13 +401,28 @@ class ActionListPopoverViewController < UIViewController
     newImage
   end
 
+  # draw red circle for explosion
   def drawExplosion(magnitude, inImage:image)
     UIGraphicsBeginImageContext(image.size)
     image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))
+
+    # Minh, redraw explosion for a better representation
+    ratio = magnitude/30000
+    if ratio < 0.4
+      ratio = 0.4
+    elsif ratio > 1
+      ratio = 1
+    end
+    explosionImage = UIImage.imageNamed("fire_explosion.png")
+    explosionImage.drawInRect(CGRectMake(image.size.width*(1.0-ratio)/2.0,image.size.height*(1.0-ratio)/2.0,image.size.width*ratio,image.size.height*ratio))
+
     context = UIGraphicsGetCurrentContext()
 
     # max  x and y 500?
-    draw_force_circle(context,CGPointMake(image.size.width/2, image.size.height/2),(magnitude/52000)*image.size.width/2)
+    #(1..100).each do |i|
+
+    #end
+    #draw_force_circle(context,CGPointMake(image.size.width/2, image.size.height/2),(magnitude/52000)*image.size.width/2)
 
     newImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
@@ -436,7 +430,13 @@ class ActionListPopoverViewController < UIViewController
     newImage
   end
 
+  # draw arrow for rotation
   def drawRotation(radians, inImage:image)
+    if radians == Constants::RANDOM_HASH_KEY
+      radians = rand(Math::PI) - (Math::PI / 2.0)
+    end
+    #puts "rotation draw = #{radians}"
+
     #radians between -2pi and +2pi, -ve = clockwise
     UIGraphicsBeginImageContext(image.size)
     image.drawInRect(CGRectMake(0,0,image.size.width,image.size.height))

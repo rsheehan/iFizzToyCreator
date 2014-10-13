@@ -15,6 +15,7 @@ class Language
   FORCE_TITLE     = 'Force'
   EXPLOSION_TITLE = 'Explosion'
   ROTATION_TITLE  = 'Rotation'
+  RANDOM_FORCE_LABEL = 'Random Force'
 
   # View labels
   TOY_MAKER       = 'Toy Maker'
@@ -38,7 +39,7 @@ class Language
   CLEAR         = 'clear'
 
   # Action Names
-  TOUCH         = 'tap'
+  TOUCH         = 'tap button'
   COLLISION     = 'collision'
   REPEAT        = 'timer'     # Repeat?
   HOLD          = 'hold'
@@ -74,7 +75,7 @@ class Language
   RIGHT_BOUNDARY          = 'Right boundary on/off'
   TOP_BOUNDARY          = 'Top boundary on/off'
   BOTTOM_BOUNDARY          = 'Bottom boundary on/off'
-  BACK_GROUND_IMAGE   = 'Background Image'
+  BACK_GROUND_IMAGE   = 'Background'
 
   # Commands
   CHOOSE_TOUCH_BUTTON  = 'Choose the button for this action.'

@@ -8,13 +8,14 @@ class SceneCreatorViewController < UIViewController
   attr_reader :main_view
 
   def loadView # preferable to viewDidLoad because not using xib
-
+    puts "scene creator view controller load view"
     self.view = UIView.alloc.initWithFrame(@bounds)
     self.view.accessibilityLabel = 'sceneView'
     location_of_play = [95, 0]
     size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @main_view = SceneCreatorView.alloc.initWithFrame([location_of_play, size_of_play])
-
+    @main_view.setGravity(Constants::DEFAULT_GRAVITY_Y)
+    @main_view.setWind(Constants::DEFAULT_GRAVITY_X)
     #@main_view.add_delegate(self) Now done in viewDidAppear
     #view.addSubview(@main_view)
     setup_colour_buttons
@@ -37,6 +38,7 @@ class SceneCreatorViewController < UIViewController
     view.addSubview(@mode_view)
     #save_scene
     super
+
   end
 
   #def viewDidDisappear(animated)
@@ -48,8 +50,8 @@ class SceneCreatorViewController < UIViewController
 
   # Show the scene box.
   def scene
-    p "show scene box"
-    save_scene
+    #save_scene
+    p "show scene box ...."
     scenebox_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
     scenebox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
     scenebox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
@@ -102,8 +104,16 @@ class SceneCreatorViewController < UIViewController
     p 'drop scene'
     #do something here to load scene
     scene = @state.scenes[scene_index]
+    p "drop set wind #{scene.gravity.dx}, gravity #{scene.gravity.dy}"
     @main_view.clear
     @main_view.setBackground(scene.background)
+
+
+    setGravity(scene.gravity.dy)
+    setWind(scene.gravity.dx)
+
+    p "drop set wind #{scene.gravity.dx}, gravity #{scene.gravity.dy}"
+
     scene.edges.each do |edge|
       # draw edge
       case edge
@@ -152,28 +162,45 @@ class SceneCreatorViewController < UIViewController
 
   def setBoundaries(boundaries)
     @main_view.setBoundaries(boundaries)
-    save_scene
+    #save_scene
+  end
+
+  def setGravity(gravity)
+    @main_view.setGravity(gravity)
+    #save_scene
+  end
+  def setWind(wind)
+    @main_view.setWind(wind)
+    #save_scene
   end
 
   def save_scene
-    p "save scene #{@state.scenes[@state.currentscene]} current scene: #{@state.currentscene}"
-    if @state.scenes[@state.currentscene] != nil
-      @main_view.setGravity(@state.scenes[@state.currentscene].gravity)
-      if @state.scenes[@state.currentscene].background != nil
-        @main_view.setBackground(@state.scenes[@state.currentscene].background)
-      end
-      scene = @main_view.gather_scene_info
-      scene.identifier = @id
-      unless scene.edges.empty? and scene.toys.empty?
-        @state.add_scene(scene)
-      end
+    # p "save scene #{@state.scenes[@state.currentscene]} current scene: #{@state.currentscene}"
+    #if @state.scenes[@state.currentscene] != nil
+    #   @main_view.setGravity(@state.scenes[@state.currentscene].gravity)
+    #   if @state.scenes[@state.currentscene].background != nil
+    #     @main_view.setBackground(@state.scenes[@state.currentscene].background)
+    #   end
+    #   scene = @main_view.gather_scene_info
+    #   scene.identifier = @id
+    #   unless scene.edges.empty? and scene.toys.empty?
+    #     @state.add_scene(scene)
+    #   end
+    #end
+    # p "finished save scene"
+
+    scene = @main_view.gather_scene_info
+    puts "save scene #{scene.to_s} with gravity = #{scene.gravity.dy}, wind = #{scene.gravity.dx}"
+    scene.identifier = @id
+    unless scene.edges.empty? and scene.toys.empty?
+      @state.add_scene(scene)
     end
     p "finished save scene"
   end
 
   def new
-    p 'new scene'
     save_scene
+    p 'new scene'
     clear
   end
   

@@ -97,10 +97,12 @@ class State
       @scenes << scene
       @currentscene = @scenes.length - 1
     else
+      p "gravity changed #{@scenes[replaced].gravity.dy}"
       @scenes[replaced] = scene
       @currentscene = replaced
+      p "gravity changed #{@scenes[replaced].gravity.dy}"
     end
-
+    #puts "(-) scene is added size of scene = #{@scenes.size}"
     #save
   end
 
@@ -109,6 +111,7 @@ class State
   end
 
   def save
+    #puts "saving thread: #{@thread}"
     if @thread.nil?
       @thread = Thread.new {
       paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
@@ -121,7 +124,7 @@ class State
         writeStream.open
         error = Pointer.new(:object)
         bytes = NSJSONSerialization.writeJSONObject(json_compatible, toStream: writeStream, options: 0, error: error)
-        puts "saved #{bytes} bytes"
+        puts "(*) Saved successfully #{bytes} bytes"
         writeStream.close
       end
       state_file_path = documents_path.stringByAppendingPathComponent('state')
@@ -149,6 +152,7 @@ class State
       #puts "error value (not necessarily an error) #{error[0].localizedDescription}"
       readStream.close
       convert_from_json_compatible(json_state) if json_state
+      puts "(*) Load successfully json successfully"
     end
     files = Dir.entries(documents_path)
     files.each do |file_name|
@@ -186,10 +190,11 @@ class State
     @toys = toys
 
     json_scenes = json_object[:scenes]
+    puts "scene size = #{json_scenes.size}"
     scenes = []
     if json_scenes
       json_scenes.each do |json_scene|
-        #puts 'processing scene'
+        puts "processing scene"
         scenes << jsonToScene(json_scene)
       end
     end
@@ -283,11 +288,20 @@ class State
     if json_scene.nil?
       return nil
     end
-
     id = json_scene[:id]
 
-    #load gravity
-    gravity = json_scene[:gravity]
+    puts "json_scene wind = #{json_scene[:wind]} gravity = #{json_scene[:gravity]}"
+
+    windValue = 0.0
+    if json_scene[:wind].to_s != ""
+      windValue = json_scene[:wind].to_f
+    end
+    gravityValue = -4.0
+    if json_scene[:gravity].to_s != ""
+      gravityValue = json_scene[:gravity].to_f
+    end
+
+    gravity = CGVectorMake(windValue, gravityValue)
 
     boundaries = json_scene[:boundaries]
 

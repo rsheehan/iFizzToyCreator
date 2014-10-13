@@ -42,6 +42,8 @@ class SceneTemplate
     if @gravity == nil
       @gravity = CGVectorMake(Constants::DEFAULT_GRAVITY_X, Constants::DEFAULT_GRAVITY_Y)
     end
+    @gravityX = @gravity.dx
+    @gravityY = @gravity.dy
   end
 
   def add_actions(actions)
@@ -75,8 +77,10 @@ class SceneTemplate
       json_edges << edge_part.to_json_compatible
     end
     json_scene[:edges] = json_edges
-    json_scene[:gravity] = @gravity
-    json_scene[:background] = @background
+    json_scene[:gravity] = @gravity.dy
+    json_scene[:wind] = @gravity.dx
+    #puts "saving #{json_scene.to_s}"
+    #json_scene[:background] = @background
 
     #actions will go here
 
@@ -129,8 +133,7 @@ class SceneTemplate
     p @background
     if @background != nil
       rectangle = CGRectMake(Constants::SMALL_GAP, Constants::SMALL_GAP, size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP)
-      #backgroundImage = @background.scale_to_fill([size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP])
-      #CGContextDrawImage(context, [[0,0],[100,100]], @background.CGImage)
+
       @background.drawInRect(rectangle)
     else
       CGContextFillRect(context, CGRectMake(Constants::SMALL_GAP, Constants::SMALL_GAP, size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP))
@@ -159,6 +162,12 @@ class SceneTemplate
         draw_toy(context,toy,scale)
       end
     end
+
+    font = UIFont.fontWithName("Courier", size: 16.0)
+    fontHeight = font.pointSize
+    text = "Gravity = " << @gravityY.to_s << ", wind = " << @gravityX.to_s
+    UIColor.blackColor.set
+    text.drawAtPoint(CGPointMake(10, 10), withFont:font)
 
     image = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()

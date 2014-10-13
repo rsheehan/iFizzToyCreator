@@ -19,6 +19,7 @@ class SceneCreatorView < CreatorView
   NUM_SEGMENTS = 10
   MAX_DIAGONAL_DRAG = 660
 
+
   # MODES for standard views :scene, (:toys_only, :toy_selected {Only ACTION ADDER modes})
   # MODES for action/effects :force, :explosion, :rotation, :create_new_toy
 
@@ -30,17 +31,30 @@ class SceneCreatorView < CreatorView
     @toys_in_scene = []
     @actions = []
     @boundaries = [1,1,1,1]
+    @gravity = CGVectorMake(0, 0)
     self.backgroundColor = DEFAULT_SCENE_COLOUR
     pinch_recognizer = UIPinchGestureRecognizer.alloc.initWithTarget(self, action: 'zoom_selected:')
     pinch_recognizer.delegate = self
     addGestureRecognizer(pinch_recognizer)
     @alpha_view = 1.0
+
+    @gravityLabel = UILabel.alloc.initWithFrame(CGRectMake(0, 0, 800, 50))
+    @gravityLabel.setTextAlignment(UITextAlignmentRight)
+    @gravityLabel.text = ""
+    self.addSubview(@gravityLabel)
+
     self
   end
 
   #set gravity from the config
   def setGravity(gravity)
-    @gravity = gravity
+    @gravity.dy = gravity
+    @gravityLabel.text = "Gravity = #{@gravity.dy}, wind = #{@gravity.dx}"
+  end
+
+  def setWind(wind)
+    @gravity.dx = wind
+    @gravityLabel.text = "Gravity = #{@gravity.dy}, wind = #{@gravity.dx}"
   end
 
   #set boundaries from the config
@@ -51,7 +65,8 @@ class SceneCreatorView < CreatorView
   #set background image from the config popup
   def setBackground(backgroundImage)
     if backgroundImage != nil
-      @backgroundImage = backgroundImage.scale_to_fill(self.frame.size)
+      @backgroundImage = backgroundImage
+      #@backgroundImage = backgroundImage.scale_to_fill(self.frame.size)
       #p "frame size = #{frame.size.width}"
 
       self.backgroundColor = UIColor.colorWithPatternImage(@backgroundImage)
@@ -111,8 +126,8 @@ class SceneCreatorView < CreatorView
   # Similar to gathering the toy info in ToyCreatorView but the scale is 1.
   def gather_scene_info
     id = rand(2**60).to_s
-    gravity = CGVectorMake(1,1)
-    #p "gather info boundary #{@boundaries}"
+    #gravity = CGVectorMake(1,1)
+    p "gather info wind = #{@gravity.dx}, gravity = #{@gravity.dy}"
     SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds, @gravity, @boundaries, @backgroundImage)
   end
 

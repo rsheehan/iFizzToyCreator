@@ -87,7 +87,10 @@ class CreatorView < UIView
         b = point
         if (b - a).magnitude > Constants::MAGNITUDE_DISTANCE_BETWEEN_POINTS
           @points << point
-          setNeedsDisplay
+          if @points.size % 5 == 0
+            setNeedsDisplay
+          end
+
         end
       when :grab
         if @truly_selected

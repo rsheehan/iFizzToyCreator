@@ -142,7 +142,7 @@ class CollectionViewPopoverViewController < UIViewController
       case @mode
         # add action to toys here
         when :effects
-          puts "effect"
+          #puts "effect"
           @delegate.makeEffect(EFFECTS[item])
         when :toys, :move_towards, :move_away
           puts "toys"

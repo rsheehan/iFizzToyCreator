@@ -80,6 +80,7 @@ class ToyCreatorViewController < UIViewController
   end
 
   def save_toy
+    puts "save toy"
     toy_parts = @main_view.gather_toy_info
 
     unless toy_parts.nil?

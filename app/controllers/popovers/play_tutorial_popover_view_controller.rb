@@ -23,7 +23,7 @@ class PlayPopoverViewController < UIViewController
       @instruction.setText(@instr_text)
     end
     @instruction.setBackgroundColor(Constants::LIGHT_BLUE_GRAY)
-    @instruction.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
+    @instruction.setFont(UIFont.systemFontOfSize(Constants::INSTRUCTION_LABEL_FONT_SIZE))
     @instruction.textAlignment = NSTextAlignmentCenter
     view.addSubview(@instruction)
 

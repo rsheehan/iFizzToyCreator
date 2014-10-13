@@ -44,6 +44,10 @@ class SceneConfigPopoverViewController < UIViewController
     @image_picker.delegate = self
   end
 
+  def viewDidDisappear(animated)
+    @delegate.save_scene
+  end
+
   def setTitle(text)
     @title_text = text
     #resize frames
@@ -141,29 +145,29 @@ class SceneConfigPopoverViewController < UIViewController
         when 6
           cell.text = Language::BACK_GROUND_IMAGE
 
-          @browseButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-          @browseButton.frame = [[0, 0], [100, 37]]
-          @browseButton.setTitle("Gallery", forState:UIControlStateNormal)
+          # @browseButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+          # @browseButton.frame = [[0, 0], [100, 37]]
+          # @browseButton.setTitle("Gallery", forState:UIControlStateNormal)
 
           @cameraButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-          @cameraButton.frame = [[70, 0], [100, 37]]
+          @cameraButton.frame = [[0, 0], [100, 37]]
           @cameraButton.setTitle("Camera", forState:UIControlStateNormal)
 
           @clearButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-          @clearButton.frame = [[140, 0], [100, 37]]
+          @clearButton.frame = [[100, 0], [100, 37]]
           @clearButton.setTitle("Clear", forState:UIControlStateNormal)
 
 
           # add two button to the same cell
-          buttonView = UIView.alloc.initWithFrame([[0,0],[200,37]])
-          buttonView.addSubview(@browseButton)
+          buttonView = UIView.alloc.initWithFrame([[0,0],[160,37]])
+          #buttonView.addSubview(@browseButton)
           buttonView.addSubview(@cameraButton)
           buttonView.addSubview(@clearButton)
           cell.accessoryView = buttonView
           #cell.selectionStyle = UITableViewCellSelectionStyleNone
           #cell.userInteractionEnabled = false
           #cell.backgroundColor = UIColor.grayColor
-          @browseButton.addTarget(self,action:'browseButtonClicked', forControlEvents:UIControlEventTouchUpInside)
+          #@browseButton.addTarget(self,action:'browseButtonClicked', forControlEvents:UIControlEventTouchUpInside)
           @cameraButton.addTarget(self,action:'cameraButtonClicked', forControlEvents:UIControlEventTouchUpInside)
           @clearButton.addTarget(self,action:'clearButtonClicked', forControlEvents:UIControlEventTouchUpInside)
       end
@@ -171,10 +175,10 @@ class SceneConfigPopoverViewController < UIViewController
     end
   end
 
-  def browseButtonClicked
-    @image_picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary
-    presentModalViewController(@image_picker, animated: true)
-  end
+  # def browseButtonClicked
+  #   @image_picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary
+  #   presentModalViewController(@image_picker, animated: true)
+  # end
 
   def cameraButtonClicked
     @image_picker.sourceType = UIImagePickerControllerSourceTypeCamera
@@ -207,14 +211,17 @@ class SceneConfigPopoverViewController < UIViewController
 
   # change value of gravity
   def gravitySliderChanged
-    @scene.gravity.dy = @gravitySlider.value * -1
-    @table_view.reloadData
+    #@scene.gravity.dy = @gravitySlider.value * -1
+    @delegate.setGravity(@gravitySlider.value.to_i * -1)
+    #@table_view.reloadData
   end
 
   # change value of wind
   def windSliderChanged
-    @scene.gravity.dx = @windSlider.value
-    @table_view.reloadData
+    #@scene.gravity.dx = @windSlider.value
+    @delegate.setWind(@windSlider.value.to_i)
+    #@table_view.reloadData
+
   end
 
   # change values of switches for boundaries

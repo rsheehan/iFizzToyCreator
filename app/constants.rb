@@ -13,6 +13,7 @@ class Constants
   LIGHT_GRAY = UIColor.colorWithRed(0.95, green: 0.95, blue: 0.95, alpha: 1.0)
   LIGHT_BLUE_GRAY = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
   ICON_LABEL_FONT_SIZE = 12
+  INSTRUCTION_LABEL_FONT_SIZE = 15
 
   # Sound constants
   SOUND_NAMES = []
@@ -24,18 +25,18 @@ class Constants
     end
   end
 
-
   MAX_CONVEX_HULL_POINTS = 12
   DEFAULT_GRAVITY_X = 0
   DEFAULT_GRAVITY_Y = -4
 
   # when using touch to draw scene and toys
-  MAGNITUDE_DISTANCE_BETWEEN_POINTS = 7.0
-  MAX_CONTROLLED_POINTS_FOR_A_CURVE = 20
+  MAGNITUDE_DISTANCE_BETWEEN_POINTS = 3.0
+  MAX_CONTROLLED_POINTS_FOR_A_CURVE = 25
   SMALL_BSPLINE_STEPS = 5.0
 
   SMALLER_SIZED_SAVED_SCENE = 0.35
-  SMALL_GAP = 2
+  SMALL_GAP = 2       #pixels
+  SMALL_MARGIN = 10   #pixels
 
   # transition effects between scenes
   TRANSITION_EFFECT = SKTransition.revealWithDirection( SKTransitionDirectionLeft,  duration: 1 ) # for how many seconds
