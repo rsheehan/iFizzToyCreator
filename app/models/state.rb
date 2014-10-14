@@ -249,6 +249,7 @@ class State
     end
   end
 
+  # Convert from Json to collection of toys
   def jsonToToy(json_toy)
     id = json_toy[:id]
 
@@ -283,6 +284,7 @@ class State
     toy
   end
 
+  # Convert from Json to collection of scene
   def jsonToScene(json_scene)
     puts "json to scene"
     if json_scene.nil?

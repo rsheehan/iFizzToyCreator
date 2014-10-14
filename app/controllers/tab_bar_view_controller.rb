@@ -52,8 +52,17 @@ class UITabBarControllerLandscape < UITabBarController
   end
 
   def supportedInterfaceOrientations
-    UIInterfaceOrientationMaskLandscape
+    return UIInterfaceOrientationMaskLandscape
+    #return UIInterfaceOrientationMaskPortrait
   end
+
+  def shouldAutorotate
+    return true #self.selectedViewController.shouldAutorotate
+  end
+
+
+
+
   # Saving after the app has closed
   def applicationWillResignActive(application)
     @state.save
@@ -63,6 +72,7 @@ class UITabBarControllerLandscape < UITabBarController
   # returns with the icon image
   def icon_and_title(controller, title, icon_name)
     controller.title = title
-    UIImage.imageNamed(icon_name)
+    imageIcon = UIImage.imageNamed(icon_name)
+    imageIcon
   end
 end

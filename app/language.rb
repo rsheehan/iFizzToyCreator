@@ -69,8 +69,8 @@ class Language
   ALWAYS_TRAVELS_FORWARD = 'Always Travels Forward'
 
   #Scene properties
-  GRAVITY       = 'Gravity'
-  WIND          = 'Wind Direction'
+  GRAVITY       = 'Gravity:'
+  WIND          = 'Wind:'
   LEFT_BOUNDARY          = 'Left boundary on/off'
   RIGHT_BOUNDARY          = 'Right boundary on/off'
   TOP_BOUNDARY          = 'Top boundary on/off'

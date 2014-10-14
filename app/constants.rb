@@ -15,15 +15,31 @@ class Constants
   ICON_LABEL_FONT_SIZE = 12
   INSTRUCTION_LABEL_FONT_SIZE = 15
 
+  paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
+  BUNDLE_ROOT = paths.objectAtIndex(0) # Get the docs directory
+
+  #BUNDLE_ROOT = NSBundle.mainBundle.bundlePath
+
   # Sound constants
   SOUND_NAMES = []
-  bundleRoot = NSBundle.mainBundle.bundlePath
-  dirContents = NSFileManager.defaultManager.directoryContentsAtPath(bundleRoot)
+  
+  dirContents = NSFileManager.defaultManager.directoryContentsAtPath(NSBundle.mainBundle.bundlePath)
   dirContents.each do |fileName|
     if fileName.hasSuffix(".wav") || fileName.hasSuffix(".mp3")
       SOUND_NAMES << fileName
     end
   end
+
+  # Background constants
+
+  # BACKGROUND_NAMES = []
+  # bundleRoot = NSBundle.mainBundle.bundlePath
+  # dirContents = NSFileManager.defaultManager.directoryContentsAtPath(bundleRoot)
+  # dirContents.each do |fileName|
+  #   if fileName.hasSuffix("bground.png") || fileName.hasSuffix("bground.jpg")
+  #     BACKGROUND_NAMES << fileName
+  #   end
+  # end
 
   MAX_CONVEX_HULL_POINTS = 12
   DEFAULT_GRAVITY_X = 0
@@ -35,7 +51,7 @@ class Constants
   SMALL_BSPLINE_STEPS = 5.0
 
   SMALLER_SIZED_SAVED_SCENE = 0.35
-  SMALL_GAP = 2       #pixels
+  SMALL_GAP = 7       #pixels to display borders on scene
   SMALL_MARGIN = 10   #pixels
 
   # transition effects between scenes
