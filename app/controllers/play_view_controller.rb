@@ -149,7 +149,7 @@ class PlayViewController < UIViewController
       @play_scene.delegate = self
 
       # set scene gravity
-      @play_scene.setGravity(scene.gravity)
+      @play_scene.setGravity(CGVectorMake(scene.gravityX, scene.gravityY))
       @play_scene.setBoundaries(scene.boundaries)
 
       # this is purely for development only uses the first scene
@@ -159,7 +159,8 @@ class PlayViewController < UIViewController
       @play_scene.backgroundImage = scene.background
 
       # add the toys to the scene
-      @play_scene.toys = scene.toys
+      @play_scene.toys = scene.toyInPlayScene
+      # Minh has changed, only add if toy is not ghost
       # add the edges to the scene
       @play_scene.edges = scene.edges #@state.scenes[@state.currentscene].edges
       # also go through the actions checking for button actions and enabling the buttons

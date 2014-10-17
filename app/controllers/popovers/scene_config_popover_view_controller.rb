@@ -157,13 +157,13 @@ class SceneConfigPopoverViewController < UIViewController
           @gravitySlider.maximumValue = +5.0
           @gravitySlider.continuous = false
           #gravity is negative
-          @gravitySlider.value = -1*@scene.gravity.dy
+          @gravitySlider.value = -1*@scene.gravityY
 
           gravityView = UIView.alloc.initWithFrame([[0,0],[200,23]])
 
           @gravity_label_view = UILabel.alloc.initWithFrame([[150, 0], [50.0, 23.0]])
           @gravity_label_view.setTextAlignment(UITextAlignmentCenter)
-          @gravity_label_view.text = (-1*@scene.gravity.dy).to_s
+          @gravity_label_view.text = (-1*@scene.gravityY).to_s
 
           gravityView.addSubview(@gravitySlider)
           gravityView.addSubview(@gravity_label_view)
@@ -177,11 +177,11 @@ class SceneConfigPopoverViewController < UIViewController
           @windSlider.minimumValue = -5.0
           @windSlider.maximumValue = +5.0
           @windSlider.continuous = false
-          @windSlider.value = @scene.gravity.dx
+          @windSlider.value = @scene.gravityX
 
           @wind_label_view = UILabel.alloc.initWithFrame([[150, 0], [50.0, 23.0]])
           @wind_label_view.setTextAlignment(UITextAlignmentCenter)
-          @wind_label_view.text = @scene.gravity.dx.to_s
+          @wind_label_view.text = @scene.gravityX.to_s
 
           windView = UIView.alloc.initWithFrame([[0,0],[200,23]])
 
@@ -291,8 +291,10 @@ class SceneConfigPopoverViewController < UIViewController
           @clearButton.setTitle("Clear", forState:UIControlStateNormal)
 
           # add two button to the same cell
-          buttonView = UIView.alloc.initWithFrame([[0,0],[160,37]])       
-          buttonView.addSubview(@cameraButton)
+          buttonView = UIView.alloc.initWithFrame([[0,0],[160,37]]) 
+          if camera_available?      
+            buttonView.addSubview(@cameraButton)
+          end
           buttonView.addSubview(@clearButton)
           cell.accessoryView = buttonView
          
@@ -413,14 +415,14 @@ class SceneConfigPopoverViewController < UIViewController
 
   # change value of gravity
   def gravitySliderChanged
-    @scene.gravity.dy = @gravitySlider.value.to_i * -1
+    @scene.gravityY = @gravitySlider.value.to_i * -1
     @delegate.setGravity(@gravitySlider.value.to_i * -1)
     @table_view.reloadData
   end
 
   # change value of wind
   def windSliderChanged
-    @scene.gravity.dx = @windSlider.value.to_i
+    @scene.gravityX = @windSlider.value.to_i
     @delegate.setWind(@windSlider.value.to_i)
     @table_view.reloadData
 
@@ -473,6 +475,11 @@ class SceneConfigPopoverViewController < UIViewController
     if @state.scenes.size > 0
       @scene = @state.scenes[@state.currentscene]
     end
+  end
+
+  # check if camera available
+  def camera_available?
+    UIImagePickerController.isSourceTypeAvailable UIImagePickerControllerSourceTypeCamera 
   end
 
 end

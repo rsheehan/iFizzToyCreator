@@ -63,6 +63,8 @@ class CreateActionViewController < UIViewController
 
 
   def done
+    # newToy = ToyInScene.new(@state.toys[toy_index], 1.0, true)
+    # @main_view.add_toy(newToy)
     @main_view.end_create_toy
   end
 

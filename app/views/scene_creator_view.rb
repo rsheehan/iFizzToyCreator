@@ -49,17 +49,18 @@ class SceneCreatorView < CreatorView
   #set gravity from the config
   def setGravity(gravity)
     @gravity.dy = gravity
-    @gravityLabel.text = "Gravity = #{@gravity.dy}, wind = #{@gravity.dx}"
+    @gravityLabel.text = "y = #{@gravity.dy}, x = #{@gravity.dx}, #{@boundaries.to_s}"
   end
 
   def setWind(wind)
     @gravity.dx = wind
-    @gravityLabel.text = "Gravity = #{@gravity.dy}, wind = #{@gravity.dx}"
+    @gravityLabel.text = "y = #{@gravity.dy}, x = #{@gravity.dx}, #{@boundaries.to_s}"
   end
 
   #set boundaries from the config
   def setBoundaries(boundaries)
     @boundaries = boundaries
+    @gravityLabel.text = "y = #{@gravity.dy}, x = #{@gravity.dx}, #{@boundaries.to_s}"
   end
 
   #set background image from the config popup
@@ -470,6 +471,9 @@ class SceneCreatorView < CreatorView
     results[:id] = @selected.template.identifier
     disp = @secondary_selected.position - @selected.position
 
+    newToy = ToyInScene.new(@selected.template, 1.0, true)
+    newToy.position = @selected.position
+
     # to handle randomly created toy
     if random
       results[:x] = Constants::RANDOM_HASH_KEY
@@ -483,10 +487,16 @@ class SceneCreatorView < CreatorView
     results[:zoom] = @selected.zoom
     results[:angle] = @selected.angle
     @selected = @secondary_selected
+
     @secondary_selected = nil
+
     @delegate.selected_toy = @selected
     @delegate.create_new_toy = results
     @delegate.close_modal_view
+
+
+    add_toy(newToy)
+
   end
 
   # Called when the touch ends for a collision toy selection.

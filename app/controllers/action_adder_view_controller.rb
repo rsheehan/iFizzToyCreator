@@ -883,6 +883,9 @@ class ActionAdderViewController < UIViewController
             drag_action_view_controller.new_toy = ToyInScene.new(@state.toys[toy_index])
             drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
             presentViewController(drag_action_view_controller, animated: false, completion: nil)
+
+            # newToy = ToyInScene.new(@state.toys[toy_index], 1.0, true)
+            # @main_view.add_toy(newToy)
           end
 
         else

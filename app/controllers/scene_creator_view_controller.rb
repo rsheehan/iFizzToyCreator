@@ -1,10 +1,7 @@
 class SceneCreatorViewController < UIViewController
-
   include CreatorViewControllerModule
-
   # Mode on top of the screen, add config button
   MODES = [:scene, :toy, :config, :new]
-
   attr_reader :main_view
 
   def loadView # preferable to viewDidLoad because not using xib
@@ -15,17 +12,14 @@ class SceneCreatorViewController < UIViewController
     size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @main_view = SceneCreatorView.alloc.initWithFrame([location_of_play, size_of_play])
     @main_view.setGravity(Constants::DEFAULT_GRAVITY_Y)
-    @main_view.setWind(Constants::DEFAULT_GRAVITY_X)
-    #@main_view.add_delegate(self) Now done in viewDidAppear
-    #view.addSubview(@main_view)
+    @main_view.setWind(Constants::DEFAULT_GRAVITY_X)    
     setup_colour_buttons
     @current_colour_view.current_colour_image = Swatch.images['brown']
     @main_view.current_colour = UIColor.brownColor
     setup_tool_buttons
     setup_mode_buttons(MODES)
     @tool_buttons[:grab].selected = true # the default, was :line
-    setup_label(Language::SCENE_MAKER)
-    #assign an id to the toy being made
+    setup_label(Language::SCENE_MAKER)   
     @id = rand(2**60).to_s
   end
 
@@ -35,22 +29,12 @@ class SceneCreatorViewController < UIViewController
     @main_view.add_delegate(self)
     @main_view.mode = :scene
     view.addSubview(@main_view)
-    view.addSubview(@mode_view)
-    #save_scene
+    view.addSubview(@mode_view)    
     super
-
   end
 
-  #def viewDidDisappear(animated)
-  #  puts "viewDidDisappear"
-  #  #@main_view.current_tool = :grab
-  #  #select_button(:grab)
-  #  #@tool_buttons[:grab].selected = true # the default, was :line
-  #end
-
   # Show the scene box.
-  def scene
-    #save_scene
+  def scene   
     p "show scene box ...."
     scenebox_view_controller = SceneBoxViewController.alloc.initWithNibName(nil, bundle: nil)
     scenebox_view_controller.modalTransitionStyle = UIModalTransitionStyleCoverVertical
@@ -63,15 +47,13 @@ class SceneCreatorViewController < UIViewController
   # Closes the toy box.
   def close_toybox
     p 'close_toybox'
-    dismissModalViewControllerAnimated(true, completion: nil)
-    #puts "close toybox"
+    dismissModalViewControllerAnimated(true, completion: nil)   
   end
 
   # Set background
   def setBackground(image)
     @main_view.setBackground(image) # if nil then clear
-    @state.scenes[@state.currentscene].background = image
-    #puts "set background"
+    @state.scenes[@state.currentscene].background = image   
   end
 
   # Show the toy box
@@ -82,8 +64,7 @@ class SceneCreatorViewController < UIViewController
     toybox_view_controller.modalPresentationStyle = UIModalPresentationPageSheet
     toybox_view_controller.delegate = self
     toybox_view_controller.state = @state
-    presentViewController(toybox_view_controller, animated: true, completion: nil)
-    #toybox_view_controller.setup_toys(@state.toys)
+    presentViewController(toybox_view_controller, animated: true, completion: nil)    
   end
 
   # Called when a toy image is clicked on in the toy box view.
@@ -100,19 +81,14 @@ class SceneCreatorViewController < UIViewController
   end
 
   #called when a scene imae is chosen in the scene box view
-  def drop_scene(scene_index)
-    p 'drop scene'
-    #do something here to load scene
-    scene = @state.scenes[scene_index]
-    p "drop set wind #{scene.gravity.dx}, gravity #{scene.gravity.dy}"
+  def drop_scene(scene_index)   
+    scene = @state.scenes[scene_index]    
     @main_view.clear
     @main_view.setBackground(scene.background)
 
-
-    setGravity(scene.gravity.dy)
-    setWind(scene.gravity.dx)
-
-    p "drop set wind #{scene.gravity.dx}, gravity #{scene.gravity.dy}"
+    setGravity(scene.gravityY)
+    setWind(scene.gravityX)
+    setBoundaries(scene.boundaries)    
 
     scene.edges.each do |edge|
       # draw edge
@@ -124,10 +100,11 @@ class SceneCreatorViewController < UIViewController
         else
       end
     end
+
     scene.toys.each do |toy|
-      @main_view.add_toy(toy)
-      #add toy's actions to scene
+      @main_view.add_toy(toy)   
     end
+    
     @state.load_scene_actions(scene)
     @main_view.add_action(scene.actions)
     #update id
@@ -137,22 +114,12 @@ class SceneCreatorViewController < UIViewController
     grab
   end
 
-  # def add_all_toy_actions(toy)
-  #   toy.actions.each do |action|
-  #     @main_view.add_action(action)
-  #     if action[:effect_type] == :create_new_toy
-  #       add_all_toy_actions((@state.toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first)
-  #     end
-  #   end
-  # end
-
   # Called when the view disappears.
   def viewWillDisappear(animated)
     p 'view will disappear'
     super
     # collect the scene information to pass on to the play view controller
-    save_scene
-    #@play_view_controller.update_play_scene
+    save_scene    
   end
 
   def refresh
@@ -161,52 +128,30 @@ class SceneCreatorViewController < UIViewController
   end
 
   def setBoundaries(boundaries)
-    @main_view.setBoundaries(boundaries)
-    #save_scene
+    @main_view.setBoundaries(boundaries)    
   end
 
   def setGravity(gravity)
-    @main_view.setGravity(gravity)
-    #save_scene
+    @main_view.setGravity(gravity)    
   end
   def setWind(wind)
-    @main_view.setWind(wind)
-    #save_scene
+    @main_view.setWind(wind)    
   end
 
   def save_scene
-    # p "save scene #{@state.scenes[@state.currentscene]} current scene: #{@state.currentscene}"
-    #if @state.scenes[@state.currentscene] != nil
-    #   @main_view.setGravity(@state.scenes[@state.currentscene].gravity)
-    #   if @state.scenes[@state.currentscene].background != nil
-    #     @main_view.setBackground(@state.scenes[@state.currentscene].background)
-    #   end
-    #   scene = @main_view.gather_scene_info
-    #   scene.identifier = @id
-    #   unless scene.edges.empty? and scene.toys.empty?
-    #     @state.add_scene(scene)
-    #   end
-    #end
-    # p "finished save scene"
-
     scene = @main_view.gather_scene_info
-    puts "save scene #{scene.to_s} with gravity = #{scene.gravity.dy}, wind = #{scene.gravity.dx}"
     scene.identifier = @id
     unless scene.edges.empty? and scene.toys.empty?
       @state.add_scene(scene)
-    end
-    p "finished save scene"
+    end    
   end
 
   def new
-    save_scene
-    p 'new scene'
+    save_scene    
     clear
   end
   
-  def clear
-    p 'clear'
-    #@main_view.setup_for_new
+  def clear   
     @id = rand(2**60).to_s
     @main_view.clear
   end

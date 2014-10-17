@@ -4,8 +4,8 @@
 # TODO: separate the edge and background stuff into BackgroundTemplate
 class SceneTemplate
 
-  attr_reader :toys, :edges, :actions, :identifier, :image, :gravity, :background, :boundaries
-  attr_writer :identifier, :bounds, :gravity, :background, :boundaries
+  attr_reader :toys, :edges, :actions, :identifier, :image, :gravityX, :gravityY, :background, :boundaries
+  attr_writer :identifier, :bounds, :gravityX, :gravityY, :background, :boundaries
 
   WIDTH = 834
   HEIGHT = 712
@@ -69,7 +69,10 @@ class SceneTemplate
     # the toys are represented by their identifiers
     json_toys = []
     @toys.each do |toy|
-      json_toys << toy.to_json_compatible
+      puts "toy ghost = #{toy.ghost}"
+      #if toy.ghost == false
+        json_toys << toy.to_json_compatible
+      #end
     end
     json_scene[:toys] = json_toys
     json_edges = []
@@ -79,6 +82,15 @@ class SceneTemplate
     json_scene[:edges] = json_edges
     json_scene[:gravity] = @gravity.dy
     json_scene[:wind] = @gravity.dx
+    json_scene[:boundaries] = @boundaries
+
+    #change background image to JSON
+    if @background != nil
+      backgroundImageData = UIImageJPEGRepresentation(@background, 0.9)
+      encodedData = [backgroundImageData].pack("m")
+      json_scene[:background] = encodedData
+    end
+
     #puts "saving #{json_scene.to_s}"
     #json_scene[:background] = @background
 
@@ -158,10 +170,18 @@ class SceneTemplate
 
     @toys.each do |toy|
       #draw toy image at position and scale and rotation
-      if toy
+      if toy and toy.ghost == false
         draw_toy(context,toy,scale)
       end
     end
+
+    # @actions.each do |action|      
+    #   #:effect_type=>:create_new_toy
+    #   if action[:effect_type] == :create_new_toy
+    #   #  puts "-- draw action #{action.to_s}"
+    #   #   draw_toy(context,toy,scale)
+    #   end
+    # end
 
     font = UIFont.fontWithName("Courier", size: 16.0)
     fontHeight = font.pointSize
@@ -172,6 +192,16 @@ class SceneTemplate
     image = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
     image
+  end
+
+  def toyInPlayScene
+    realToyInScene = []
+    @toys.each do |toy|
+      if toy.ghost == false
+        realToyInScene << toy
+      end
+    end
+    realToyInScene
   end
 
   def draw_sole_point(context, sole_point, scale)

@@ -49,6 +49,8 @@ class UITabBarControllerLandscape < UITabBarController
     # CAN CHANGE TO scene_creator_view_controller
     tab_bar = self.tabBar
     icons.each_with_index { |icon, i| tab_bar.items[i].image = icon }
+
+    
   end
 
   def supportedInterfaceOrientations

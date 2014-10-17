@@ -68,7 +68,7 @@ class PlayScene < SKScene
 
   # Det boundaries of the scene
   def setBoundaries(boundaries)
-    puts "boundaries: #{boundaries}"
+    #puts "boundaries: #{boundaries}"
     # top edge
     if(boundaries[TOP]==SWITCH_ON)
       body = SKPhysicsBody.bodyWithEdgeFromPoint([frame.origin.x,frame.size.height], toPoint: [frame.size.width, frame.size.height])
@@ -130,7 +130,7 @@ class PlayScene < SKScene
   end
 
   def add_create_action(action)
-    puts "add create action #{action}"
+    #puts "add create action #{action}"
     if @create_actions
       @create_actions << action
     else
@@ -219,8 +219,7 @@ class PlayScene < SKScene
           end
 
           # remove toys if toys fall out of the frame
-          if toy.position.y > frame.size.height || toy.position.y < frame.origin.y || toy.position.x > frame.size.width || toy.position.x < frame.origin.x
-            #p "remove toy #{toy.userData[:uniqueID]}"
+          if toy.position.y > 2*frame.size.height || toy.position.y < frame.origin.y - frame.size.height || toy.position.x > 2*frame.size.width || toy.position.x < frame.origin.x - frame.size.width            
             remove = SKAction.removeFromParent()
             apply_action_to_toy(toy, remove)
             toy.userData[:uniqueID] = -1
@@ -353,7 +352,7 @@ class PlayScene < SKScene
         else
           effect = action[:effect_type]
           param = action[:effect_param]
-          puts "effect #{effect}, param #{param}"
+          #puts "effect #{effect}, param #{param}"
           delete = false
           send = false
           #puts "Value param: #{param}"
@@ -369,7 +368,7 @@ class PlayScene < SKScene
               else
                 param = CGPointApplyAffineTransform(param, rotation)
               end
-              puts "apply force at #{param}: (#{param.x},#{param.y})"
+              #puts "apply force at #{param}: (#{param.x},#{param.y})"
 
               send = true
               effect = "applyForce"
@@ -505,7 +504,7 @@ class PlayScene < SKScene
               label.runAction(actions)
 
               # Checks for actions to fire if a score is reached or passed
-              puts "Toy Score: " + toy.userData[:score].to_s
+              #puts "Toy Score: " + toy.userData[:score].to_s
               @score_actions.each do |score_action|
                 # Checks toy identifier, score being reached or passed, and that the action has not been fired previously
                 if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score] and not score_action[:used].include?(toy.userData[:uniqueID])
@@ -527,12 +526,12 @@ class PlayScene < SKScene
                   else
                     @actions_to_be_fired = [score_action]
                   end
-                  puts "score action "+ score_action.to_s
+                  #puts "score action "+ score_action.to_s
                 end
               end
 
             when :create_new_toy
-              puts "create_new_toy"
+              #puts "create_new_toy"
               id = action[:effect_param][:id]
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               # Gets toy in scene from loaded toys
@@ -578,8 +577,8 @@ class PlayScene < SKScene
               @toys_count[id] = 0 unless @toys_count[id]
               @toy_hash[id].delete_if do |check_toy|
                 bool = check_toy.userData[:uniqueID] == -1
-                puts "UniqueID: " + check_toy.userData[:uniqueID].to_s
-                puts "Is dead?: " + bool.to_s
+                #puts "UniqueID: " + check_toy.userData[:uniqueID].to_s
+                #puts "Is dead?: " + bool.to_s
                 bool
               end
 
@@ -593,12 +592,12 @@ class PlayScene < SKScene
               end
           end
           if send
-            puts "mass "+toy.userData[:mass].to_s
+            #puts "mass "+toy.userData[:mass].to_s
             param = scale_force_mass(param, toy.userData[:mass])
             toy.physicsBody.send(effect, param)
           end
         end
-        puts "Deleted: " + delete.to_s
+        #puts "Deleted: " + delete.to_s
         delete
       end
     end
@@ -754,7 +753,7 @@ class PlayScene < SKScene
     @edges.each do |edge|
       case edge
         when CirclePart
-          puts "PlayScene"
+          #puts "PlayScene"
           body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
           body.dynamic = false
           body.contactTestBitMask = 1
@@ -990,7 +989,7 @@ class PlayScene < SKScene
 
     end
 
-    puts "trigger any create actions"
+    #puts "trigger any create actions"
 
     #trigger any create actions
     @create_actions.each do |action|

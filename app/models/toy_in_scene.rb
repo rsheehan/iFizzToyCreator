@@ -4,14 +4,15 @@ class ToyInScene
   # position, angle and zoom - along with the template stuff of course
 
   attr_reader :old_position, :old_angle, :old_zoom, :template
-  attr_accessor :angle, :zoom, :position
+  attr_accessor :angle, :zoom, :position, :ghost
   attr_reader :image, :uid  # for the PlayScene
 
-  def initialize(toy_template, zoom = 1.0)
+  def initialize(toy_template, zoom = 1.0, ghost = false)
     @template = toy_template
     @old_position = @position = CGPointMake((1024 - 190)/2, (768 - 56)/2)
     @old_angle = @angle = 0
     @old_zoom = @zoom = zoom
+    @ghost = ghost
     if @zoom != 1.0
       @image = @template.create_image(@zoom)
     else
@@ -38,6 +39,7 @@ class ToyInScene
     json_toy_in_scene[:position] = { x: @position.x, y: @position.y }
     json_toy_in_scene[:angle] = @angle
     json_toy_in_scene[:zoom] = @zoom
+    json_toy_in_scene[:ghost] = @ghost
     json_toy_in_scene
   end
 
@@ -165,6 +167,17 @@ class ToyInScene
 
   def draw(context)
     CGContextSaveGState(context)
+
+    #puts "Ghost = #{@ghost}"
+
+    #colorSpace = CGColorSpaceCreateDeviceGray()
+    #CGContextSetFillColorSpace(context, colorSpace)
+
+    if @ghost
+      CGContextSetAlpha(context, 0.3)
+      CGContextBeginTransparencyLayer(context, nil)
+    end
+
     if @animate_position
       CGContextTranslateCTM(context, *@animate_position)
     else
@@ -174,6 +187,13 @@ class ToyInScene
     CGContextScaleCTM(context, @zoom/@old_zoom, @zoom/@old_zoom) #if @zoom != @old_zoom
     image_size = CGPointMake(@image.size.width, @image.size.height)
     @image.drawInRect(CGRectMake(*(image_size / -2.0), *image_size))
+
+    #CGContextSetAlpha(context, 1.0)
+    if @ghost
+      CGContextEndTransparencyLayer(context)
+      CGContextSetAlpha(context, 1.0)
+    end
+
     CGContextRestoreGState(context)
   end
 

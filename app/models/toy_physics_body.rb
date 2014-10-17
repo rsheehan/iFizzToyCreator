@@ -13,17 +13,7 @@
 class ToyPhysicsBody
 
   def initialize(toy_parts) #, toy_node)
-    #parts = toy_template.parts
     collect(toy_parts)
-    #add_lines_to_paths
-    #puts "circles: #{@circles.length}"
-    #puts "paths: #{@paths.length}"
-    #@paths.each do |path|
-    #  puts "    path size: #{path.points.length}, hull size: #{convex_hull(path.points).length}"
-    #end
-    #puts "lines: #{@lines.length}"
-    #puts "dots: #{@dots.length}"
-
     # create the physics body
     # this is temporary code - gets convex hull of all path/line parts
     @all_points = []
@@ -37,22 +27,6 @@ class ToyPhysicsBody
         @all_points << point
       end
     end
-    #convex_hull(all_points)
-
-    ## at the moment only does the paths
-    ## get the body of the first path
-    #if @paths.length > 0
-    #  hull = convex_hull(@paths.shift.points)
-    #  #first_body = SKPhysicsBody.bodyWithPolygonFromPath(hull)
-    #end
-    #@paths.each do |path|
-    #  #body = SKPhysicsBody.bodyWithPolygonFromPath(convex_hull(path.points))
-    #  hull = convex_hull(path.points)
-    #  # glue this body to the first body
-    #  # NB: the bodies must already be part of a node
-    #
-    #  #SKPhysicsJointFixed.jointWithBodyA(first_body, bodyB: body, anchor: anchor)
-    #end
   end
 
   def points_in_paths
@@ -81,26 +55,6 @@ class ToyPhysicsBody
       end
     end
   end
-
-  #CLOSE = 10
-  ## Adds lines which are close to other lines to a path,
-  ## removing them from the lines array.
-  ## Should I also add paths which are close to each other into one path
-  ## and what about lines which are close to a path?
-  #def add_lines_to_paths
-  #  new_paths = []
-  #  for i in 0..@lines.length-2
-  #    p0, p1 = @lines[i]
-  #    for j in i+1..@lines.length-1
-  #      p2, p3 = @lines[j]
-  #      if (p0 - p2).magnitude < CLOSE or (p0 - p3).magnitude < CLOSE or (p1 - p2).magnitude < CLOSE or (p1 - p3).magnitude < CLOSE
-  #        # at least two points are close together so put them in the same path
-  #        new_path = [p0, p1, p2, p3]
-  #        new_paths << @lines[i] << @lines[j]
-  #      end
-  #    end
-  #  end
-  #end
 
   def minimum_distance(vpoint, p0, p1)
     v0 = p0
@@ -135,7 +89,6 @@ class ToyPhysicsBody
 # Uses Jarvis's algorithm - http://www.geeksforgeeks.org/convex-hull-set-1-jarviss-algorithm-or-wrapping/
 # Assumes path has at least 3 points.
   def convex_hull(path = @all_points)
-    puts "convex_hull"
     # Turn Two points into Four
     if path.length < 2
       return []
@@ -189,7 +142,6 @@ class ToyPhysicsBody
 
   # Added by Minh
   def reduce_points_2(path_of_points, epsilon)
-    #puts "reduce points"
     x = []
     y = []
     path_of_points.each do |p|
@@ -216,13 +168,11 @@ class ToyPhysicsBody
     while i < path_of_points.length do
       b = path_of_points[i]
       if minimum_distance(mid, a, b) > DISTANCE_OFF_PATH
-        #puts "keep"
         new_path << mid
         a = mid
         mid = b
         i += 1
       else
-        #puts "remove"
         # remove mid from the path of points
         new_path << b
         a = b

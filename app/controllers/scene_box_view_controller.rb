@@ -55,28 +55,13 @@ class SceneBoxViewController < UIViewController
       view.window.addGestureRecognizer(@recognizer)
     end
 
-    #def process_row_of_buttons(row_of_buttons)
-    #  row_of_buttons.each do |row_button|
-    #    size = row_button.frame.size
-    #    x = row_button.frame.origin.x
-    #    y = (row_button.frame.origin.y + @next_ypos - BIG_GAP)/2 - size.height/2
-    #    row_button.frame = [[x, y], size]
-    #    row_button.addTarget(@delegate, action: 'drop_toy:', forControlEvents: UIControlEventTouchUpInside)
-    #    view.addSubview(row_button)
-    #  end
-    #end
-
     # Back to the previous screen.
     def back
       self.view.window.removeGestureRecognizer(@recognizer)
       @delegate.close_toybox
     end
 
-    ## Jump from here to the SceneCreator.
-    #def scene
-    #
-    #end
-
+  
     #activate delete mode
     def delete
       if @delete_mode

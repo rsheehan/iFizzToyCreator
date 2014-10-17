@@ -8,32 +8,32 @@ class AppDelegate
     @window.rootViewController = @uiMainTab
     @window.makeKeyAndVisible # do this early otherwise some of the dimensions are wrong
 
+    # Setting of some global properties
+    UIButton.appearance.setTintColor(Constants::BUTTON_TINT_COLOR)
+    UIButton.appearance.setFont(UIFont.systemFontOfSize(Constants::GENERAL_BUTTON_FONT_SIZE))
 
+    #temporary used
 
-  #   bundleRoot = NSBundle.mainBundle.bundlePath
+    # temporaryImage = UIImage.imageNamed("bground.jpg")
+    # backgroundImageData = UIImageJPEGRepresentation(temporaryImage, 1.0)
+    #encodedData = [backgroundImageData].pack("m")
 
-  #   the_image = UIImage.imageNamed("bground.jpg")
+    #string = encodedData.to_s
+    
+    #data = string.unpack("m")
 
+    # File.open("#{Constants::DOCUMENT_PATH}/temporary.jpg", "w+b") do |f|
+    #     f.write(backgroundImageData)
+    # end
+    
+    # p "#{Constants::DOCUMENT_PATH}/temporary.jpg"
+    # newImage = UIImage.imageNamed("#{Constants::DOCUMENT_PATH}/temporary.jpg")
+    # puts newImage
 
-      
-  #     paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
-  #     documents_path = paths.objectAtIndex(0) # Get the docs directory
-  #     timeStamp = Time.now.to_s.gsub! ' ', '_'
-  #     file_name = bundleRoot + "/" + timeStamp + "_bground.png"
-      
-  #     puts "Writing image to #{file_name}"
-  #     writeData = UIImagePNGRepresentation(the_image)
-  #     writeData.writeToFile(file_name, atomically: true)
-
-  #     dirContents = NSFileManager.defaultManager.directoryContentsAtPath(bundleRoot)
-  # dirContents.each do |fileName|
-  #   if fileName.hasSuffix("bground.png") || fileName.hasSuffix("bground.jpg")
-  #     p fileName
-  #   end
-  # end
-  #     p "finish"
-  #File.remove()
-
+    # File.open("#{Constants::DOCUMENT_PATH}/temporary.txt", "w+b") do |f|
+    #   f.write("awData.to_s")
+    # end
+   
     true
   end
 end
