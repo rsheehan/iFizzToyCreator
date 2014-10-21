@@ -2,36 +2,19 @@
 # Sort of an abstract class - can't be created directly
 # Now a module
 module CreatorViewControllerModule
-
-  #puts "loaded"
-
-  TOOLS = [:grab, :squiggle, :line, :circle, :undo, :redo, :trash,:clear]
+  TOOLS = [:grab, :squiggle, :line, :circle, :undo, :redo, :trash, :clear]
   #COLOURS = ['black', 'blue', 'brown', 'cyan', 'green', 'magenta', 'orange', 'purple', 'red', 'yellow', 'white']
 
   attr_writer :state
 
-  #def loadView # preferable to viewDidLoad because not using xib
-  #  # Do not call super.
-  #  #self.modalPresentationStyle = UIModalPresentationCurrentContext
-  #  setup_colour_buttons
-  #  setup_tool_buttons
-  #  #setup_mode_buttons
-  #end
-
-  # code to enable orientation changes
-  #def supportedInterfaceOrientations
-  #  UIInterfaceOrientationMaskPortrait
-  #end
-
-  #def shouldAutorotateToInterfaceOrientation(orientation)
-  #  if orientation == UIDeviceOrientationPortraitUpsideDown || orientation == UIDeviceOrientationPortrait
-  #    return false
-   # end
-  #  true
-  #end
-
   def viewDidAppear(animated)
     super
+
+    self.view.alpha = 0.0
+    UIView.animateWithDuration(1.0, animations: proc{
+      self.view.alpha=1.0
+    })
+
     @main_view.reset_undo
   end
 
@@ -105,6 +88,16 @@ module CreatorViewControllerModule
         Language::TRASH
       when :clear
         Language::CLEAR
+      when :toy
+        "all toys"
+      when :new
+        "create new"
+      when :scene
+        "all scenes"
+      when :config
+        "config"
+      else
+        name.to_s
     end
   end
 
@@ -160,16 +153,14 @@ module CreatorViewControllerModule
         CGRectMake(95, 0, 95 * modes.length, 95)) # @bounds.size.width - 95 - 85, @bounds.size.height - 95, 190, 95))
     position = [10, 10]
     modes.each do |mode_name|
-      button = setup_button(mode_name, position, @mode_view)
+      button = setup_button(mode_name, position, @mode_view, mode_name)
       position[0] += CGRectGetWidth(button.frame) + 10
     end
     view.addSubview(@mode_view)
   end
 
-  def setup_button(image_name, position, super_view)
+  def setup_button(image_name, position, super_view, label = '')
     button = UIButton.buttonWithType(UIButtonTypeCustom)
-    #p "button name #{image_name}"
-    #button.setTitle(image_name, forState: UIControlStateNormal)
     button.accessibilityLabel = image_name
     button.setImage(UIImage.imageNamed(image_name), forState: UIControlStateNormal)
     button.setImage(UIImage.imageNamed(image_name + '_selected'), forState: UIControlStateSelected) rescue puts 'rescued'
@@ -177,6 +168,14 @@ module CreatorViewControllerModule
     button.frame = [position, button.frame.size]
     button.addTarget(self, action: image_name, forControlEvents: UIControlEventTouchUpInside)
     super_view.addSubview(button)
+    if label != ''
+      labelView = UILabel.alloc.initWithFrame(CGRectMake(button.frame.origin.x-10, button.frame.origin.y+button.frame.size.height, button.frame.size.width+20, 20))
+      labelView.text=name_for_label(label)
+      labelView.textAlignment=UITextAlignmentCenter
+      labelView.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
+      #p "label = #{label}"
+      super_view.addSubview(labelView)
+    end
     button
   end
 
@@ -330,9 +329,7 @@ module CreatorViewControllerModule
 end
 
 class Swatch
-
   COLOURS = ['black', 'blue_colour', 'brown', 'cyan', 'green_colour', 'magenta', 'orange', 'purple', 'red_colour', 'yellow', 'white']
-
   def self.images
     if @images.nil?
       @images = {}
@@ -342,5 +339,4 @@ class Swatch
     end
     @images
   end
-
 end

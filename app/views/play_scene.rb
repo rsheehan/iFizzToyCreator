@@ -25,6 +25,7 @@ class PlayScene < SKScene
 
   def didMoveToView(view)
     p 'start play scene'
+    @systemMessage = nil
     @actions_to_fire = []
     if not @create_actions
       @create_actions = []
@@ -119,14 +120,22 @@ class PlayScene < SKScene
       NSTimer.scheduledTimerWithTimeInterval(delay.to_i, target: self, selector: "perform_action:", userInfo: actions, repeats: false)
     else
       @actions_to_fire += actions
+      p actions.to_s
     end
-
   end
 
   # Minh add to allow action to be perform after a certain time of delay
   def perform_action(timer)
     @actions_to_fire += timer.userInfo
-    #puts "delay after 1 second"
+  end
+
+  def queue_action_with_delay(timer)
+    if @actions_to_be_fired
+      @actions_to_be_fired << timer.userInfo
+    else
+      @actions_to_be_fired = [timer.userInfo]
+    end
+    #@actions_to_fire += timer.userInfo
   end
 
   def add_create_action(action)
@@ -320,19 +329,13 @@ class PlayScene < SKScene
     end
 
     @actions_to_fire.each do |action|
-
       # minh comment: all toys with the same type
       toy_id = action[:toy]
-
       toys = @toy_hash[toy_id] # all toys of the correct type
-      #puts "toy hash id = #{toy_id}"
       if toys.nil?     # If the toy gets deleted after an action is added
         next
       end
-      #if collision - remove all toys that are same but not collided
-      #if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches or action[:action_type] == :toy_touch
 
-      # What is this below code doing????
       if action[:action_type] == :collision or action[:action_type] == :when_created or action[:action_type] == :score_reaches or action[:action_type] == :toy_touch
         new_toys = []
         toys.each do |toy|
@@ -343,19 +346,15 @@ class PlayScene < SKScene
         toys = new_toys
       end
 
-      #puts "action to fire: #{action}"
-
       ### Apply effects on toys for each action
       toys.delete_if do |toy| # toys here are SKSpriteNodes
         if toy.userData[:uniqueID] == -1
           delete = true
         else
           effect = action[:effect_type]
-          param = action[:effect_param]
-          #puts "effect #{effect}, param #{param}"
+          param = action[:effect_param]          
           delete = false
-          send = false
-          #puts "Value param: #{param}"
+          send = false          
           case effect
             when :apply_force
               # make force relative to the toy
@@ -367,14 +366,12 @@ class PlayScene < SKScene
                 param = CGPointApplyAffineTransform(CGPointMake(ranX,ranY), rotation)
               else
                 param = CGPointApplyAffineTransform(param, rotation)
-              end
-              #puts "apply force at #{param}: (#{param.x},#{param.y})"
+              end             
 
               send = true
               effect = "applyForce"
 
-            when :explosion
-              #
+            when :explosion             
               @mutex.synchronize do
                 if toy.userData[:uniqueID] != -1
                   explode_toy(toy, param)
@@ -398,7 +395,6 @@ class PlayScene < SKScene
               fadeOut = SKAction.fadeOutWithDuration(param)
               remove = SKAction.removeFromParent()
               sequence = SKAction.sequence([fadeOut, remove])
-              #toy.runAction(sequence)
               apply_action_to_toy(toy, sequence)
               toy.userData[:uniqueID] = -1
               delete = true
@@ -441,7 +437,6 @@ class PlayScene < SKScene
 
             when :scene_shift
               @delegate.scene_shift(param)
-              p "scene shift"
 
             when :text_bubble
               position = view.convertPoint(toy.position, fromScene: self)
@@ -460,6 +455,81 @@ class PlayScene < SKScene
               @label.fillColor = Constants::LIGHT_BLUE_GRAY
               @label.position = toy.position
               addChild(@label)
+
+            when :send_message
+              @systemMessage = param.to_s
+              if @systemMessage == "black"
+                  label_colour = UIColor.blackColor
+              elsif @systemMessage == "red"
+                  label_colour = UIColor.redColor
+              elsif @systemMessage ==  "blue"
+                  label_colour = UIColor.blueColor
+              elsif @systemMessage == "green"
+                  label_colour = UIColor.greenColor
+              elsif @systemMessage ==  "cyan"
+                  label_colour = UIColor.cyanColor
+              elsif @systemMessage ==  "yellow"                  
+                  label_colour = UIColor.yellowColor
+              elsif @systemMessage ==  "orange"
+                  label_colour = UIColor.orangeColor
+              elsif @systemMessage ==  "purple"
+                  label_colour = UIColor.purpleColor
+              elsif @systemMessage ==  "brown"
+                  label_colour = UIColor.brownColor
+              else
+                  label_colour = UIColor.whiteColor
+              end
+
+              (1..5).each do |i|
+                label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(18).fontDescriptor.postscriptName)
+                label.position = toy.position + CGPointMake(-30, 0)
+                label.fontSize = 18
+                label.text = @systemMessage
+                label.fontColor = label_colour
+                addChild(label)
+                # Creates Fade and sclae effect before removing
+                action_duration = Constants::TIME_FOR_MESSAGE_TO_SEND
+                groupActions = []
+                groupActions << SKAction.moveToX(200+rand(500), duration: action_duration)
+                groupActions << SKAction.moveToY(200+rand(500), duration: action_duration)
+                #SKAction.move_towards(100, )
+                groupActions << SKAction.scaleBy(10, duration: action_duration)
+                groupActions << SKAction.fadeOutWithDuration(action_duration)
+                actions = SKAction.group(groupActions)
+                actions = SKAction.sequence([actions, SKAction.removeFromParent])
+                label.runAction(actions)
+              end
+
+              # Now check what toy is still waiting to receive the same message
+              p "******* #{@toys.size}"
+              @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
+                toyArray.each do |toy|
+                  #p toyArray
+                  if toy.userData
+                    toyinscene = toy.userData[:toyInScene]
+                    if toyinscene != nil
+                      toyinscene.template.actions.each do |action|
+                        if action[:action_type] == :receive_message and action[:action_param] == @systemMessage
+                          new_action = action.clone
+                          p new_action
+                          NSTimer.scheduledTimerWithTimeInterval(Constants::TIME_FOR_MESSAGE_TO_SEND, target: self, selector: "queue_action_with_delay:", userInfo: new_action, repeats: false)
+                        end
+                      end
+                    end
+                  end
+                end
+              end
+
+              # @toys.each do |toy_in_scene|
+              #   toy_in_scene.template.actions.each do |action|
+              #     if action[:action_type] == :receive_message and action[:action_param] == @systemMessage
+              #       new_action = action.clone
+              #       p new_action
+              #       NSTimer.scheduledTimerWithTimeInterval(Constants::TIME_FOR_MESSAGE_TO_SEND, target: self, selector: "queue_action_with_delay:", userInfo: new_action, repeats: false)
+              #     end
+              #   end
+              # end
+
 
             when :score_adder
 
@@ -547,6 +617,7 @@ class PlayScene < SKScene
                 toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
               end
               new_toy = new_toy(toy_in_scene, true)
+              #@toys << toy_in_scene
               new_toy.color = UIColor.grayColor
               new_toy.zRotation = (new_toy.zRotation + toy.zRotation)
               new_toy.userData[:id] = rand(2**60).to_s
@@ -561,16 +632,6 @@ class PlayScene < SKScene
                   timeDelay = create_action[:action_param][0]
                   create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
                   add_actions_for_update([create_action],timeDelay)
-
-                  # create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
-                  # #create_action[:action_param][1] = new_toy.userData[:uniqueID]
-                  # if @actions_to_be_fired
-                  #   @actions_to_be_fired << create_action
-                  # else
-                  #   @actions_to_be_fired = [create_action]
-                  # end
-                  # puts "create action "+ create_action.to_s
-
                 end
               end
               @toy_hash[id] << new_toy
@@ -611,9 +672,7 @@ class PlayScene < SKScene
   def scale_force_mass(param, mass)
     #puts "Mass: " + mass.to_s
     scale = mass
-
     param = param * scale
-
     param
   end
 
@@ -672,7 +731,6 @@ class PlayScene < SKScene
 
         end
 
-
         if DEBUG_EXPLOSIONS
           new_sprite_toy.position = CGPointMake(new_sprite_toy.position.x+displacement.x*2, new_sprite_toy.position.y+displacement.y*2)
           new_sprite_toy.physicsBody.dynamic = false
@@ -718,8 +776,6 @@ class PlayScene < SKScene
       wheel.runAction(action)
     end
   end
-
-
 
   def draw_sole_point(context, sole_point)
     sole_point = @points[-1]
@@ -784,7 +840,6 @@ class PlayScene < SKScene
 
     # Minh changed, due to ios 8.0 difference
     screen_scale = 1.0 # UIScreen.mainScreen.scale
-    #puts "$$$ screen scale = #{screen_scale}"
 
     frame_size = CGSizeMake(frame.size.width / screen_scale, frame.size.height / screen_scale)
     UIGraphicsBeginImageContextWithOptions(frame_size, true, 0.0) #frame.size, true, 0.0)
@@ -820,11 +875,6 @@ class PlayScene < SKScene
 
     background = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(UIGraphicsGetImageFromCurrentImageContext()))
 
-    #texture = SKTexture.textureWithImageNamed("bground.jpg")
-    #background = SKSpriteNode.spriteNodeWithTexture(texture)
-    #background.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMidY(self.frame))
-    #addChild(background)
-
     UIGraphicsEndImageContext()
     background.position = CGPointMake(size.width/2, size.height/2)
     background.blendMode = SKBlendModeReplace # background image doesn't need any alpha
@@ -856,18 +906,14 @@ class PlayScene < SKScene
     return toy_in_scene.template.create_image(toy_in_scene.zoom / screen)
   end
 
+  # Minh: this part is important
   def new_toy(toy_in_scene, darken = false)
     image = get_image(toy_in_scene)
-    # if darken
-    #   imageWidth = image.size.width
-    #   image = image.darken()
-    #   image = image.scale_to([imageWidth,999])
-    # end
     toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(image))
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
     toy.position = view.convertPoint(toy_in_scene.position, toScene: self) #CGPointMake(toy_in_scene.position.x, size.height-toy_in_scene.position.y)
     toy.zRotation = -toy_in_scene.angle
-    toy.userData = {score: 0, uniqueID: toy_in_scene.uid} #add unique id to allow for single collision
+    toy.userData = {score: 0, uniqueID: toy_in_scene.uid, toyInScene: toy_in_scene} #add unique id to allow for single collision
     if toy_in_scene.template.always_travels_forward
       toy.userData[:front] = toy_in_scene.template.front
     end
@@ -1100,9 +1146,5 @@ class PlayScene < SKScene
   def paused= (value)
     @paused = value
   end
-
-# def delegate= (controler)
-#   @delegate = controler
-# end
 
 end

@@ -33,7 +33,9 @@ class AppDelegate
     # File.open("#{Constants::DOCUMENT_PATH}/temporary.txt", "w+b") do |f|
     #   f.write("awData.to_s")
     # end
-   
+
+
+
     true
   end
 end

@@ -43,11 +43,7 @@ class CreatorView < UIView
   end
 
   def valid_touch_location?(point)
-    @valid_start_location = true
-    #if [:squiggle, :line].include?(@current_tool)
-    #  puts "was valid touch"
-    #  return @valid_start_location
-    #end
+    @valid_start_location = true   
     subviews.each do |view|
       if CGRectContainsPoint(view.frame, point)
         @valid_start_location = false
@@ -57,7 +53,7 @@ class CreatorView < UIView
     @valid_start_location
   end
 
-  def touchesBegan(touches, withEvent: event)
+  def touchesBegan(touches, withEvent: event)    
     touch = touches.anyObject
     point = touch.locationInView(self)
     return unless valid_touch_location?(point)

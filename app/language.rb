@@ -61,6 +61,8 @@ class Language
   SCENE_SHIFT   = 'scene'
   MOVE_TOWARDS_OTHERS  = 'towards'
   MOVE_AWAY_OTHERS  = 'move away'
+  SEND_MESSAGE = 'send txt'
+  RECEIVE_MESSAGE = 'receive txt'
 
   #Property names
   CAN_ROTATE    = 'Can Rotate'
@@ -93,6 +95,7 @@ class Language
   CHOOSE_TIMER         = 'Timer Trigger'
   CHOOSE_SCORE         = 'Enter the change in score'
   TEXT_COMMAND         = 'Enter the text to show'
+  MESSAGE_SEND         = 'Message to send out'
   MOVE_TOWARDS         = 'Choose the toy this will move towards'
   MOVE_AWAY            = 'Choose the toy this will move away from'
 end

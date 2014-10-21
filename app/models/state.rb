@@ -5,16 +5,10 @@ class State
 
   def initialize
     @toys = []
-    # scenes include the actions at the moment
     @scenes = []
     @currentscene = 0
     @thread = nil
     load
-    #@toys = []
-    # check to see if any state is saved?
-
-    # load the state if it is
-
   end
 
   # Adds a toy and saves the updated state.
@@ -25,14 +19,11 @@ class State
         replaced = index
       end
     end
-
     if replaced.nil?
       @toys << toy
     else
       @toys[replaced] = toy
     end
-
-    #save
   end
 
   def load_scene_actions(pos= @scenes[@currentscene])
@@ -71,7 +62,7 @@ class State
     toy.actions.each do |action|
       if action[:effect_type] == :create_new_toy
         create_toy = (@toys.select{ |altToy| altToy.identifier == action[:effect_param][:id]}).first
-        #puts "Found Created Toy"
+
         create_actions = return_toy_actions(create_toy, completed)
         create_actions.each do |creaction|
           if !actions.include?(creaction)
@@ -93,19 +84,13 @@ class State
       end
     end
 
-    puts "replace = #{replaced.to_s}"
-
     if replaced.nil?
       @scenes << scene
       @currentscene = @scenes.length - 1
-
     else      
       @scenes[replaced] = scene
       @currentscene = replaced
-
     end
-
-    #save
   end
 
   def is_saving
@@ -113,7 +98,6 @@ class State
   end
 
   def save
-    #puts "saving thread: #{@thread}"
     if @thread.nil?
       @thread = Thread.new {
       paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
@@ -152,7 +136,7 @@ class State
       readStream.open
       error = Pointer.new(:object)
       json_state = NSJSONSerialization.JSONObjectWithStream(readStream, options: 0, error: error)
-      #puts "error value (not necessarily an error) #{error[0].localizedDescription}"
+
       readStream.close
       convert_from_json_compatible(json_state) if json_state
       puts "(*) Load successfully json successfully"
@@ -182,8 +166,6 @@ class State
 
   # Extracts the toys (and eventually scenes) from the json compatible data.
   def convert_from_json_compatible(json_object)
-    #error = Pointer.new(:object)
-    #json_object = NSJSONSerialization.JSONObjectWithData(data, options: 0, error: error)
     json_toys = json_object[:toys]
     toys = []
     json_toys.each do |json_toy|
@@ -193,11 +175,9 @@ class State
     @toys = toys
 
     json_scenes = json_object[:scenes]
-    puts "scene size = #{json_scenes.size}"
     scenes = []
     if json_scenes
       json_scenes.each do |json_scene|
-        puts "processing scene"
         scenes << jsonToScene(json_scene)
       end
     end
@@ -227,7 +207,6 @@ class State
   end
 
   def jsonToToyInScene(json_toy)
-
     toy_id = json_toy[:toy_id]
     template = nil
     #get toy template for id
@@ -242,7 +221,6 @@ class State
     end
 
     if template
-    #zoom,angle,postiton
       toy = ToyInScene.new(template, json_toy[:zoom], json_toy[:ghost])
       toy.position = CGPointMake(json_toy[:position][:x],json_toy[:position][:y] )
       toy.angle = json_toy[:angle]
@@ -255,7 +233,6 @@ class State
   # Convert from Json to collection of toys
   def jsonToToy(json_toy)
     id = json_toy[:id]
-
     parts = []
     json_toy[:parts].each do |json_part|
       parts << jsonToPart(json_part)
@@ -283,7 +260,6 @@ class State
       end
     end
     toy.actions = actions
-
     toy
   end
 
@@ -328,13 +304,10 @@ class State
 
   # Convert from Json to collection of scene
   def jsonToScene(json_scene)
-    puts "json to scene"
     if json_scene.nil?
       return nil
     end
     id = json_scene[:id]
-
-    puts "json_scene wind = #{json_scene[:wind]} gravity = #{json_scene[:gravity]}"
 
     windValue = 0.0
     if json_scene[:wind].to_s != ""
@@ -416,7 +389,6 @@ class State
     toys = []
     unless json_scene[:toys].empty?
      json_scene[:toys].each do |json_toy|
-        #puts "%% value --- #{json_toy.to_s}"
         if json_toy != nil          
           toys << jsonToToyInScene(json_toy)
         end
@@ -424,7 +396,7 @@ class State
     end
 
     unless toys.empty? and edges.empty?
-      actions = [] #get_actions_from_toys(toys)
+      actions = []
       scene = SceneTemplate.new(toys, edges, actions, id, CGRectMake(0,0,0,0), gravity, boundaries, backgroundImage)
       scene
     end

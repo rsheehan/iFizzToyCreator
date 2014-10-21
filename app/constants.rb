@@ -13,6 +13,7 @@ class Constants
   LIGHT_GRAY = UIColor.colorWithRed(0.95, green: 0.95, blue: 0.95, alpha: 1.0)
   LIGHT_BLUE_GRAY = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
   BUTTON_TINT_COLOR = UIColor.redColor
+  MESSAGE_COLOURS = ['black', 'white', 'red', 'green', 'blue', 'cyan', 'yellow', 'orange', 'purple', 'brown']
   
   ICON_LABEL_FONT_SIZE = 12
   INSTRUCTION_LABEL_FONT_SIZE = 15
@@ -48,11 +49,12 @@ class Constants
   SMALL_MARGIN = 10   #pixels
 
   # transition effects between scenes
-  TRANSITION_EFFECT = SKTransition.revealWithDirection( SKTransitionDirectionLeft,  duration: 1 ) # for how many seconds
+  TRANSITION_EFFECT = SKTransition.revealWithDirection( SKTransitionDirectionLeft,  duration: 1.5 ) # for how many seconds 
 
   GENERAL_TOY_FORCE = 100000
   RANDOM_HASH_KEY = 99999
   MOVE_TOWARDS_AND_AWAY_SPEED = 500 #pixels per second
   TIME_AFTER_EXPLOSION = 10 # seconds
+  TIME_FOR_MESSAGE_TO_SEND = 1.0
 
 end

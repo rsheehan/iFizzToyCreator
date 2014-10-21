@@ -5,12 +5,14 @@ class ToyCreatorViewController < UIViewController
   def loadView # preferable to viewDidLoad because not using xib
     # Can call super this time as super is not UIViewController
     self.view = UIView.alloc.initWithFrame(@bounds)
+    self.view.alpha = 0.0
     self.view.accessibilityLabel = 'toyView'
     location_of_play = [95, 0]
     size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @main_view = ToyCreatorView.alloc.initWithFrame([location_of_play, size_of_play])
     @main_view.add_delegate(self)
     view.addSubview(@main_view)
+    
     setup_colour_buttons
     @current_colour_view.current_colour_image = Swatch.images['blue_colour']
     @main_view.current_colour = UIColor.blueColor
@@ -20,6 +22,15 @@ class ToyCreatorViewController < UIViewController
     setup_label(Language::TOY_MAKER)
     #assign an id to the toy being made
     @id = rand(2**60).to_s
+
+  end
+
+  def viewDidAppear(animated)
+    self.view.alpha = 0.0
+    UIView.animateWithDuration(1.0, animations: proc{
+      self.view.alpha=1.0
+    })
+    # UIView.transitionFromView(@temporaryView, toView:@main_view, duration:0.5, options:UIViewAnimationOptionTransitionCrossDissolve, completion: nil)
   end
 
   # Clears the view and resets to create a new toy.

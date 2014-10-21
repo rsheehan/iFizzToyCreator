@@ -4,16 +4,22 @@ class UITabBarControllerLandscape < UITabBarController
     @controllers = []
     icons = []
 
+    #self.setBackgroundColor = UIColor.redColor
+
     # Make Toys view
     @controllers << toy_creator_view_controller = ToyCreatorViewController.alloc.initWithNibName(nil, bundle: nil)
     icons << icon_and_title(toy_creator_view_controller, Language::MAKE_TOYS, 'toy_for_tab_bar')
 
     # Make Scene view
-    @controllers << scene_creator_view_controller = SceneCreatorViewController.alloc.initWithNibName(nil, bundle: nil)
+    sceneView = scene_creator_view_controller = SceneCreatorViewController.alloc.initWithNibName(nil, bundle: nil)
+    sceneView.tab_bar = self
+    @controllers << sceneView
     icons << icon_and_title(scene_creator_view_controller, Language::MAKE_SCENES, 'scene_for_tab_bar')
 
     # Add Actions View
-    @controllers << action_creator_view_controller = ActionAdderViewController.alloc.initWithNibName(nil, bundle: nil)
+    actionView = action_creator_view_controller = ActionAdderViewController.alloc.initWithNibName(nil, bundle: nil)
+    actionView.tab_bar = self
+    @controllers << actionView
     icons << icon_and_title(action_creator_view_controller, Language::ADD_ACTIONS, 'action_for_tab_bar')
     action_creator_view_controller.scene_creator_view_controller = scene_creator_view_controller
 
@@ -35,7 +41,10 @@ class UITabBarControllerLandscape < UITabBarController
       @view_bounds = CGRectMake(origin.x, origin.y, size.height, size.width - tabBarHeight)
     end
 
-    @controllers.each { |controller| controller.bounds_for_view = @view_bounds }
+    @controllers.each { 
+      |controller| 
+        controller.bounds_for_view = @view_bounds 
+    }
     # Now set up my models
     @state = State.new
     @controllers.each { |controller| controller.state = @state }

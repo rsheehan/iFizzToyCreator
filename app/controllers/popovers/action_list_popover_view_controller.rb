@@ -36,12 +36,23 @@ class ActionListPopoverViewController < UIViewController
     view.addSubview(@action_button)
 
     #setup edit button
+
     @edit_mode = false
     @edit_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-    @edit_button.frame = CGRectMake(WIDTH/2,@table_view.frame.size.height+@table_view.frame.origin.y+5, WIDTH/2,20)
-    @edit_button.setTitle("Edit", forState: UIControlStateNormal)
-    @edit_button.addTarget(self, action: 'edit:', forControlEvents: UIControlEventTouchUpInside)
+    @edit_button.frame = CGRectMake(WIDTH/2,@table_view.frame.size.height+@table_view.frame.origin.y+5, WIDTH/2,20)    
+    #@edit_button.setTitle("Edit", forState: UIControlStateNormal)
+    #@edit_button.addTarget(self, action: 'edit:', forControlEvents: UIControlEventTouchUpInside)
+    @edit_button.setTitle("Delete", forState: UIControlStateNormal)
+    @edit_button.addTarget(self, action: 'delete:', forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(@edit_button)
+
+    # Minh changed the above edit button to delete button
+    #@edit_mode = false
+    # @delete_button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+    # @delete_button.frame = CGRectMake(WIDTH/2,@table_view.frame.size.height+@table_view.frame.origin.y+5, WIDTH/2,20)    
+    # @delete_button.setTitle("Delete", forState: UIControlStateNormal)
+    # @delete_button.addTarget(self, action: 'delete:', forControlEvents: UIControlEventTouchUpInside)
+    # view.addSubview(@delete_button)
 
   end
 
@@ -109,6 +120,13 @@ class ActionListPopoverViewController < UIViewController
     end
   end
 
+  #delete toy from scene
+  def delete(sender)
+    #p "selected is #{@selected}"
+    @delegate.remove_selected(@selected)
+    @state.save
+  end
+
   # The methods to implement the UICollectionViewDataSource protocol.
   def tableView(tv, commitEditingStyle: style, forRowAtIndexPath: index_path)
     tv.beginUpdates
@@ -116,6 +134,7 @@ class ActionListPopoverViewController < UIViewController
     item = index_path.row
     #remove from toy
     @toy_actions.delete_at(item)
+    @delegate.show_sides
     tv.endUpdates
     resizeTV
   end
@@ -243,6 +262,8 @@ class ActionListPopoverViewController < UIViewController
       action_cell.selectionStyle = UITableViewCellSelectionStyleNone
       action = @toy_actions[item]
 
+      p "action = #{action.to_s}"
+
       #action image
       case action[:action_type]
         when :collision
@@ -276,6 +297,9 @@ class ActionListPopoverViewController < UIViewController
           action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
         when :toy_touch
           action_cell.action_text = Language::TOY_TOUCH
+          action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
+        when :receive_message
+          action_cell.action_text = Language::RECEIVE_MESSAGE
           action_cell.action_image = UIImage.imageNamed(action[:action_type]+".png")
         else
           action_cell.action_text = :unknown
@@ -332,12 +356,14 @@ class ActionListPopoverViewController < UIViewController
           #show sound name? button to play sound?
           button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
           button.setFrame((action_cell.effect_image_view.frame))
-          button.setTitle('Play', forState: UIControlStateNormal)
+          #button.setTitle('Play', forState: UIControlStateNormal)
           button.addTarget(self,action:'play_sound_file:', forControlEvents:UIControlEventTouchUpInside)
           action_cell.sound_button = button
 
         when :text_bubble
           action_cell.effect_text = Language::TEXT_BUBBLE
+        when :send_message
+          action_cell.effect_text = Language::SEND_MESSAGE
         when :scene_shift
           action_cell.effect_text = Language::SCENE_SHIFT
         when :move_towards
@@ -345,7 +371,7 @@ class ActionListPopoverViewController < UIViewController
         when :move_away
           action_cell.effect_text = Language::MOVE_AWAY_OTHERS
         else
-          action_cell.action_text = "unknown"
+          action_cell.action_text = :unknown
       end
       action_cell
     end

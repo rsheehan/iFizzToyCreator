@@ -4,10 +4,15 @@ class SceneCreatorViewController < UIViewController
   MODES = [:scene, :toy, :config, :new]
   attr_reader :main_view
 
+  attr_accessor :tab_bar
+
+
+
   def loadView # preferable to viewDidLoad because not using xib
     puts "scene creator view controller load view"
     self.view = UIView.alloc.initWithFrame(@bounds)
     self.view.accessibilityLabel = 'sceneView'
+    self.view.alpha = 0.0
     location_of_play = [95, 0]
     size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @main_view = SceneCreatorView.alloc.initWithFrame([location_of_play, size_of_play])
@@ -30,7 +35,13 @@ class SceneCreatorViewController < UIViewController
     @main_view.mode = :scene
     view.addSubview(@main_view)
     view.addSubview(@mode_view)    
-    super
+    super    
+  end
+
+  def moveToActionBar
+    if tab_bar != nil
+      tab_bar.selectedIndex = 2
+    end
   end
 
   # Show the scene box.
@@ -102,7 +113,8 @@ class SceneCreatorViewController < UIViewController
     end
 
     scene.toys.each do |toy|
-      @main_view.add_toy(toy)   
+      @main_view.add_toy(toy)  
+      toy.old_position = toy.position 
     end
     
     @state.load_scene_actions(scene)

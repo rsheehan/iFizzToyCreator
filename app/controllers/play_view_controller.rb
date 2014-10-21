@@ -36,6 +36,7 @@ class PlayViewController < UIViewController
     setup_reset(view)
     @listening = false
     @lowPassResults = 0
+    @play_view.alpha = 0.0
   end
 
   def listen_to_mic
@@ -102,11 +103,16 @@ class PlayViewController < UIViewController
   def viewDidAppear(animated)
     update_play_scene
     self.becomeFirstResponder
+    @play_view.alpha = 1.0
+    # UIView.animateWithDuration(1.0, animations: proc{
+    #   @play_view.alpha=1.0
+    # })
   end
 
   def viewWillDisappear(animated)
     p 'play view just disappear'
     remove_actions
+    @play_view.alpha = 0.0
     @play_view.presentScene(nil)
   end
 
@@ -136,9 +142,6 @@ class PlayViewController < UIViewController
 
 
   def update_play_scene(scene=@state.scenes[@state.currentscene])
-    #p "state = #{@state}"
-    #p "total scenes = #{@state.scenes.size}"
-    #p "++++ update play scene: #{@state.scenes[@state.currentscene]}"
     if scene == nil
       scene=@state.scenes[0]
     end

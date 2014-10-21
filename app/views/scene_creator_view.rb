@@ -49,27 +49,21 @@ class SceneCreatorView < CreatorView
   #set gravity from the config
   def setGravity(gravity)
     @gravity.dy = gravity
-    @gravityLabel.text = "y = #{@gravity.dy}, x = #{@gravity.dx}, #{@boundaries.to_s}"
   end
 
   def setWind(wind)
     @gravity.dx = wind
-    @gravityLabel.text = "y = #{@gravity.dy}, x = #{@gravity.dx}, #{@boundaries.to_s}"
   end
 
   #set boundaries from the config
   def setBoundaries(boundaries)
     @boundaries = boundaries
-    @gravityLabel.text = "y = #{@gravity.dy}, x = #{@gravity.dx}, #{@boundaries.to_s}"
   end
 
   #set background image from the config popup
   def setBackground(backgroundImage)
     if backgroundImage != nil
       @backgroundImage = backgroundImage
-      #@backgroundImage = backgroundImage.scale_to_fill(self.frame.size)
-      #p "frame size = #{frame.size.width}"
-
       self.backgroundColor = UIColor.colorWithPatternImage(@backgroundImage)
     else
       @backgroundImage = nil
@@ -127,8 +121,6 @@ class SceneCreatorView < CreatorView
   # Similar to gathering the toy info in ToyCreatorView but the scale is 1.
   def gather_scene_info
     id = rand(2**60).to_s
-    #gravity = CGVectorMake(1,1)
-    p "gather info wind = #{@gravity.dx}, gravity = #{@gravity.dy}"
     SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds, @gravity, @boundaries, @backgroundImage)
   end
 
@@ -328,6 +320,7 @@ class SceneCreatorView < CreatorView
 
   # Touch lifted off view
   def touchesEnded(touches, withEvent: event)
+
     # Get point on view
     touch = touches.anyObject
     point = touch.locationInView(self)
@@ -391,12 +384,14 @@ class SceneCreatorView < CreatorView
           when :create_new_toy
             @drag = false
           when :toy_selected
-            #Opens popover if selected has not been dragged
             if @delegate.is_a?(ActionAdderViewController) and not @drag
               if @selected.close_enough(point)
+                p "***** other touch open: #{@current_tool} and #{@mode}"
                   @delegate.start_action_flow
               else
+                p "***** other touch close: #{@current_tool} and #{@mode}"
                 @delegate.close_popover
+                @delegate.moveToSceneBar
               end
             end
             @drag = false
@@ -410,21 +405,35 @@ class SceneCreatorView < CreatorView
         @points = nil
         setNeedsDisplay
     end
+
+    #p "***** other touch: #{@current_tool} and #{@mode}"
   end
 
   # Called when the touch ends for a scene.
   def touch_end_scene
+    
     if @truly_selected
+      justSelectedAToy = @truly_selected.old_position == @truly_selected.position
       change_position_of(@truly_selected, to: @truly_selected.position)
       if @truly_selected.is_a?(ToyInScene)
         @toys_in_scene.delete(@truly_selected)
         @toys_in_scene << @truly_selected
+        #p "touch toy"
       else
+        justSelectedAToy = false
         @strokes.delete(@truly_selected)
         @strokes << @truly_selected
+        #p "touch scene"
       end
       @truly_selected = nil
       setNeedsDisplay
+    else
+      #p "other touch"
+    end
+
+    #p "Just selected = #{justSelectedAToy}"
+    if justSelectedAToy      
+      delegate.moveToActionBar
     end
   end
 

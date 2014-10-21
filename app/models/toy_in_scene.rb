@@ -3,13 +3,14 @@ class ToyInScene
   # The information we need to save is:
   # position, angle and zoom - along with the template stuff of course
 
-  attr_reader :old_position, :old_angle, :old_zoom, :template
-  attr_accessor :angle, :zoom, :position, :ghost
+  attr_reader :old_angle, :old_zoom, :template
+  attr_accessor :angle, :zoom, :position, :ghost, :old_position
   attr_reader :image, :uid  # for the PlayScene
 
   def initialize(toy_template, zoom = 1.0, ghost = false)
     @template = toy_template
-    @old_position = @position = CGPointMake((1024 - 190)/2, (768 - 56)/2)
+    @old_position = CGPointMake(-1, -1)
+    @position = CGPointMake((1024 - 190)/2, (768 - 56)/2)
     @old_angle = @angle = 0
     @old_zoom = @zoom = zoom
     @ghost = ghost

@@ -69,10 +69,7 @@ class SceneTemplate
     # the toys are represented by their identifiers
     json_toys = []
     @toys.each do |toy|
-      puts "toy ghost = #{toy.ghost}"
-      #if toy.ghost == false
-        json_toys << toy.to_json_compatible
-      #end
+      json_toys << toy.to_json_compatible
     end
     json_scene[:toys] = json_toys
     json_edges = []
@@ -90,11 +87,6 @@ class SceneTemplate
       encodedData = [backgroundImageData].pack("m")
       json_scene[:background] = encodedData
     end
-
-    #puts "saving #{json_scene.to_s}"
-    #json_scene[:background] = @background
-
-    #actions will go here
 
     json_scene
   end
@@ -116,28 +108,6 @@ class SceneTemplate
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     context = UIGraphicsGetCurrentContext()
     setup_context(context, scale)
-    colour = UIColor.redColor
-    colour.set
-
-    #left
-    if @boundaries[LEFT]==SWITCH_ON
-      CGContextFillRect(context, CGRectMake(0, 0, Constants::SMALL_GAP, size.height))
-    end
-
-    #top
-    if @boundaries[TOP]==SWITCH_ON
-      CGContextFillRect(context, CGRectMake(0, 0, size.width, Constants::SMALL_GAP))
-    end
-
-    #bottom
-    if @boundaries[BOTTOM]==SWITCH_ON
-      CGContextFillRect(context, CGRectMake(0, size.height-Constants::SMALL_GAP, size.width, Constants::SMALL_GAP))
-    end
-
-    #right
-    if @boundaries[RIGHT]==SWITCH_ON
-      CGContextFillRect(context, CGRectMake(size.width-Constants::SMALL_GAP, 0, Constants::SMALL_GAP, size.height))
-    end
 
     colour = SceneCreatorView::DEFAULT_SCENE_COLOUR
     colour.set
@@ -175,19 +145,31 @@ class SceneTemplate
       end
     end
 
-    # @actions.each do |action|      
-    #   #:effect_type=>:create_new_toy
-    #   if action[:effect_type] == :create_new_toy
-    #   #  puts "-- draw action #{action.to_s}"
-    #   #   draw_toy(context,toy,scale)
-    #   end
-    # end
-
-    font = UIFont.fontWithName("Courier", size: 16.0)
+    font = UIFont.fontWithName("Courier", size: 14.0)
     fontHeight = font.pointSize
     text = "Gravity = " << @gravityY.to_s << ", wind = " << @gravityX.to_s
     UIColor.blackColor.set
     text.drawAtPoint(CGPointMake(10, 10), withFont:font)
+
+    # draw the boundaries
+    colour = UIColor.redColor
+    colour.set
+    #left
+    if @boundaries[LEFT]==SWITCH_ON
+      CGContextFillRect(context, CGRectMake(0, 0, Constants::SMALL_GAP, size.height))
+    end
+    #top
+    if @boundaries[TOP]==SWITCH_ON
+      CGContextFillRect(context, CGRectMake(0, 0, size.width, Constants::SMALL_GAP))
+    end
+    #bottom
+    if @boundaries[BOTTOM]==SWITCH_ON
+      CGContextFillRect(context, CGRectMake(0, size.height-Constants::SMALL_GAP, size.width, Constants::SMALL_GAP))
+    end
+    #right
+    if @boundaries[RIGHT]==SWITCH_ON
+      CGContextFillRect(context, CGRectMake(size.width-Constants::SMALL_GAP, 0, Constants::SMALL_GAP, size.height))
+    end
 
     image = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()

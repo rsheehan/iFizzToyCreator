@@ -89,6 +89,7 @@ class ToyPhysicsBody
 # Uses Jarvis's algorithm - http://www.geeksforgeeks.org/convex-hull-set-1-jarviss-algorithm-or-wrapping/
 # Assumes path has at least 3 points.
   def convex_hull(path = @all_points)
+    #p "convex hull"
     # Turn Two points into Four
     if path.length < 2
       return []
@@ -142,6 +143,7 @@ class ToyPhysicsBody
 
   # Added by Minh
   def reduce_points_2(path_of_points, epsilon)
+    #p "reduce point 2"
     x = []
     y = []
     path_of_points.each do |p|
@@ -187,11 +189,6 @@ class ToyPhysicsBody
   def convex_hull_for_physics(scale)
     points = convex_hull.map { |p| CGPointMake(p.x, -p.y) * scale }
     points.reverse
-  end
-
-  # Too many points in the original so I want to reduce this.
-  def reduced_convex_hull
-
   end
 
 end

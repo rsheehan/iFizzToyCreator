@@ -4,7 +4,7 @@ class ActionAdderViewController < UIViewController
 
   # Actions are hashes with the following keys.
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
-  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble, :scene_shift, :move_towards,:move_away ]
+  EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble, :scene_shift, :move_towards,:move_away, :send_message ]
 
   FORCE_SCALE = 250
   EXPLODE_SCALE = 80
@@ -18,44 +18,34 @@ class ActionAdderViewController < UIViewController
   EMPTY_ICON_INSET = UIScreen.mainScreen.scale != 1.0 ? 20 : 10
 
   attr_writer :state, :scene_creator_view_controller, :back_from_modal_view
+  attr_accessor :tab_bar
 
   # TODO: undo/redo for placing, moving, resizing toys
   # Make sure that a list of added toys is maintained. These are removed when
   # reverting to SceneCreatorViewController or PlayViewController.
 
-
-
-
   def loadView # preferable to viewDidLoad because not using xib
-
     action_over_view = UIView.alloc.init
     self.view = action_over_view
-
-    #create a show actions button
-    # Add the mode buttons
+    self.view.alpha = 0.0
     location_of_action = [95, 0]
     size_of_action = [@bounds.size.width - 190, @bounds.size.height]
-
     @button_toys = {}
     setup_sides
-
     @main_view = @scene_creator_view_controller.main_view
-
-    # check for @ma
-    if @main_view != nil
-      @main_view.add_delegate(self)
-      @main_view.mode = :toys_only # only toys can be selected
-      position = [10, 10]
-      view.addSubview(@main_view)
-    end
+    show_sides
   end
 
   def bounds_for_view=(bounds)
     @bounds = bounds
   end
 
-  def viewDidAppear(animated)
-    p "view appear mainview is #{@main_view}"
+  def viewWillDisappear(animated)
+    p "view disappears"
+    close_popover
+  end
+
+  def viewDidAppear(animated)    
     if @main_view == nil
       @main_view = @scene_creator_view_controller.main_view
     end
@@ -63,30 +53,33 @@ class ActionAdderViewController < UIViewController
       alert = UIAlertView.alloc.initWithTitle("Alert", message:"You have not selected any scene, click Make scenes button below", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
       alert.show
     else
+      self.view.alpha = 0.0
       @button_toys = {}
       @main_view.change_label_text_to(Language::ACTION_ADDER)
       @main_view.add_delegate(self)
-      @main_view.mode = :toys_only # only toys can be selected
+      @main_view.mode = :toys_only
       view.addSubview(@main_view)
-      super # MUST BE CALLED
-      hide_sides
-      #add popover to prompt to select a toy
+      super
       if not @selected_toy.nil? and not @back_from_modal_view
         start_action_flow
       end
-      #load all button actions to button images?
-      reload_button_image_hash
-      draw_all_buttons
+
+      UIView.animateWithDuration(0.5, animations: proc{
+        self.view.alpha=1.0
+      })
+    end
+    show_sides
+  end
+
+  def moveToSceneBar
+    if tab_bar != nil
+      tab_bar.selectedIndex = 1
     end
   end
 
   def reload_button_image_hash
     @button_toys = {}
-    #setup_sides
     draw_all_buttons
-
-    #puts "current scene #{@state.currentscene}"
-
     if @state.currentscene == nil
       @state.currentscene = 0
     end
@@ -100,7 +93,6 @@ class ActionAdderViewController < UIViewController
         end
       end
     end
-
   end
 
   def draw_all_buttons
@@ -142,8 +134,8 @@ class ActionAdderViewController < UIViewController
   end
 
   def hide_sides
-    @left_panel.hidden = true
-    @right_panel.hidden = true
+    #@left_panel.hidden = true
+    #@right_panel.hidden = true
   end
 
   def setup_game_button(position, panel)
@@ -260,6 +252,9 @@ class ActionAdderViewController < UIViewController
     elsif @toy_touch
       action_type = :toy_touch
       action_param = nil
+    elsif @message_receive
+      action_type = :receive_message
+      action_param = @message_receive.to_s
     else
       action_type = :unknown
       action_param = :unknown
@@ -278,6 +273,7 @@ class ActionAdderViewController < UIViewController
     @shake = nil
     @score_reaches = nil
     @toy_touch = nil
+    @message_receive = nil
   end
 
   # Gets the force information for the actions effect.
@@ -669,7 +665,19 @@ class ActionAdderViewController < UIViewController
         @toy_touch = @selected_toy
         show_effects_popover
 
+      when :receive_message
+        #@message_receive = 'blue'
+
+        content = MessagePopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        content.setActionType("action")
+        content.setTitle("What message do you want to send?")
+        show_popover(content)
+
+        #show_effects_popover
+
       else
+        p 'unknow action'
     end
   end
 
@@ -715,6 +723,13 @@ class ActionAdderViewController < UIViewController
     content.mode = :effects
     content.setTitle(Language::CHOOSE_EFFECT)
     show_popover(content)
+  end
+
+  def submit_receive_message(message)
+    p "submit message = #{message}"
+    @message_receive = message
+    close_popover
+    show_effects_popover
   end
 
   def makeEffect(type)
@@ -800,6 +815,13 @@ class ActionAdderViewController < UIViewController
         scene_box_view_controller.delegate = self
         scene_box_view_controller.state = @state
         presentViewController(scene_box_view_controller, animated: true, completion: nil)
+
+      when :send_message
+        content = MessagePopOverViewController.alloc.initWithNibName(nil, bundle: nil)
+        content.delegate = self
+        content.setTitle("What message do you want to send?")
+        show_popover(content)
+
       else
 
     end
@@ -831,6 +853,13 @@ class ActionAdderViewController < UIViewController
     action_created
   end
 
+  def submit_message(text)
+    action_type, action_param = get_action
+    effect_type = :send_message
+    effect_param = text
+    create_action_effect(@selected_toy, action_type, action_param, effect_type, effect_param)
+    action_created
+  end
 
   def move_towards_action(other_toys)
     close_popover
@@ -884,13 +913,10 @@ class ActionAdderViewController < UIViewController
             drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
             presentViewController(drag_action_view_controller, animated: false, completion: nil)
 
-            # newToy = ToyInScene.new(@state.toys[toy_index], 1.0, true)
-            # @main_view.add_toy(newToy)
           end
 
         else
           puts "others"
-          #do nothing
       end
     end
   end
@@ -926,9 +952,23 @@ class ActionAdderViewController < UIViewController
     while not @popoverStack[-1].is_a?(ActionListPopoverViewController)
       @popoverStack.pop
     end
-    #update state?
     @popoverStack[-1].state = @state
     reopen_action_flow
+  end
+
+  # Deletes the selected stroke or toy.
+  def remove_selected(selected)
+    #p "remove selected #{selected} from #{@toys_in_scene}"
+    case selected
+      when Stroke
+        @main_view.remove_stroke(selected)
+        p "remove stroke"
+      when ToyInScene
+        @main_view.remove_toy(selected)
+        p "remove toy"
+    end
+    close_popover
+    moveToSceneBar
   end
 
 end
