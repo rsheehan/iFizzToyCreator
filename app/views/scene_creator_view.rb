@@ -14,8 +14,9 @@ class SceneCreatorView < CreatorView
   attr_reader :actions, :delegate
   attr_accessor :alpha_view
 
-  DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
-  THRESHOLD = 50
+  #DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
+  DEFAULT_SCENE_COLOUR = Constants::BACKGROUND_COLOUR_LIST[0]
+      THRESHOLD = 50
   NUM_SEGMENTS = 10
   MAX_DIAGONAL_DRAG = 660
 
@@ -32,7 +33,7 @@ class SceneCreatorView < CreatorView
     @actions = []
     @boundaries = [1,1,1,1]
     @gravity = CGVectorMake(0, 0)
-    self.backgroundColor = DEFAULT_SCENE_COLOUR
+    self.backgroundColor = Constants::BACKGROUND_COLOUR_LIST[rand(100)%Constants::BACKGROUND_COLOUR_LIST.size]
     pinch_recognizer = UIPinchGestureRecognizer.alloc.initWithTarget(self, action: 'zoom_selected:')
     pinch_recognizer.delegate = self
     addGestureRecognizer(pinch_recognizer)
@@ -69,7 +70,6 @@ class SceneCreatorView < CreatorView
       @backgroundImage = nil
       self.backgroundColor = DEFAULT_SCENE_COLOUR
     end
-
   end
 
   # The different modes this view can represent.

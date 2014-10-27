@@ -7,7 +7,7 @@ class ToyCreatorView < CreatorView
     super
     @line_size = ToyTemplate::TOY_LINE_SIZE
     @current_tool = :squiggle
-    self.backgroundColor = UIColor.colorWithRed(0.8, green: 0.8, blue: 0.85, alpha: 1.0)
+    self.backgroundColor = Constants::GRAY
     self
   end
 

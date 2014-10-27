@@ -75,7 +75,7 @@ class CollectionViewPopoverViewController < UIViewController
     # Back to the Select toy screen.
     def back(sender)
       if @state
-        @state.save
+        #@state.save
       end
       @delegate.action_flow_back
     end

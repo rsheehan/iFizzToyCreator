@@ -45,9 +45,6 @@ class PlayPopoverViewController < UIViewController
   end
 
   def resizeViews
-    #frame = @instruction.frame
-    #frame.size.height = @instruction.contentSize.height
-    #@instruction.frame = frame
     puts 'resize'
     if @instr_text.nil?
       self.preferredContentSize = CGSizeMake(@width,29)
@@ -57,7 +54,6 @@ class PlayPopoverViewController < UIViewController
     frame = @instruction.frame
     frame.size.height = size.height
     @instruction.frame = frame
-    #update preferred size
     self.preferredContentSize = CGSizeMake(@width,@instruction.frame.size.height+@instruction.frame.origin.y+5)
     puts 'done ' + size.height.to_s
   end

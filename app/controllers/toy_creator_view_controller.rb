@@ -93,7 +93,6 @@ class ToyCreatorViewController < UIViewController
   def save_toy
     puts "save toy"
     toy_parts = @main_view.gather_toy_info
-
     unless toy_parts.nil?
       toy = ToyTemplate.new(toy_parts, @id)
       @state.add_toy(toy)

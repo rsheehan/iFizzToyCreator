@@ -21,7 +21,7 @@ class SceneConfigPopoverViewController < UIViewController
     buttonHeight = 40
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, @height]])
-    view.backgroundColor =  UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 0.7)
+    view.backgroundColor =  UIColor.clearColor
     self.contentSizeForViewInPopover = CGSizeMake(@width, @height)
 
     #title*
@@ -44,20 +44,28 @@ class SceneConfigPopoverViewController < UIViewController
     view.addSubview(@table_view)
 
     # Background images
-    @backgroundImages = []    
-    dirContents = NSFileManager.defaultManager.directoryContentsAtPath(Constants::BUNDLE_ROOT)
+    @backgroundImages = []
+    dirContents = NSFileManager.defaultManager.directoryContentsAtPath(NSBundle.mainBundle.bundlePath)
     dirContents.each do |fileName|
-      if fileName.hasSuffix("bground.png") || fileName.hasSuffix("bground.jpg")
+      if fileName.hasSuffix("_bground.png") || fileName.hasSuffix("_bground.jpg")
         puts "image  = #{fileName}"
         @backgroundImages << fileName
       end
     end
+
+
 
     @image_picker = UIImagePickerController.alloc.init
     @image_picker.delegate = self
   end
 
   def viewDidDisappear(animated)
+    @scene.gravityY = @gravitySlider.value.to_i * -1.0
+    @delegate.setGravity(@gravitySlider.value.to_i * -1.0)
+
+    @scene.gravityX = @windSlider.value.to_i
+    @delegate.setWind(@windSlider.value.to_i)
+
     @delegate.save_scene
   end
 
@@ -155,7 +163,7 @@ class SceneConfigPopoverViewController < UIViewController
           @gravitySlider = UISlider.alloc.initWithFrame([[0, 0], [150.0, 23.0]])
           @gravitySlider.minimumValue = 0
           @gravitySlider.maximumValue = +5.0
-          @gravitySlider.continuous = false
+          @gravitySlider.continuous = true
           #gravity is negative
           @gravitySlider.value = -1*@scene.gravityY
 
@@ -176,7 +184,7 @@ class SceneConfigPopoverViewController < UIViewController
           @windSlider = UISlider.alloc.initWithFrame([[0, 0], [150.0, 23.0]])
           @windSlider.minimumValue = -5.0
           @windSlider.maximumValue = +5.0
-          @windSlider.continuous = false
+          @windSlider.continuous = true
           @windSlider.value = @scene.gravityX
 
           @wind_label_view = UILabel.alloc.initWithFrame([[150, 0], [50.0, 23.0]])
@@ -224,12 +232,16 @@ class SceneConfigPopoverViewController < UIViewController
           cell.hidden = true
 
         when 6
-          cell.text = :Boundary   
+          cell.text = :Frame
           boundaryWidth = 1.5*IMAGE_CELL_HEIGHT
           boundaryHeight = IMAGE_CELL_HEIGHT
-          boundaryThickness = 35
+          boundaryThickness = 25
           @boundaryOnColour = UIColor.redColor
           @boundaryOffColour = UIColor.clearColor
+
+          @centralButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+          @centralButton.frame = [[0, 0], [boundaryWidth, boundaryHeight]]
+          @centralButton.setTitle("change colour", forState: UIControlStateNormal)
 
           @topBoundaryButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
           @topBoundaryButton.frame = [[0, 0], [boundaryWidth, boundaryThickness]]
@@ -265,13 +277,16 @@ class SceneConfigPopoverViewController < UIViewController
 
           # add four buttons to control boundary
           buttonBoundaryView = UIView.alloc.initWithFrame([[0,0],[boundaryWidth, boundaryHeight]]) 
-          buttonBoundaryView.backgroundColor = SceneCreatorView::DEFAULT_SCENE_COLOUR
+          buttonBoundaryView.backgroundColor = @delegate.getBackgroundColor
 
           @topBoundaryButton.addTarget(self,action:'topBorderClicked', forControlEvents:UIControlEventTouchUpInside)
           @bottomBoundaryButton.addTarget(self,action:'bottomBorderClicked', forControlEvents:UIControlEventTouchUpInside)
           @leftBoundaryButton.addTarget(self,action:'leftBorderClicked', forControlEvents:UIControlEventTouchUpInside)
           @rightBoundaryButton.addTarget(self,action:'rightBorderClicked', forControlEvents:UIControlEventTouchUpInside)
 
+          @centralButton.addTarget(self,action:'colourChanged', forControlEvents:UIControlEventTouchUpInside)
+
+          buttonBoundaryView.addSubview(@centralButton)
           buttonBoundaryView.addSubview(@topBoundaryButton)
           buttonBoundaryView.addSubview(@bottomBoundaryButton)
           buttonBoundaryView.addSubview(@leftBoundaryButton)
@@ -303,8 +318,8 @@ class SceneConfigPopoverViewController < UIViewController
       end
 
       if position >= 8
-        cell.text = "Camera \##{position-7}"
-        imageNameAndLocation = Constants::BUNDLE_ROOT+"/"+@backgroundImages[position-8]
+        cell.text = "Picture \##{position-7}"
+        imageNameAndLocation = @backgroundImages[position-8]
         @imageBackgroundButton = UIButton.buttonWithType(UIButtonTypeCustom)
         @imageBackgroundButton.setImage(UIImage.imageNamed(imageNameAndLocation), forState: UIControlStateNormal)
         @imageBackgroundButton.sizeToFit
@@ -316,6 +331,13 @@ class SceneConfigPopoverViewController < UIViewController
       end
       cell
     end
+  end
+
+  def colourChanged
+    # change background colour
+    puts "change background colour"
+    @delegate.changeBackgroundColour
+    @table_view.reloadData
   end
 
   def imageButtonClick(sender)
@@ -415,17 +437,18 @@ class SceneConfigPopoverViewController < UIViewController
 
   # change value of gravity
   def gravitySliderChanged
-    @scene.gravityY = @gravitySlider.value.to_i * -1
-    @delegate.setGravity(@gravitySlider.value.to_i * -1)
-    @table_view.reloadData
+    #@scene.gravityY = @gravitySlider.value * -1.0
+    #@delegate.setGravity(@gravitySlider.value * -1.0)
+    #@table_view.reloadData
+    @gravity_label_view.text = @gravitySlider.value.to_i.to_s+".0"
   end
 
   # change value of wind
   def windSliderChanged
-    @scene.gravityX = @windSlider.value.to_i
-    @delegate.setWind(@windSlider.value.to_i)
-    @table_view.reloadData
-
+    #@scene.gravityX = @windSlider.value
+    #@delegate.setWind(@windSlider.value)
+    #@table_view.reloadData
+    @wind_label_view.text = @windSlider.value.to_i.to_s+".0"
   end
 
   # change values of switches for boundaries

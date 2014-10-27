@@ -13,7 +13,7 @@ class PlayScene < SKScene
   TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
 
-
+  #self.scene.view.paused = true
   MAX_CREATES = 10
 
   TOP=0
@@ -43,8 +43,12 @@ class PlayScene < SKScene
       create_scene_contents
       @content_created = true
     end
-
+    #self.scene.view.paused = true
   end
+
+  # def startGame
+  #   self.scene.view.paused = false
+  # end
 
   def create_scene_contents
     #removeAllChildren
@@ -120,7 +124,6 @@ class PlayScene < SKScene
       NSTimer.scheduledTimerWithTimeInterval(delay.to_i, target: self, selector: "perform_action:", userInfo: actions, repeats: false)
     else
       @actions_to_fire += actions
-      p actions.to_s
     end
   end
 
@@ -139,7 +142,6 @@ class PlayScene < SKScene
   end
 
   def add_create_action(action)
-    #puts "add create action #{action}"
     if @create_actions
       @create_actions << action
     else
@@ -409,14 +411,13 @@ class PlayScene < SKScene
               if otherToys != nil
                 otherToys.each do |otherToy|
                   theOtherToy = otherToy
+                  xDirection = theOtherToy.position.x - toy.position.x
+                  yDirection = theOtherToy.position.y - toy.position.y
+                  length = Math.sqrt(xDirection*xDirection + yDirection*yDirection)
+                  velocity = CGVectorMake(Constants::MOVE_TOWARDS_AND_AWAY_SPEED*xDirection/length, Constants::MOVE_TOWARDS_AND_AWAY_SPEED*yDirection/length)
+                  toy.physicsBody.velocity = velocity
+                  break
                 end
-              end
-              if theOtherToy != nil
-                xDirection = theOtherToy.position.x - toy.position.x
-                yDirection = theOtherToy.position.y - toy.position.y
-                length = Math.sqrt(xDirection*xDirection + yDirection*yDirection)
-                velocity = CGVectorMake(Constants::MOVE_TOWARDS_AND_AWAY_SPEED*xDirection/length, Constants::MOVE_TOWARDS_AND_AWAY_SPEED*yDirection/length)
-                toy.physicsBody.velocity = velocity
               end
 
             when :move_away
@@ -425,36 +426,38 @@ class PlayScene < SKScene
               if otherToys != nil
                 otherToys.each do |otherToy|
                   theOtherToy = otherToy
+                  xDirection = toy.position.x - theOtherToy.position.x
+                  yDirection = toy.position.y - theOtherToy.position.y
+                  length = Math.sqrt(xDirection*xDirection + yDirection*yDirection)
+                  velocity = CGVectorMake(Constants::MOVE_TOWARDS_AND_AWAY_SPEED*xDirection/length, Constants::MOVE_TOWARDS_AND_AWAY_SPEED*yDirection/length)
+                  toy.physicsBody.velocity = velocity
+                  break
                 end
-              end
-              if theOtherToy != nil
-                xDirection = toy.position.x - theOtherToy.position.x
-                yDirection = toy.position.y - theOtherToy.position.y
-                length = Math.sqrt(xDirection*xDirection + yDirection*yDirection)
-                velocity = CGVectorMake(Constants::MOVE_TOWARDS_AND_AWAY_SPEED*xDirection/length, Constants::MOVE_TOWARDS_AND_AWAY_SPEED*yDirection/length)
-                toy.physicsBody.velocity = velocity
               end
 
             when :scene_shift
               @delegate.scene_shift(param)
 
             when :text_bubble
-              position = view.convertPoint(toy.position, fromScene: self)
-              position -= CGPointMake(-20, 20)
-              frame = CGRectMake(*position, 40, 40)
-              @delegate.create_label(param, frame)
-              if @label
-                @label.removeFromParent
-              end
-
-              @label = SKShapeNode.alloc.init
-              num = Pointer.new(:float, 2)
-              num[0] = 5
-              bezier = UIBezierPath.bezierPathWithRoundedRect(CGRectMake(-20, -20, 40, 40), cornerRadius: num[0])
-              @label.path = bezier.CGPath
-              @label.fillColor = Constants::LIGHT_BLUE_GRAY
-              @label.position = toy.position
-              addChild(@label)
+              label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(30).fontDescriptor.postscriptName)
+              label.position = toy.position + CGPointMake(0, 10)
+              label.text = param
+              label.fontColor = UIColor.blackColor
+              label2 = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(30).fontDescriptor.postscriptName)
+              label2.position = toy.position + CGPointMake(-2, 8)
+              label2.text = param
+              label2.fontColor = UIColor.whiteColor
+              addChild(label)
+              addChild(label2)
+              # Creates Fade and sclae effect before removing
+              groupActions = []
+              groupActions << SKAction.moveToY(self.size.height, duration: 10.0)
+              groupActions << SKAction.moveToX(self.size.width/2, duration: 10.0)
+              groupActions << SKAction.fadeOutWithDuration(10.0)
+              actions = SKAction.group(groupActions)
+              actions = SKAction.sequence([actions, SKAction.removeFromParent])
+              label.runAction(actions)
+              label2.runAction(actions)
 
             when :send_message
               @systemMessage = param.to_s
@@ -501,7 +504,7 @@ class PlayScene < SKScene
               end
 
               # Now check what toy is still waiting to receive the same message
-              p "******* #{@toys.size}"
+              #p "******* #{@toys.size}"
               @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
                 toyArray.each do |toy|
                   #p toyArray
@@ -520,15 +523,6 @@ class PlayScene < SKScene
                 end
               end
 
-              # @toys.each do |toy_in_scene|
-              #   toy_in_scene.template.actions.each do |action|
-              #     if action[:action_type] == :receive_message and action[:action_param] == @systemMessage
-              #       new_action = action.clone
-              #       p new_action
-              #       NSTimer.scheduledTimerWithTimeInterval(Constants::TIME_FOR_MESSAGE_TO_SEND, target: self, selector: "queue_action_with_delay:", userInfo: new_action, repeats: false)
-              #     end
-              #   end
-              # end
 
 
             when :score_adder
@@ -574,7 +568,6 @@ class PlayScene < SKScene
               label.runAction(actions)
 
               # Checks for actions to fire if a score is reached or passed
-              #puts "Toy Score: " + toy.userData[:score].to_s
               @score_actions.each do |score_action|
                 # Checks toy identifier, score being reached or passed, and that the action has not been fired previously
                 if score_action[:toy] == toy.name and score_action[:action_param][0] <= toy.userData[:score] and not score_action[:used].include?(toy.userData[:uniqueID])
@@ -638,8 +631,6 @@ class PlayScene < SKScene
               @toys_count[id] = 0 unless @toys_count[id]
               @toy_hash[id].delete_if do |check_toy|
                 bool = check_toy.userData[:uniqueID] == -1
-                #puts "UniqueID: " + check_toy.userData[:uniqueID].to_s
-                #puts "Is dead?: " + bool.to_s
                 bool
               end
 
@@ -653,12 +644,10 @@ class PlayScene < SKScene
               end
           end
           if send
-            #puts "mass "+toy.userData[:mass].to_s
             param = scale_force_mass(param, toy.userData[:mass])
             toy.physicsBody.send(effect, param)
           end
         end
-        #puts "Deleted: " + delete.to_s
         delete
       end
     end
@@ -670,7 +659,6 @@ class PlayScene < SKScene
   end
 
   def scale_force_mass(param, mass)
-    #puts "Mass: " + mass.to_s
     scale = mass
     param = param * scale
     param
@@ -686,8 +674,17 @@ class PlayScene < SKScene
     templates = []
     new_name = toy.userData[:uniqueID]
     @toy_hash[new_name] = []
-    partsArray = toy_in_scene.template.exploded
-
+    #p "size = #{partsArray.size}"
+    bigArray = toy_in_scene.template.exploded
+    partsArray = []
+    if bigArray.size > 10
+      (0..10).each do |i|
+        partsArray << bigArray[rand(bigArray.size).to_i]
+        #partsArray << bigArray[i]
+      end
+    else
+      partsArray = bigArray
+    end
     if force.to_i == Constants::RANDOM_HASH_KEY.to_i
       force = rand(Constants::RANDOM_HASH_KEY)/5.0
     end
@@ -716,20 +713,22 @@ class PlayScene < SKScene
 
         physics_points = ToyPhysicsBody.new(new_toy.template.parts).convex_hull_for_physics(new_toy.zoom)
 
-        if physics_points.length == 0
-          new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
-        else
-          path = CGPathCreateMutable()
-          CGPathMoveToPoint(path, nil, *physics_points[0])
-          physics_points[0..-1].each do |p|
-            # To fix the Assertion failed: (area > 1.19209290e-7F), function ComputeCentroid avoid crash
-            if p.x.abs > 1.0 && p.y.abs > 1.0
-              CGPathAddLineToPoint(path, nil, *p)
-            end
-          end
-          new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+        #if physics_points.length == 0
+        #  new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
+        # else
+        #   path = CGPathCreateMutable()
+        #   CGPathMoveToPoint(path, nil, *physics_points[0])
+        #   physics_points[0..-1].each do |p|
+        #     # To fix the Assertion failed: (area > 1.19209290e-7F), function ComputeCentroid avoid crash
+        #     if p.x.abs > 1.0 && p.y.abs > 1.0
+        #       CGPathAddLineToPoint(path, nil, *p)
+        #     end
+        #   end
+        #   new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithPolygonFromPath(path)
+        # end
 
-        end
+        # Minh added, to simplify the explosion
+        new_sprite_toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(10)
 
         if DEBUG_EXPLOSIONS
           new_sprite_toy.position = CGPointMake(new_sprite_toy.position.x+displacement.x*2, new_sprite_toy.position.y+displacement.y*2)
@@ -809,7 +808,6 @@ class PlayScene < SKScene
     @edges.each do |edge|
       case edge
         when CirclePart
-          #puts "PlayScene"
           body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
           body.dynamic = false
           body.contactTestBitMask = 1
@@ -1032,10 +1030,8 @@ class PlayScene < SKScene
 
         toy.userData[:flipped_toy] = flipped_toy
       end
-
     end
 
-    #puts "trigger any create actions"
 
     #trigger any create actions
     @create_actions.each do |action|
@@ -1070,8 +1066,6 @@ class PlayScene < SKScene
 # Called from Play View Controller in able to preprocess create new toys
 # [ID, Displacement.x, displacement.y, zoom, angle]
   def add_create_toy_ref(toy_args, toy_template)
-    # puts toy_args.to_s
-    # puts toy_template.identifier
     if @toy_hash[toy_template.identifier].nil?
       @toy_hash[toy_template.identifier]= []
     end

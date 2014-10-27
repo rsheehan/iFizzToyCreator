@@ -88,7 +88,7 @@ class ToyBoxViewController < UIViewController
     #remove item from collectionview
     @collection_view.deleteItemsAtIndexPaths([index_path])
     #save state
-    @state.save
+    #@state.save
   end
 
   # The methods to implement the UICollectionViewDataSource protocol.

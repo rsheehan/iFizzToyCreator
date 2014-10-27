@@ -25,6 +25,7 @@ class SceneTemplate
     @toys = toys    # each of type ToyInScene
     @edges = edges  # each of type ToyPart - either Circle or Points
     @actions = actions   # each a Hash
+    p "scene action = #{@actions}"
     @bounds = bounds
 
     @background = background

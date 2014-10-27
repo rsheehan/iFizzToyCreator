@@ -5,7 +5,7 @@ class ActionAdderViewController < UIViewController
   # Actions are hashes with the following keys.
   ACTIONS = [:touch, :timer, :collision, :shake, :score_reaches, :when_created, :loud_noise, :toy_touch]
   EFFECTS = [:apply_force, :explosion, :apply_torque, :create_new_toy, :delete_effect, :score_adder, :play_sound, :text_bubble, :scene_shift, :move_towards,:move_away, :send_message ]
-
+  MODES = [:background]
   FORCE_SCALE = 250
   EXPLODE_SCALE = 80
   ROTATION_SCALE = 2
@@ -40,6 +40,49 @@ class ActionAdderViewController < UIViewController
     @bounds = bounds
   end
 
+  # Add the mode buttons
+  def setup_mode_buttons(modes)
+    @mode_view = UIView.alloc.initWithFrame(
+        CGRectMake(@main_view.frame.size.width - 95, 0, 95 * modes.length, 95)) # @bounds.size.width - 95 - 85, @bounds.size.height - 95, 190, 95))
+    position = [10, 10]
+    modes.each do |mode_name|
+      button = setup_button_action(mode_name, position, @mode_view, mode_name)
+      position[0] += CGRectGetWidth(button.frame) + 10
+    end
+    @main_view.addSubview(@mode_view)
+  end
+
+  def setup_button_action(image_name, position, super_view, label = '')
+    button = UIButton.buttonWithType(UIButtonTypeCustom)
+    button.accessibilityLabel = image_name
+    button.setImage(UIImage.imageNamed(image_name), forState: UIControlStateNormal)
+    button.setImage(UIImage.imageNamed(image_name + '_selected'), forState: UIControlStateSelected) rescue puts 'rescued'
+    button.sizeToFit
+    button.frame = [position, button.frame.size]
+    button.addTarget(self, action: image_name, forControlEvents: UIControlEventTouchUpInside)
+    super_view.addSubview(button)
+    if label != ''
+      labelView = UILabel.alloc.initWithFrame(CGRectMake(button.frame.origin.x-10, button.frame.origin.y+button.frame.size.height, button.frame.size.width+20, 20))
+      labelView.text=name_for_label_action(label)
+      labelView.textAlignment=UITextAlignmentCenter
+      labelView.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
+      super_view.addSubview(labelView)
+    end
+    button
+  end
+
+  def background
+    p "scene action pressed"
+    start_scene_action_flow
+  end
+
+  def name_for_label_action(label)
+    case label
+      when :background
+        return "scene action"
+    end
+  end
+
   def viewWillDisappear(animated)
     p "view disappears"
     close_popover
@@ -59,6 +102,7 @@ class ActionAdderViewController < UIViewController
       @main_view.add_delegate(self)
       @main_view.mode = :toys_only
       view.addSubview(@main_view)
+      setup_mode_buttons(MODES)
       super
       if not @selected_toy.nil? and not @back_from_modal_view
         start_action_flow
@@ -73,7 +117,7 @@ class ActionAdderViewController < UIViewController
 
   def moveToSceneBar
     if tab_bar != nil
-      tab_bar.selectedIndex = 1
+      tab_bar.selectedIndex = 2
     end
   end
 
@@ -344,7 +388,7 @@ class ActionAdderViewController < UIViewController
     #save actions
     @main_view.secondary_selected = nil
     @main_view.setNeedsDisplay
-    @state.save
+    #@state.save
   end
 
   def add_toy_to_button(toy, button_name)
@@ -480,10 +524,6 @@ class ActionAdderViewController < UIViewController
   # Called when the view disappears.
   def viewWillDisappear(animated)
     super
-    #@state.save
-    # collect the scene information to pass on to the play view controller
-    #@state.scenes = [@main_view.gather_scene_info] # only one scene while developing
-    #@play_view_controller.update_play_scene
   end
 
   # draw label below icons
@@ -537,13 +577,10 @@ class ActionAdderViewController < UIViewController
   def drop_toy(toy)
     drag_action_view_controller = CreateActionViewController.alloc.initWithNibName(nil, bundle: nil)
     drag_action_view_controller.bounds_for_view = @bounds
-
     drag_action_view_controller.modalPresentationStyle = UIModalPresentationFullScreen
     drag_action_view_controller.selected = @selected_toy
     drag_action_view_controller.new_toy = ToyInScene.new(@state.toys[toy])
-
     drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
-
     dismissViewControllerAnimated(true, completion: lambda { presentViewController(drag_action_view_controller, animated: false, completion: nil)})
   end
 
@@ -565,6 +602,24 @@ class ActionAdderViewController < UIViewController
       content = ActionListPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
       content.state = @state
       content.selected = @selected_toy
+      content.delegate = self
+      show_popover(content)
+    end
+  end
+
+  def start_scene_action_flow
+    if @popover
+      close_popover
+    end
+    @popoverStack = []
+    reset_action_params
+
+    if @state.scenes.size > 0
+      content = SceneActionListPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+      content.state = @state
+      @selected_toy = nil
+      content.selected = nil
+      content.scene = @state.scenes[@state.currentscene]
       content.delegate = self
       show_popover(content)
     end
@@ -615,25 +670,20 @@ class ActionAdderViewController < UIViewController
     close_popover
     case type
       when :touch
-        #show button select
-
         @popover_type = :button
         content = ButtonSelectPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
         show_popover(content)
         show_sides
-
-        # Minh: fixed the code below, this makes it crash in io8
+        # Minh: I have fixed the code below, this makes it crash in io8
         @popover.passthroughViews = [@left_panel, @right_panel]
         enableButtons
       when :timer
-        #show timer popover
         @popover_type = :timer
         content = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
         show_popover(content)
       when :collision
-        #show select toy popover
         content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
         content.mode = :toys
@@ -641,7 +691,6 @@ class ActionAdderViewController < UIViewController
         content.setTitle(Language::TOUCH_COLLISION)
         show_popover(content)
       when :score_reaches
-        #show score popover
         @popover_type = :score_reaches
         content = NumericInputPopOverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.setTitle(Language::CHOOSE_SCORE_REACHES)
@@ -652,7 +701,6 @@ class ActionAdderViewController < UIViewController
         show_effects_popover
       when :when_created
         @when_created = true
-        #show_effects_popover
         @popover_type = :after_created
         content = RepeatActionViewController.alloc.initWithNibName(nil, bundle: nil)
         content.setLabel('Trigger after')
@@ -664,18 +712,12 @@ class ActionAdderViewController < UIViewController
       when :toy_touch
         @toy_touch = @selected_toy
         show_effects_popover
-
       when :receive_message
-        #@message_receive = 'blue'
-
         content = MessagePopOverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
         content.setActionType("action")
         content.setTitle("What message do you want to send?")
         show_popover(content)
-
-        #show_effects_popover
-
       else
         p 'unknow action'
     end
@@ -726,14 +768,12 @@ class ActionAdderViewController < UIViewController
   end
 
   def submit_receive_message(message)
-    p "submit message = #{message}"
     @message_receive = message
     close_popover
     show_effects_popover
   end
 
   def makeEffect(type)
-    puts "Make effect "
     close_popover
     case type
       when :apply_force
@@ -743,6 +783,7 @@ class ActionAdderViewController < UIViewController
         drag_action_view_controller.selected = @selected_toy
         drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
         presentViewController(drag_action_view_controller, animated: false, completion: nil)
+
       when :explosion
         explosion_action_view_controller = ExplosionActionViewController.alloc.initWithNibName(nil, bundle: nil)
         explosion_action_view_controller.bounds_for_view = @bounds
@@ -750,6 +791,7 @@ class ActionAdderViewController < UIViewController
         explosion_action_view_controller.selected = @selected_toy
         explosion_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
         presentViewController(explosion_action_view_controller, animated: false, completion: nil)
+
       when :apply_torque
         torque_action_view_controller = RotationActionViewController.alloc.initWithNibName(nil, bundle: nil)
         torque_action_view_controller.bounds_for_view = @bounds
@@ -757,8 +799,8 @@ class ActionAdderViewController < UIViewController
         torque_action_view_controller.selected = @selected_toy
         torque_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
         presentViewController(torque_action_view_controller, animated: false, completion: nil)
+
       when :create_new_toy
-        #show select toy popover
         content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
         content.mode = :toys
@@ -767,22 +809,16 @@ class ActionAdderViewController < UIViewController
         show_popover(content)
 
       when :move_towards
-        puts "move towards is clicked"
-        #show select toy popover
         content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
-        #message to toys
         content.mode = :move_towards
         content.state = @state
         content.setTitle(Language::MOVE_TOWARDS)
         show_popover(content)
 
       when :move_away
-        puts "move away is clicked"
-        #show select toy popover
         content = CollectionViewPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
-        #message to toys
         content.mode = :move_away
         content.state = @state
         content.setTitle(Language::MOVE_AWAY)
@@ -815,13 +851,11 @@ class ActionAdderViewController < UIViewController
         scene_box_view_controller.delegate = self
         scene_box_view_controller.state = @state
         presentViewController(scene_box_view_controller, animated: true, completion: nil)
-
       when :send_message
         content = MessagePopOverViewController.alloc.initWithNibName(nil, bundle: nil)
         content.delegate = self
         content.setTitle("What message do you want to send?")
         show_popover(content)
-
       else
 
     end
@@ -883,23 +917,18 @@ class ActionAdderViewController < UIViewController
   def chose_toy(toy_index)
     #find mode of latest collection popover that was not toy (should be 2nd last)
     if @popoverStack[-2].is_a?(CollectionViewPopoverViewController)
-      puts "mode -1 is #{@popoverStack[-1].mode}"
-      puts "mode -2 is #{@popoverStack[-2].mode}"
       case @popoverStack[-2].mode
         when :actions
-          puts "colide"
           #add toy param to action (collision)
           @colliding_toy = @state.toys[toy_index]
           close_popover
           show_effects_popover
         when :effects
           if @popoverStack[-1].mode == :move_towards
-            puts "move_towards toy message"
             close_popover
             # Minh: now here add move toward or sthing, message with other toys
             move_towards_action(@state.toys[toy_index])
           elsif @popoverStack[-1].mode == :move_away
-            puts "move_away toy message"
             close_popover
             # Minh: now here add move toward or sthing, message with other toys
             move_away_action(@state.toys[toy_index])
@@ -912,9 +941,7 @@ class ActionAdderViewController < UIViewController
             drag_action_view_controller.new_toy = ToyInScene.new(@state.toys[toy_index])
             drag_action_view_controller.scene_creator_view_controller = @scene_creator_view_controller
             presentViewController(drag_action_view_controller, animated: false, completion: nil)
-
           end
-
         else
           puts "others"
       end
@@ -927,7 +954,12 @@ class ActionAdderViewController < UIViewController
     @popover.passthroughViews = [@main_view, @scene_creator_view_controller.view] #not working? should allow dragging while popover open
     @popover.delegate = self
     viewy = self.view
-    frame = CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size)
+    if @selected_toy == nil
+      frame = CGRectMake(0,0,95,95)
+    else
+      frame = CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size)
+    end
+
     @popover.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     @popoverStack << content
   end
@@ -947,7 +979,6 @@ class ActionAdderViewController < UIViewController
   end
 
   def action_created
-    puts "action created"
     #remove popovers from stack until get to action viewer (don't want to allow going back and editing action)
     while not @popoverStack[-1].is_a?(ActionListPopoverViewController)
       @popoverStack.pop
@@ -958,14 +989,11 @@ class ActionAdderViewController < UIViewController
 
   # Deletes the selected stroke or toy.
   def remove_selected(selected)
-    #p "remove selected #{selected} from #{@toys_in_scene}"
     case selected
       when Stroke
         @main_view.remove_stroke(selected)
-        p "remove stroke"
       when ToyInScene
         @main_view.remove_toy(selected)
-        p "remove toy"
     end
     close_popover
     moveToSceneBar

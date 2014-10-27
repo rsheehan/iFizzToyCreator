@@ -11,6 +11,7 @@ class ToyInScene
     @template = toy_template
     @old_position = CGPointMake(-1, -1)
     @position = CGPointMake((1024 - 190)/2, (768 - 56)/2)
+    @rectDraw = CGRectMake(0,0,0,0)
     @old_angle = @angle = 0
     @old_zoom = @zoom = zoom
     @ghost = ghost
@@ -47,7 +48,11 @@ class ToyInScene
   # Returns true iff the point is "close" to the toy.
   # "close" at the moment is within 40 points of the centre.
   def close_enough(point)
-    (@position - point).magnitude < 40
+    p "#{point.x} x #{point.y}"
+    p "size = #{@image.size.width.to_s} x #{@image.size.height.to_s}"
+    closeRadius = Math.sqrt(@image.size.width*@image.size.width + @image.size.height+@image.size.height) / 2.0
+    (@position - point).magnitude < 1.2 * closeRadius
+    #CGRectContainsPoint(@rectDraw, point)
   end
 
   # Called when the toy is being moved in the scene creator.
@@ -187,7 +192,14 @@ class ToyInScene
     CGContextRotateCTM(context, @angle)
     CGContextScaleCTM(context, @zoom/@old_zoom, @zoom/@old_zoom) #if @zoom != @old_zoom
     image_size = CGPointMake(@image.size.width, @image.size.height)
-    @image.drawInRect(CGRectMake(*(image_size / -2.0), *image_size))
+    @rectDraw = CGRectMake(*(image_size / -2.0), *image_size)
+    @image.drawInRect(@rectDraw)
+
+    if Constants::DEBUG
+      UIColor.greenColor.set
+      CGContextSetLineWidth(context, 1.0);
+      CGContextStrokeRect(context, @rectDraw)
+    end
 
     #CGContextSetAlpha(context, 1.0)
     if @ghost

@@ -85,7 +85,7 @@ class SceneBoxViewController < UIViewController
       #remove item from collectionview
       @collection_view.deleteItemsAtIndexPaths([index_path])
       #save state
-      @state.save
+      #@state.save
 
     end
 

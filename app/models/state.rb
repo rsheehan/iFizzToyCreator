@@ -240,6 +240,7 @@ class State
     toy = ToyTemplate.new(parts, id)
     toy.stuck = (json_toy[:stuck] == nil) ? false : json_toy[:stuck]
     toy.can_rotate = (json_toy[:can_rotate] == nil) ? true : json_toy[:can_rotate]
+    toy.gravity = (json_toy[:gravity] == nil) ? true : json_toy[:gravity]
     toy.front = (json_toy[:front] == nil) ? Constants::Front::Right : json_toy[:front]
     toy.always_travels_forward = (json_toy[:always_travels_forward] == nil) ? false : json_toy[:always_travels_forward]
 
@@ -266,26 +267,13 @@ class State
   def saveTempBackground(backgroundString)
     p "Saved background thread = #{@thread}"
     backgroundImage = nil
-    #if @thread.nil?
-      #Thread.new {
-        #file_name = 'temporaryTest.jpg'
-        #file_path = Constants::DOCUMENT_PATH.stringByAppendingPathComponent(file_name)
-        if backgroundString != nil
-          #p "Saved successfully #{file_path}"
-          data = backgroundString.unpack("m0")
-          #data = encodedData.unpack("m0")
-          File.open("#{Constants::DOCUMENT_PATH}/temporary.jpg", "w+b") do |f|
-              f.write(data.first)
-          end
-          # "#{App.resources_path}/temporary.jpg"
-          #newImage = UIImage.imageNamed("#{App.resources_path}/temporary.jpg")
-          #uts newImage
-        end
-        #backgroundImage = UIImage.imageNamed(file_path)
-        #@thread = nil
-        #p "Saved successfully #{file_path}"
-      #}
-    #end
+    if backgroundString != nil
+      data = backgroundString.unpack("m0")
+      File.open("#{Constants::DOCUMENT_PATH}/temporary.jpg", "w+b") do |f|
+        f.write(data.first)
+      end
+    end
+
     backgroundImage
   end
 

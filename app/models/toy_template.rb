@@ -19,10 +19,6 @@ class ToyTemplate
     @front = Constants::Front::Right
     @always_travels_forward = false
     @actions = []
-    #ToyPhysicsBody.new(self) <--
-
-    #@image = image
-    #save
   end
 
   def update_image

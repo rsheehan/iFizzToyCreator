@@ -58,7 +58,7 @@ class ActionListViewController < UIViewController
     # Back to the Select toy screen.
     def back
       self.view.window.removeGestureRecognizer(@recognizer)
-      @state.save
+      #@state.save
       @delegate.close_modal_view(true)
     end
 
@@ -179,7 +179,7 @@ class ActionListViewController < UIViewController
         if (!self.view.pointInside(self.view.convertPoint(location, fromView:self.view.window), withEvent:nil))
           # Remove the recognizer first so it's view.window is valid.
           self.view.window.removeGestureRecognizer(sender)
-          @state.save
+          #@state.save
           self.dismissModalViewControllerAnimated(true)
         end
       end

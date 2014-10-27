@@ -1,6 +1,7 @@
 class Language
 
   # Tab names
+  HOME          = 'Home'
   MAKE_TOYS     = 'Make toys'
   MAKE_SCENES   = 'Make scenes'
   ADD_ACTIONS   = 'Add actions'

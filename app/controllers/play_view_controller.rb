@@ -16,7 +16,6 @@ class PlayViewController < UIViewController
     self.view = play_over_view
 
     location_of_play = [95, 0]
-    #@bounds = CGSizeMake(2048,1536)
     @size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @play_view = SKView.alloc.initWithFrame([location_of_play, @size_of_play])
     if Constants::DEBUG
@@ -25,7 +24,7 @@ class PlayViewController < UIViewController
       @play_view.showsFPS = true
       @play_view.showsPhysics = true
     end
-    #@play_view.showsFPS = true
+    @play_view.showsFPS = true
     view.addSubview(@play_view)
 
     @button_actions = {} # keys = buttons, values = list of actions for that button
@@ -104,9 +103,6 @@ class PlayViewController < UIViewController
     update_play_scene
     self.becomeFirstResponder
     @play_view.alpha = 1.0
-    # UIView.animateWithDuration(1.0, animations: proc{
-    #   @play_view.alpha=1.0
-    # })
   end
 
   def viewWillDisappear(animated)
@@ -114,6 +110,7 @@ class PlayViewController < UIViewController
     remove_actions
     @play_view.alpha = 0.0
     @play_view.presentScene(nil)
+    @state.save
   end
 
   def remove_actions
@@ -394,16 +391,12 @@ class PlayViewController < UIViewController
   end
 
   def button_action(sender)
-    # find the correct action and submit it for firing
-    #puts "button: #{sender}"
-    # pass the actions through to the scene for its update method to use
     @play_scene.add_actions_for_update(@button_actions[sender])
   end
 
   # this will run every second, if random then using if rand(1000) % 5 == 1 to fire for example
   def perform_action(timer)
     timeInterval = timer.userInfo[:action_param][0].to_i
-    #puts "timeInterval = #{timeInterval}"
     if timeInterval >= 0
       time = Time.new
       if (time.sec + 60*time.min) % timeInterval == (timeInterval-1)

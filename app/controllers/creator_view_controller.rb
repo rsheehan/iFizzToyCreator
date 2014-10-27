@@ -20,7 +20,7 @@ module CreatorViewControllerModule
 
   def viewDidDisappear(animated)
     super
-    @state.save
+    #@state.save
   end
 
   def setup_label(name)

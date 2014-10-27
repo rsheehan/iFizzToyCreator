@@ -7,6 +7,7 @@ class AppDelegate
     @uiMainTab = UITabBarControllerLandscape.alloc.init
     @window.rootViewController = @uiMainTab
     @window.makeKeyAndVisible # do this early otherwise some of the dimensions are wrong
+    @window.backgroundColor = Constants::GRAY
 
     # Setting of some global properties
     UIButton.appearance.setTintColor(Constants::BUTTON_TINT_COLOR)

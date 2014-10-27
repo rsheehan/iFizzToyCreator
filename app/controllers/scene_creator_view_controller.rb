@@ -17,7 +17,9 @@ class SceneCreatorViewController < UIViewController
     size_of_play = [@bounds.size.width - 190, @bounds.size.height]
     @main_view = SceneCreatorView.alloc.initWithFrame([location_of_play, size_of_play])
     @main_view.setGravity(Constants::DEFAULT_GRAVITY_Y)
-    @main_view.setWind(Constants::DEFAULT_GRAVITY_X)    
+    @main_view.setWind(Constants::DEFAULT_GRAVITY_X)
+    @backgroundColourIndex = 0
+    @main_view.backgroundColor = Constants::BACKGROUND_COLOUR_LIST[@backgroundColourIndex]
     setup_colour_buttons
     @current_colour_view.current_colour_image = Swatch.images['brown']
     @main_view.current_colour = UIColor.brownColor
@@ -26,6 +28,14 @@ class SceneCreatorViewController < UIViewController
     @tool_buttons[:grab].selected = true # the default, was :line
     setup_label(Language::SCENE_MAKER)   
     @id = rand(2**60).to_s
+  end
+
+  def changeBackgroundColour
+    @backgroundColourIndex = (@backgroundColourIndex + 1) % Constants::BACKGROUND_COLOUR_LIST.size
+    @main_view.backgroundColor = Constants::BACKGROUND_COLOUR_LIST[@backgroundColourIndex]
+  end
+  def getBackgroundColor
+    @main_view.backgroundColor
   end
 
   def viewDidAppear(animated)
@@ -40,7 +50,7 @@ class SceneCreatorViewController < UIViewController
 
   def moveToActionBar
     if tab_bar != nil
-      tab_bar.selectedIndex = 2
+      tab_bar.selectedIndex = 3
     end
   end
 
