@@ -44,7 +44,11 @@ class ActionListPopoverViewController < UIViewController
     #@edit_button.addTarget(self, action: 'edit:', forControlEvents: UIControlEventTouchUpInside)
     @edit_button.setTitle("Delete", forState: UIControlStateNormal)
     @edit_button.addTarget(self, action: 'delete:', forControlEvents: UIControlEventTouchUpInside)
-    view.addSubview(@edit_button)
+
+    if @selected.template.identifier != Constants::SCENE_TOY_IDENTIFIER
+      view.addSubview(@edit_button)
+    end
+
 
     # Minh changed the above edit button to delete button
     #@edit_mode = false
@@ -153,6 +157,8 @@ class ActionListPopoverViewController < UIViewController
         0
       elsif indexPath.row == 3 and not @selected.template.always_travels_forward
         0
+      elsif @selected.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+        0
       else
         40
       end
@@ -221,6 +227,10 @@ class ActionListPopoverViewController < UIViewController
             cell.hidden = true
           end
 
+          if @selected.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+            cell.hidden = true
+          end
+
         when 1
           cell.text = Language::STUCK
           @stuck_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
@@ -228,12 +238,20 @@ class ActionListPopoverViewController < UIViewController
           cell.accessoryView = @stuck_switch
           @stuck_switch.addTarget(self,action:'stuck_switch_changed', forControlEvents:UIControlEventValueChanged)
 
+          if @selected.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+            cell.hidden = true
+          end
+
         when 2
           cell.text = Language::ALWAYS_TRAVELS_FORWARD
           @travel_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
           @travel_switch.on = @selected.template.always_travels_forward
           cell.accessoryView = @travel_switch
           @travel_switch.addTarget(self,action:'travel_switch_changed', forControlEvents:UIControlEventValueChanged)
+
+          if @selected.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+            cell.hidden = true
+          end
 
         when 3
           #show 4 way switch for direction
@@ -243,12 +261,20 @@ class ActionListPopoverViewController < UIViewController
             cell.hidden = true
           end
 
+          if @selected.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+            cell.hidden = true
+          end
+
         when 4
           cell.text = 'Affected by Gravity'
           @gravity_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
           @gravity_switch.on = @selected.template.gravity
           cell.accessoryView = @gravity_switch
           @gravity_switch.addTarget(self,action:'gravity_switch_changed', forControlEvents:UIControlEventValueChanged)
+
+          if @selected.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+            cell.hidden = true
+          end
 
       end
       cell
@@ -624,9 +650,21 @@ class ActionListPopoverViewController < UIViewController
       h_view.backgroundColor = Constants::LIGHT_GRAY
       #title
       @p_title = UILabel.alloc.initWithFrame([[10,5],[WIDTH-5,20]])
-      @p_title.setText(Language::PROPERTIES)
+
+      if @selected.template.identifier != Constants::SCENE_TOY_IDENTIFIER
+        @p_title.setText(Language::PROPERTIES)
+      else
+        @p_title.setText("Background scene:")
+      end
+
+
       @p_title.setFont(UIFont.boldSystemFontOfSize(18))
+
+      if @selected.template.identifier != Constants::SCENE_TOY_IDENTIFIER
+        h_view.addSubview(@p_title)
+      end
       h_view.addSubview(@p_title)
+
 
       #title separator
       separator = CALayer.layer
@@ -670,7 +708,11 @@ class ActionListPopoverViewController < UIViewController
 
   def tableView(tv, heightForHeaderInSection:section)
     if section == 0
-      30
+      if @selected.template.identifier != Constants::SCENE_TOY_IDENTIFIER
+        30
+      else
+        1
+      end
     else
       50
     end

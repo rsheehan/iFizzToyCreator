@@ -100,7 +100,9 @@ class ToyCreatorViewController < UIViewController
   end
 
   def clear
-    @main_view.clear
+    if @main_view != nil
+      @main_view.clear
+    end
   end
 
 end

@@ -7,11 +7,14 @@ class CollectionViewPopoverViewController < UIViewController
     WIDTH = 350
     MAX_HEIGHT = 350
 
-    ACTIONS = [:toy_touch, :touch, :collision, :timer, :when_created, :score_reaches, :loud_noise, :shake, :receive_message]
-    EFFECTS = [:apply_force, :explosion, :delete_effect, :apply_torque, :create_new_toy, :score_adder, :play_sound, :text_bubble, :scene_shift, :move_towards, :move_away, :send_message]
+
     TOYBUTTON = "ToyButton"
 
     def loadView
+
+      @action_list = [:toy_touch, :touch, :timer, :when_created, :score_reaches, :loud_noise, :shake, :receive_message, :collision]
+      @effect_list = [:apply_force, :explosion, :delete_effect, :apply_torque, :create_new_toy, :score_adder, :play_sound, :text_bubble, :scene_shift, :move_towards, :move_away, :send_message]
+
       # Do not call super.
       self.view = UIView.alloc.initWithFrame([[0, 0], [WIDTH, MAX_HEIGHT]])
       view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
@@ -19,6 +22,14 @@ class CollectionViewPopoverViewController < UIViewController
       #default mode value
       if @mode.nil?
         @mode = :actions
+      end
+
+      selectedToy = @delegate.getSelectedToy
+      if selectedToy!= nil
+        if selectedToy.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+          @action_list = [:toy_touch, :touch, :timer, :when_created, :score_reaches, :loud_noise, :shake, :receive_message]
+          @effect_list = [:create_new_toy, :score_adder, :play_sound, :text_bubble, :scene_shift, :send_message]
+        end
       end
 
       #back button
@@ -54,10 +65,8 @@ class CollectionViewPopoverViewController < UIViewController
       @col_view.dataSource = self
       @col_view.delegate = self
       view.addSubview(@col_view)
-
       self.preferredContentSize = [WIDTH, [@col_view.frame.origin.y+@col_view.frame.size.height+5, MAX_HEIGHT].min ]
       resizeViews
-
     end
 
     def setTitle(text)
@@ -70,6 +79,14 @@ class CollectionViewPopoverViewController < UIViewController
     # We need this to gain access to the toys.
     def state=(state)
       @state = state
+      @state.toys.each do |toy|
+        if toy.identifier == Constants::SCENE_TOY_IDENTIFIER
+          sceneToy = toy.clone
+          @state.toys.delete(toy)
+          @state.toys << sceneToy
+          break
+        end
+      end
     end
 
     # Back to the Select toy screen.
@@ -84,11 +101,11 @@ class CollectionViewPopoverViewController < UIViewController
     def collectionView(cv, numberOfItemsInSection: section)
       case @mode
         when :effects
-          return EFFECTS.size
+          return @effect_list.size
         when :toys, :move_towards, :move_away
           @state.toys.length
         else
-          return ACTIONS.size
+          return @action_list.size
       end
     end
 
@@ -99,18 +116,21 @@ class CollectionViewPopoverViewController < UIViewController
       case @mode
         when :effects
           cell = cv.dequeueReusableCellWithReuseIdentifier("ImgCell", forIndexPath: index_path)
-          cell.image = UIImage.imageNamed(EFFECTS[item])
-          cell.text = name_for_label(EFFECTS[item])
+          cell.image = UIImage.imageNamed(@effect_list[item])
+          cell.text = name_for_label(@effect_list[item])
         when :toys, :move_towards, :move_away
           cell = cv.dequeueReusableCellWithReuseIdentifier("ImgCell", forIndexPath: index_path)
           @state.toys[item].update_image
-          cell.image = @state.toys[item].image
+          if @state.toys[item].identifier == Constants::SCENE_TOY_IDENTIFIER
+            cell.hidden = true
+          else
+            cell.image = @state.toys[item].image
+          end
         else
           cell = cv.dequeueReusableCellWithReuseIdentifier("ImgCell", forIndexPath: index_path)
-          cell.image = UIImage.imageNamed(ACTIONS[item])
-          cell.text = name_for_label(ACTIONS[item])
+          cell.image = UIImage.imageNamed(@action_list[item])
+          cell.text = name_for_label(@action_list[item])
       end
-
       cell
     end
 
@@ -120,13 +140,13 @@ class CollectionViewPopoverViewController < UIViewController
       item = index_path.row
       case @mode
         when :effects
-          img_size = UIImage.imageNamed(EFFECTS[item]).size
+          img_size = UIImage.imageNamed(@effect_list[item]).size
           #CGSizeMake(img_size.width,img_size.height+10)
           CGSizeMake(75,75)
         when :toys, :move_towards, :move_away
           CGSizeMake(75,75)
         else
-          img_size = UIImage.imageNamed(ACTIONS[item]).size
+          img_size = UIImage.imageNamed(@action_list[item]).size
           CGSizeMake(img_size.width,img_size.height+10)
       end
     end
@@ -143,13 +163,13 @@ class CollectionViewPopoverViewController < UIViewController
         # add action to toys here
         when :effects
           #puts "effect"
-          @delegate.makeEffect(EFFECTS[item])
+          @delegate.makeEffect(@effect_list[item])
         when :toys, :move_towards, :move_away
-          puts "toys"
+          #puts "toys"
           @delegate.chose_toy(item)
         else
-          puts "other"
-          @delegate.makeTrigger(ACTIONS[item])
+          #puts "other"
+          @delegate.makeTrigger(@action_list[item])
       end
     end
 

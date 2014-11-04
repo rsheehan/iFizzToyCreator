@@ -145,7 +145,9 @@ class ToyCreatorView < CreatorView
 
   # Removes all lines from screen
   def clear
-    undoManager.registerUndoWithTarget(self, selector: 'unclear:', object: @strokes)
+    if undoManager != nil
+      undoManager.registerUndoWithTarget(self, selector: 'unclear:', object: @strokes)
+    end
     @strokes = []
     @points = nil
     @selected = nil

@@ -135,8 +135,13 @@ class ToyPhysicsBody
 
     epsilon = 0.2
     while next_pts.length > Constants::MAX_CONVEX_HULL_POINTS
-      next_pts = reduce_points_2(next_pts, epsilon)
+      next_pts_temp = reduce_points_2(next_pts, epsilon)
       epsilon = epsilon + 0.2
+      if next_pts_temp.size > 5
+        next_pts = next_pts_temp
+      else
+        break
+      end
     end
     next_pts
   end

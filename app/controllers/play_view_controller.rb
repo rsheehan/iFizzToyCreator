@@ -100,9 +100,19 @@ class PlayViewController < UIViewController
   end
 
   def viewDidAppear(animated)
-    update_play_scene
-    self.becomeFirstResponder
+    loadingView = LoadingScene.alloc.initWithSize(@bounds.size)
+    loadingView.game_name = @state.game_info.name
+    loadingView.game_description = @state.game_info.description
     @play_view.alpha = 1.0
+    @play_view.presentScene(loadingView)
+    self.becomeFirstResponder
+    NSTimer.scheduledTimerWithTimeInterval(2.5, target: self, selector: "loadGame", userInfo: nil, repeats: false)
+  end
+
+  def loadGame
+    update_play_scene
+    @play_view.presentScene(@play_scene, transition: Constants::TRANSITION_EFFECT)
+    p "play game now"
   end
 
   def viewWillDisappear(animated)
@@ -142,6 +152,7 @@ class PlayViewController < UIViewController
     if scene == nil
       scene=@state.scenes[0]
     end
+
     if scene != nil
       return unless @play_view # this is because of the orientation bug being worked around in app_delegate
       @play_scene = PlayScene.alloc.initWithSize(@play_view.frame.size)
@@ -156,7 +167,11 @@ class PlayViewController < UIViewController
       @state.load_scene_actions(scene)
 
       # add background image
-      @play_scene.backgroundImage = scene.background
+      #p "add background to play scene = #{scene.backgroundURL}"
+      @play_scene.background = scene.background
+      if scene.backgroundURL != nil
+        @play_scene.backgroundImageURL = scene.backgroundURL
+      end
 
       # add the toys to the scene
       @play_scene.toys = scene.toyInPlayScene
@@ -207,10 +222,6 @@ class PlayViewController < UIViewController
         end
       end
 
-      # end of development code
-
-      #p 'start scene transition'
-      #reveal = SKTransition.fadeWithDuration(3)
       @play_view.presentScene(@play_scene, transition: Constants::TRANSITION_EFFECT)
       @play_scene.paused = true
       actions.each do |action|
@@ -251,7 +262,14 @@ class PlayViewController < UIViewController
   end
 
   def reset
-    update_play_scene
+    loadingView = LoadingScene.alloc.initWithSize(@bounds.size)
+    loadingView.game_name = @state.game_info.name
+    loadingView.game_description = @state.game_info.description
+    @play_view.alpha = 1.0
+    @play_view.presentScene(loadingView)
+    self.becomeFirstResponder
+    NSTimer.scheduledTimerWithTimeInterval(1.5, target: self, selector: "loadGame", userInfo: nil, repeats: false)
+
   end
 
   # The sides are left for user interactions to the running scenes

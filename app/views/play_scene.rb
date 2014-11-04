@@ -8,13 +8,14 @@ class PlayScene < SKScene
   attr_reader :loaded_toys # ToyInScene not put into play straight away
   attr_reader :mutex
   attr_writer :scores, :delegate
-  attr_writer :backgroundImage
+  attr_writer :background, :backgroundImageURL
 
   TIMER_SCALE = 0.00006
   DEBUG_EXPLOSIONS = false
 
   #self.scene.view.paused = true
   MAX_CREATES = 10
+  @background = UIColor.blackColor
 
   TOP=0
   BOTTOM=1
@@ -43,18 +44,10 @@ class PlayScene < SKScene
       create_scene_contents
       @content_created = true
     end
-    #self.scene.view.paused = true
   end
 
-  # def startGame
-  #   self.scene.view.paused = false
-  # end
-
   def create_scene_contents
-    #removeAllChildren
-    #self.backgroundColor = SceneCreatorView::DEFAULT_SCENE_COLOUR # no longer necessary, see create_image
     self.scaleMode = SKSceneScaleModeAspectFill
-
     self.physicsWorld.contactDelegate = self
     @paused = true
     @mutex = Mutex.new
@@ -181,8 +174,12 @@ class PlayScene < SKScene
         #trigger action on this node
         new_action = touch_action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [nil,node.userData[:uniqueID]]; h }
         add_actions_for_update([new_action])
+      elsif touch_action[:toy] == 0 and node.name.to_s == "" and @sceneToyId != nil
+        new_action = touch_action.inject({}) { |h, (k, v)| k != :action_param ? h[k] = v : h[k] = [nil,@sceneToyId]; h }
+        add_actions_for_update([new_action])
       end
     end
+
 
   end
 
@@ -556,10 +553,12 @@ class PlayScene < SKScene
               addChild(label)
 
               # Creates Fade and sclae effect before removing
-              action_duration = 1.0
+              action_duration = 3.0
               groupActions = []
-              groupActions << SKAction.moveByX(10, y: 0, duration: action_duration)
-              groupActions << SKAction.scaleBy(7, duration: action_duration)
+              #groupActions << SKAction.moveByX(10, y: 0, duration: action_duration)
+              groupActions << SKAction.moveToY(self.size.height.to_i, duration: action_duration)
+
+              groupActions << SKAction.scaleBy(15, duration: action_duration)
               groupActions << SKAction.fadeOutWithDuration(action_duration)
 
               actions = SKAction.group(groupActions)
@@ -607,40 +606,42 @@ class PlayScene < SKScene
               else
                 displacement = CGPointApplyAffineTransform(displacement, rotation)
                 displacement = CGPointMake(displacement.x, displacement.y)
-                toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
-              end
-              new_toy = new_toy(toy_in_scene, true)
-              #@toys << toy_in_scene
-              new_toy.color = UIColor.grayColor
-              new_toy.zRotation = (new_toy.zRotation + toy.zRotation)
-              new_toy.userData[:id] = rand(2**60).to_s
-              new_toy.userData[:templateID] = toy_in_scene.uid
-              new_toy.userData[:uniqueID] = rand(2**60).to_s
-
-              #trigger any create actions
-              @create_actions.each do |create_action|
-                if create_action[:toy] == new_toy.name
-                  #trigger event
-                  create_action = create_action.clone
-                  timeDelay = create_action[:action_param][0]
-                  create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
-                  add_actions_for_update([create_action],timeDelay)
+                if toy_in_scene != nil
+                  toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
                 end
               end
-              @toy_hash[id] << new_toy
-              @toys_count[id] = 0 unless @toys_count[id]
-              @toy_hash[id].delete_if do |check_toy|
-                bool = check_toy.userData[:uniqueID] == -1
-                bool
-              end
+              if toy_in_scene != nil
+                new_toy = new_toy(toy_in_scene, true)
+                new_toy.color = UIColor.grayColor
+                new_toy.zRotation = (new_toy.zRotation + toy.zRotation)
+                new_toy.userData[:id] = rand(2**60).to_s
+                new_toy.userData[:templateID] = toy_in_scene.uid
+                new_toy.userData[:uniqueID] = rand(2**60).to_s
 
-              # remove toys when it reaches to some particular MAX_CREATES value
-              while @toy_hash[id].length - @toys_count[id] > MAX_CREATES
-                to_remove = @toy_hash[id].delete_at(@toys_count[id])
-                fadeOut = SKAction.fadeOutWithDuration(0.7)
-                remove = SKAction.removeFromParent()
-                sequence = SKAction.sequence([fadeOut, remove])
-                apply_action_to_toy(to_remove, sequence)
+                #trigger any create actions
+                @create_actions.each do |create_action|
+                  if create_action[:toy] == new_toy.name
+                    #trigger event
+                    create_action = create_action.clone
+                    timeDelay = create_action[:action_param][0]
+                    create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
+                    add_actions_for_update([create_action],timeDelay)
+                  end
+                end
+                @toy_hash[id] << new_toy
+                @toys_count[id] = 0 unless @toys_count[id]
+                @toy_hash[id].delete_if do |check_toy|
+                  bool = check_toy.userData[:uniqueID] == -1
+                  bool
+                end
+                # remove toys when it reaches to some particular MAX_CREATES value
+                while @toy_hash[id].length - @toys_count[id] > MAX_CREATES
+                  to_remove = @toy_hash[id].delete_at(@toys_count[id])
+                  fadeOut = SKAction.fadeOutWithDuration(0.7)
+                  remove = SKAction.removeFromParent()
+                  sequence = SKAction.sequence([fadeOut, remove])
+                  apply_action_to_toy(to_remove, sequence)
+                end
               end
           end
           if send
@@ -842,14 +843,20 @@ class PlayScene < SKScene
     frame_size = CGSizeMake(frame.size.width / screen_scale, frame.size.height / screen_scale)
     UIGraphicsBeginImageContextWithOptions(frame_size, true, 0.0) #frame.size, true, 0.0)
     context = UIGraphicsGetCurrentContext()
-    setup_context(context)
-    SceneCreatorView::DEFAULT_SCENE_COLOUR.set
 
-    if @backgroundImage != nil
-      @backgroundImage.drawInRect(CGRectMake(0, 0, frame_size.width, frame_size.height))
-    else
-      CGContextFillRect(context, CGRectMake(0, 0, frame_size.width, frame_size.height)) #size.width-100, size.height-100))
+    setup_context(context)
+    if @background != nil
+      @background.set
     end
+    CGContextFillRect(context, CGRectMake(0, 0, frame_size.width, frame_size.height)) #size.width-100, size.height-100))
+
+    if @backgroundImageURL != nil
+      textureImage = UIImage.imageNamed(@backgroundImageURL)
+      textureImage.drawAtPoint(CGPointZero)
+    end
+
+    #p "backgroundimage url = #{@backgroundImageURL}."
+
 
     @edges.each do |edge|
       edge.colour.set
@@ -883,22 +890,31 @@ class PlayScene < SKScene
     @toy_hash = {}
     @loaded_toys = {}
     @toys.each do |toy_in_scene|
-      if loaded_toys[toy_in_scene.template.identifier].nil?
-        loaded_toys[toy_in_scene.template.identifier] = []
+      if toy_in_scene != nil and toy_in_scene.template != nil
+        if loaded_toys[toy_in_scene.template.identifier].nil?
+          loaded_toys[toy_in_scene.template.identifier] = []
+        end
+        loaded_toys[toy_in_scene.template.identifier] << toy_in_scene
+        if toy_in_scene != nil
+          toy = new_toy(toy_in_scene)
+          id = toy_in_scene.template.identifier
+          @toy_hash[id] = [] unless @toy_hash[id]
+          @toy_hash[id] << toy # add the toy (can be multiple toys of the same type)
+          @toys_count[id] = 0 unless @toys_count[id]
+          @toys_count[id] += 1
+          if toy_in_scene.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+            toy.position = view.convertPoint(CGPointMake(self.size.width.to_i/2, self.size.height.to_i+100), toScene: self)
+            @sceneToyId = toy.userData[:uniqueID]
+          end
+        end
       end
-      loaded_toys[toy_in_scene.template.identifier] << toy_in_scene
-      toy = new_toy(toy_in_scene)
-      id = toy_in_scene.template.identifier
-      @toy_hash[id] = [] unless @toy_hash[id]
-      @toy_hash[id] << toy # add the toy (can be multiple toys of the same type)
-      @toys_count[id] = 0 unless @toys_count[id]
-      @toys_count[id] += 1
     end
   end
 
   def get_image(toy_in_scene) # this is largely a hack because retina mode seems to get it wrong
-    #screen = UIScreen.mainScreen.scale
-    # Minh changed, due to ios 8.0 difference
+    if toy_in_scene == nil
+      return UIImage.imageNamed("background.png")
+    end
     screen = 1.0 # UIScreen.mainScreen.scale
     return toy_in_scene.image if screen == 1.0
     return toy_in_scene.template.create_image(toy_in_scene.zoom / screen)
@@ -906,6 +922,7 @@ class PlayScene < SKScene
 
   # Minh: this part is important
   def new_toy(toy_in_scene, darken = false)
+    p "new toy in scene = #{toy_in_scene}"
     image = get_image(toy_in_scene)
     toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(image))
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique

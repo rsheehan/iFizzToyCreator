@@ -78,7 +78,7 @@ class Language
   RIGHT_BOUNDARY          = 'Right boundary on/off'
   TOP_BOUNDARY          = 'Top boundary on/off'
   BOTTOM_BOUNDARY          = 'Bottom boundary on/off'
-  BACK_GROUND_IMAGE   = 'Background'
+  BACK_GROUND_IMAGE   = 'Background:'
 
   # Commands
   CHOOSE_TOUCH_BUTTON  = 'Choose the button for this action.'

@@ -44,16 +44,7 @@ class SceneConfigPopoverViewController < UIViewController
     view.addSubview(@table_view)
 
     # Background images
-    @backgroundImages = []
-    dirContents = NSFileManager.defaultManager.directoryContentsAtPath(NSBundle.mainBundle.bundlePath)
-    dirContents.each do |fileName|
-      if fileName.hasSuffix("_bground.png") || fileName.hasSuffix("_bground.jpg")
-        puts "image  = #{fileName}"
-        @backgroundImages << fileName
-      end
-    end
-
-
+    @backgroundImages = Constants::BACKGROUND_IMAGE_LIST
 
     @image_picker = UIImagePickerController.alloc.init
     @image_picker.delegate = self
@@ -97,26 +88,22 @@ class SceneConfigPopoverViewController < UIViewController
     #puts "Section: #{indexPath.section}, Cell: #{indexPath.row} is #selected"
   end
 
-  def tableView(tableView, commitEditingStyle:editingStyle, forRowAtIndexPath:indexPath)
-    if indexPath.section == 0
-      if (editingStyle == UITableViewCellEditingStyleDelete)
-        if (indexPath.row < 100)
-          #first remove this object from source
-
-          indexToRemove = indexPath.row - 8
-          
-          pathToRemove = Constants::BUNDLE_ROOT + "/" + @backgroundImages[indexToRemove]
-          p "need to remove #{pathToRemove}"
-          File.delete(pathToRemove)
-
-          @backgroundImages.removeObjectAtIndex(indexToRemove)
-
-          # Then remove associated cell from table view
-          tableView.deleteRowsAtIndexPaths(NSArray.arrayWithObject(indexPath), withRowAnimation:UITableViewRowAnimationLeft)
-        end
-      end
-    end
-  end
+  #allow delete
+  #def tableView(tableView, commitEditingStyle:editingStyle, forRowAtIndexPath:indexPath)
+    # if indexPath.section == 0
+    #   if (editingStyle == UITableViewCellEditingStyleDelete)
+    #     if (indexPath.row < 100)
+    #       indexToRemove = indexPath.row - 8
+    #       pathToRemove = Constants::BUNDLE_ROOT + "/" + @backgroundImages[indexToRemove]
+    #       p "need to remove #{pathToRemove}"
+    #       File.delete(pathToRemove)
+    #       @backgroundImages.removeObjectAtIndex(indexToRemove)
+    #       # Then remove associated cell from table view
+    #       tableView.deleteRowsAtIndexPaths(NSArray.arrayWithObject(indexPath), withRowAnimation:UITableViewRowAnimationLeft)
+    #     end
+    #   end
+    # end
+  #end
 
   # Sets the number of rows in each section
   def tableView(tableView, numberOfRowsInSection:section)
@@ -308,7 +295,7 @@ class SceneConfigPopoverViewController < UIViewController
           # add two button to the same cell
           buttonView = UIView.alloc.initWithFrame([[0,0],[160,37]]) 
           if camera_available?      
-            buttonView.addSubview(@cameraButton)
+            #buttonView.addSubview(@cameraButton)
           end
           buttonView.addSubview(@clearButton)
           cell.accessoryView = buttonView
@@ -335,15 +322,14 @@ class SceneConfigPopoverViewController < UIViewController
 
   def colourChanged
     # change background colour
-    puts "change background colour"
     @delegate.changeBackgroundColour
     @table_view.reloadData
   end
 
   def imageButtonClick(sender)
     imageNameAndLocation = sender.accessibilityLabel
-    the_image = UIImage.imageNamed(imageNameAndLocation)
-    @delegate.setBackground(the_image) 
+    #the_image = UIImage.imageNamed(imageNameAndLocation)
+    @delegate.setBackground(imageNameAndLocation)
   end
 
   def topBorderClicked
@@ -397,7 +383,7 @@ class SceneConfigPopoverViewController < UIViewController
   end
 
   def clearButtonClicked
-    @delegate.setBackground(nil)
+    @delegate.clearBackgroundImage
   end
 
   # UIImagePickerController Delegate Methods
@@ -437,17 +423,11 @@ class SceneConfigPopoverViewController < UIViewController
 
   # change value of gravity
   def gravitySliderChanged
-    #@scene.gravityY = @gravitySlider.value * -1.0
-    #@delegate.setGravity(@gravitySlider.value * -1.0)
-    #@table_view.reloadData
     @gravity_label_view.text = @gravitySlider.value.to_i.to_s+".0"
   end
 
   # change value of wind
   def windSliderChanged
-    #@scene.gravityX = @windSlider.value
-    #@delegate.setWind(@windSlider.value)
-    #@table_view.reloadData
     @wind_label_view.text = @windSlider.value.to_i.to_s+".0"
   end
 
@@ -493,7 +473,6 @@ class SceneConfigPopoverViewController < UIViewController
 
   # We need this to gain access to the scene.
   def enterState(state)
-    #puts "enter state"
     @state = state
     if @state.scenes.size > 0
       @scene = @state.scenes[@state.currentscene]

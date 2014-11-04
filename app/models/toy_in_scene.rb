@@ -48,26 +48,32 @@ class ToyInScene
   # Returns true iff the point is "close" to the toy.
   # "close" at the moment is within 40 points of the centre.
   def close_enough(point)
-    p "#{point.x} x #{point.y}"
-    p "size = #{@image.size.width.to_s} x #{@image.size.height.to_s}"
+    #p "#{point.x} x #{point.y}"
+    #p "size = #{@image.size.width.to_s} x #{@image.size.height.to_s}"
     closeRadius = Math.sqrt(@image.size.width*@image.size.width + @image.size.height+@image.size.height) / 2.0
+    #p "close enought? = #{(@position - point).magnitude < 1.2 * closeRadius}"
     (@position - point).magnitude < 1.2 * closeRadius
-    #CGRectContainsPoint(@rectDraw, point)
   end
 
   # Called when the toy is being moved in the scene creator.
   def move(vpoint)
-    @position += vpoint
+    if @template.identifier != Constants::SCENE_TOY_IDENTIFIER
+      @position += vpoint
+    end
   end
 
   # Called when a move in the UI is completed.
   def change_position(position)
-    @old_position = @position = position
+    if @template.identifier != Constants::SCENE_TOY_IDENTIFIER
+      @old_position = @position = position
+    end
   end
 
   # Called when a rotate in the UI is completed.
   def change_angle(angle)
-    @old_angle = @angle = angle
+    if @template.identifier != Constants::SCENE_TOY_IDENTIFIER
+      @old_angle = @angle = angle
+    end
   end
 
   def centre_parts
@@ -80,7 +86,6 @@ class ToyInScene
       case @template.parts[i]
         when CirclePart
           parts << CirclePart.new(CGPointMake(0, 0), @template.parts[i].radius, @template.parts[i].colour)
-          #puts "CirclePart-  X: " + @template.parts[i].position.x.to_s + ", Y: " + @template.parts[i].position.y.to_s
         when PointsPart
           points = []
           j = 0
@@ -99,29 +104,31 @@ class ToyInScene
 
   # Called when a zoom in the UI is completed.
   def change_zoom(zoom)
-    width_new = @image.size.width / @old_zoom * zoom
-    height_new = @image.size.height / @old_zoom * zoom
-    frame_width = 824
-    frame_height = 700
-    size_min = 25
-    if(width_new > frame_width || height_new > frame_height)
-      dx = width_new / frame_width
-      dy = height_new / frame_height
-      if (dx > dy)
-        @zoom = frame_width / (@image.size.width / @old_zoom)
-      else
-        @zoom = frame_height / (@image.size.height / @old_zoom)
-      end
+    if @template.identifier != Constants::SCENE_TOY_IDENTIFIER
+      width_new = @image.size.width / @old_zoom * zoom
+      height_new = @image.size.height / @old_zoom * zoom
+      frame_width = 824
+      frame_height = 700
+      size_min = 25
+      if(width_new > frame_width || height_new > frame_height)
+        dx = width_new / frame_width
+        dy = height_new / frame_height
+        if (dx > dy)
+          @zoom = frame_width / (@image.size.width / @old_zoom)
+        else
+          @zoom = frame_height / (@image.size.height / @old_zoom)
+        end
 
-    elsif(width_new < size_min && height_new < size_min )
-      if(width_new < height_new)
-        @zoom = size_min / (@image.size.height / @old_zoom)
-      else
-        @zoom = size_min / (@image.size.width / @old_zoom)
+      elsif(width_new < size_min && height_new < size_min )
+        if(width_new < height_new)
+          @zoom = size_min / (@image.size.height / @old_zoom)
+        else
+          @zoom = size_min / (@image.size.width / @old_zoom)
+        end
       end
+      @image = @template.create_image(@zoom)
+      @old_zoom = @zoom
     end
-    @image = @template.create_image(@zoom)
-    @old_zoom = @zoom
   end
 
   Wheel = Struct.new(:position, :radius)
@@ -173,13 +180,7 @@ class ToyInScene
 
   def draw(context)
     CGContextSaveGState(context)
-
-    #puts "Ghost = #{@ghost}"
-
-    #colorSpace = CGColorSpaceCreateDeviceGray()
-    #CGContextSetFillColorSpace(context, colorSpace)
-
-    if @ghost
+    if @ghost or @template.identifier == Constants::SCENE_TOY_IDENTIFIER
       CGContextSetAlpha(context, 0.3)
       CGContextBeginTransparencyLayer(context, nil)
     end
@@ -202,7 +203,7 @@ class ToyInScene
     end
 
     #CGContextSetAlpha(context, 1.0)
-    if @ghost
+    if @ghost or @template.identifier == Constants::SCENE_TOY_IDENTIFIER
       CGContextEndTransparencyLayer(context)
       CGContextSetAlpha(context, 1.0)
     end

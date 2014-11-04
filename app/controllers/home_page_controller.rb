@@ -1,5 +1,5 @@
 class HomePageViewController < UIViewController
-  attr_writer :state
+  attr_accessor :state, :tab_bar
   MODES = [:help, :game, :load]
 
   def viewDidLoad
@@ -77,9 +77,9 @@ class HomePageViewController < UIViewController
 
   end
   def game
-    content = SaveGamePopoverViewController.alloc.initWithNibName(nil, bundle: nil)
-    content.delegate = self
-    show_popover(content)
+    @popover = SaveGamePopoverViewController.alloc.initWithNibName(nil, bundle: nil)
+    @popover.delegate = self
+    show_popover(@popover)
   end
   def load
     # load internet game
@@ -88,8 +88,67 @@ class HomePageViewController < UIViewController
     show_popover(content)
   end
 
+  def close_popover
+    if not @popover.nil?
+      @popover.dismissPopoverAnimated(true)
+    end
+  end
+
+  def shareState
+    url_string = Constants::WEB_URL+"index.php"
+    fileNameGame = @state.game_info.name.tr(" ", "_")
+    dataPost = @state.getStringState
+    post_body = "name="+fileNameGame+"&data="+dataPost
+    url = NSURL.URLWithString(url_string)
+    request = NSMutableURLRequest.requestWithURL(url)
+    request.timeoutInterval = 30
+    request.HTTPMethod = "POST"
+    request.HTTPBody = post_body.dataUsingEncoding(NSUTF8StringEncoding)
+    queue = NSOperationQueue.alloc.init
+    NSURLConnection.sendAsynchronousRequest(request,
+                                            queue: queue,
+                                            completionHandler: lambda do |response, data, error|
+
+                                              if error != nil
+                                                p "error = #{error}"
+                                              else
+                                                if(data.length > 0 && error.nil?)
+                                                  html = NSString.alloc.initWithData(data, encoding: NSUTF8StringEncoding)
+                                                elsif( data.length == 0 && error.nil? )
+                                                  p "Nothing was downloaded"
+                                                elsif(!error.nil?)
+                                                  p "Error: #{error}"
+                                                end
+                                              end
+                                            end
+    )
+
+  end
+
+  def state
+    @state
+  end
+
   def resume
     @introScene.view.paused = false
+  end
+
+  def loadGame(gameURL)
+    file_path = Constants::WEB_URL+"upload/"+gameURL
+    url = NSURL.URLWithString(file_path)
+    request = NSURLRequest.requestWithURL(url)
+    res = nil
+    err = nil
+    data = NSURLConnection.sendSynchronousRequest(request, returningResponse: res, error: err)
+    @state.loadFromData(data.to_s)
+    #reset all views
+    resetViews
+
+    NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "game", userInfo: nil, repeats: false)
+  end
+
+  def resetViews
+    tab_bar.resetViews
   end
 
   def show_popover(content)

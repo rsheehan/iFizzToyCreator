@@ -94,6 +94,11 @@ class ToyTemplate
   end
 
   def image_bitmap(size, scale)
+    #p "return image #{@identifier}"
+    if @identifier == 0
+      return UIImage.imageNamed("background.png")
+    end
+
     centre_in_image = CGPointMake(*size) / 2
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     context = UIGraphicsGetCurrentContext()

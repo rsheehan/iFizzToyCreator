@@ -49,6 +49,14 @@ class ToyBoxViewController < UIViewController
   # We need this to gain access to the toys.
   def state=(state)
     @state = state
+    @state.toys.each do |toy|
+      if toy.identifier == Constants::SCENE_TOY_IDENTIFIER
+        sceneToy = toy.clone
+        @state.toys.delete(toy)
+        @state.toys << sceneToy
+        break
+      end
+    end
   end
 
   def viewDidAppear(animated)
@@ -67,6 +75,7 @@ class ToyBoxViewController < UIViewController
 
   #activate delete mode
   def delete
+    p "delete toy button pressed"
     if @delete_mode
       @delete_mode = false
       #set image
@@ -83,6 +92,7 @@ class ToyBoxViewController < UIViewController
   end
 
   def delete_toy(sender)
+    p "delete toy process"
     index_path = @collection_view.indexPathForCell(sender.superview);
     @state.toys.delete_at(index_path.row)
     #remove item from collectionview
@@ -117,40 +127,39 @@ class ToyBoxViewController < UIViewController
     toy_button.layer.borderWidth = 3.0
     toy_button.layer.borderColor = UIColor.blackColor.CGColor
     toy_button.backgroundColor = UIColor.whiteColor
-
-    # title = UILabel.alloc.initWithFrame(CGRectMake())
-
-    #p 'set border'
-    #make sure toy image is up to date
     @state.toys[item].update_image
-
     toy_button.toy = @state.toys[item]
-    #puts "toy item: #{item}"
     toy_button.accessibilityLabel = item.to_s
 
+    if @state.toys[item].identifier == Constants::SCENE_TOY_IDENTIFIER
+      toy_button.hidden = true
+    end
 
     toy_button
 
   end
 
   def animateToyButton(button,rotation,decreasing)
-    if not(@delete_mode)
-      return
-    end
-    if decreasing
-      rotation -= 0.005
-      if rotation <= -3.14/128
-        decreasing = false
-      end
-    else
-      rotation += 0.005
-      if rotation >= 3.14/128
-        decreasing = true
-      end
-    end
+    # if not(@delete_mode)
+    #   return
+    # end
+    # if decreasing
+    #   rotation -= 0.01
+    #   if rotation <= -3.14/128
+    #     decreasing = false
+    #   end
+    # else
+    #   rotation += 0.01
+    #   if rotation >= 3.14/128
+    #     decreasing = true
+    #   end
+    # end
+
+    timeStamp = Time.now.usec/50000.0
+    rotation = Math.cos(timeStamp)/50.0
 
     UIView.animateWithDuration(0.00001,
-                               delay: 0,
+                               delay: 0.05,
                                options: UIViewAnimationOptionAllowUserInteraction,
                                animations: lambda {
                                  button.transform = CGAffineTransformMakeRotation(rotation)
@@ -183,14 +192,14 @@ class ToyBoxViewController < UIViewController
 
   # handleTapOutside
   def handleTapOutside(sender)
-    if (sender.state == UIGestureRecognizerStateEnded)
-      location = sender.locationInView(nil) #Passing nil gives us coordinates in the window
-      #Then we convert the tap's location into the local view's coordinate system, and test to see if it's in or outside. If outside, dismiss the view.
-      if (!self.view.pointInside(self.view.convertPoint(location, fromView:self.view.window), withEvent:nil))
-        # Remove the recognizer first so it's view.window is valid.
-        self.view.window.removeGestureRecognizer(sender)
-        self.dismissModalViewControllerAnimated(true)
-      end
-    end
+    # if (sender.state == UIGestureRecognizerStateEnded)
+    #   location = sender.locationInView(nil) #Passing nil gives us coordinates in the window
+    #   #Then we convert the tap's location into the local view's coordinate system, and test to see if it's in or outside. If outside, dismiss the view.
+    #   if (!self.view.pointInside(self.view.convertPoint(location, fromView:self.view.window), withEvent:nil))
+    #     # Remove the recognizer first so it's view.window is valid.
+    #     self.view.window.removeGestureRecognizer(sender)
+    #     self.dismissModalViewControllerAnimated(true)
+    #   end
+    # end
   end
 end

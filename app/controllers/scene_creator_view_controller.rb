@@ -4,7 +4,6 @@ class SceneCreatorViewController < UIViewController
   MODES = [:scene, :toy, :config, :new]
   attr_reader :main_view
 
-  attr_accessor :tab_bar
 
 
 
@@ -31,11 +30,12 @@ class SceneCreatorViewController < UIViewController
   end
 
   def changeBackgroundColour
+    @main_view.clearBackgroundImage
     @backgroundColourIndex = (@backgroundColourIndex + 1) % Constants::BACKGROUND_COLOUR_LIST.size
     @main_view.backgroundColor = Constants::BACKGROUND_COLOUR_LIST[@backgroundColourIndex]
   end
   def getBackgroundColor
-    @main_view.backgroundColor
+    Constants::BACKGROUND_COLOUR_LIST[@backgroundColourIndex]
   end
 
   def viewDidAppear(animated)
@@ -72,9 +72,13 @@ class SceneCreatorViewController < UIViewController
   end
 
   # Set background
-  def setBackground(image)
-    @main_view.setBackground(image) # if nil then clear
-    @state.scenes[@state.currentscene].background = image   
+  def setBackground(imageURL)
+    @main_view.setBackground(imageURL) # if nil then clear
+  end
+
+  def clearBackgroundImage
+    @main_view.clearBackgroundImage
+    @main_view.backgroundColor = Constants::BACKGROUND_COLOUR_LIST[@backgroundColourIndex]
   end
 
   # Show the toy box
@@ -98,6 +102,7 @@ class SceneCreatorViewController < UIViewController
       @main_view.add_action(action)
     end
     close_toybox
+    @main_view.addSceneToy
     grab
   end
 
@@ -105,7 +110,10 @@ class SceneCreatorViewController < UIViewController
   def drop_scene(scene_index)   
     scene = @state.scenes[scene_index]    
     @main_view.clear
-    @main_view.setBackground(scene.background)
+    @main_view.backgroundColor = scene.background
+    setBackground(scene.backgroundURL)
+
+    #setBackground
 
     setGravity(scene.gravityY)
     setWind(scene.gravityX)
@@ -126,6 +134,7 @@ class SceneCreatorViewController < UIViewController
       @main_view.add_toy(toy)  
       toy.old_position = toy.position 
     end
+    @main_view.addSceneToy
     
     @state.load_scene_actions(scene)
     @main_view.add_action(scene.actions)
@@ -134,6 +143,13 @@ class SceneCreatorViewController < UIViewController
     @state.currentscene = scene_index
     close_toybox
     grab
+  end
+
+  def state
+    if @state.scenes.size == 0
+      new
+    end
+    @state
   end
 
   # Called when the view disappears.
@@ -163,9 +179,12 @@ class SceneCreatorViewController < UIViewController
   def save_scene
     scene = @main_view.gather_scene_info
     scene.identifier = @id
-    unless scene.edges.empty? and scene.toys.empty?
+    unless scene.edges.empty? and scene.toys.size <= 1
       @state.add_scene(scene)
-    end    
+    end
+    if @state.scenes.size == 0
+      @state.add_scene(scene)
+    end
   end
 
   def new
@@ -173,9 +192,11 @@ class SceneCreatorViewController < UIViewController
     clear
   end
   
-  def clear   
-    @id = rand(2**60).to_s
-    @main_view.clear
+  def clear
+    if @main_view != nil
+      @id = rand(2**60).to_s
+      @main_view.clear
+    end
   end
 
 end

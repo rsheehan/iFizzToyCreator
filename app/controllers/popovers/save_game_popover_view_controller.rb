@@ -5,15 +5,13 @@ class SaveGamePopoverViewController < UIViewController
   BIG_GAP = 40
   MAX_HEIGHT = 800
 
-  @number = 0
-
   def loadView
-    p "load view"
-    @number = 0
-    @dataList = []
+    p "load view"    
 
-    @width = 500
-    @height = 300
+    @sceneIndex = 0
+    @width = 450
+    @height = 600
+    @dataList = []
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
     view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
@@ -40,8 +38,7 @@ class SaveGamePopoverViewController < UIViewController
     self.view.layer.addSublayer(separator)
     
 
-    #table view for sound
-    @table_view = UITableView.alloc.initWithFrame([[0, 45], [@width, 400]])
+    @table_view = UITableView.alloc.initWithFrame([[0, 45], [@width, @height]])
     @table_view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
     @table_view.dataSource = self
     @table_view.delegate = self
@@ -53,12 +50,19 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def viewWillAppear(animated)
-    p "view appear #{@connection.to_s}"
-    req=NSURLRequest.requestWithURL(NSURL.URLWithString("https://www.cs.auckland.ac.nz/~mngu012/ifizz/index.php"))
-    @connection = NSURLConnection.alloc.initWithRequest req, delegate: self, startImmediately: true
+    paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
+    @documents_path = paths.objectAtIndex(0) # Get the docs directory
+
+    dirContents = NSFileManager.defaultManager.directoryContentsAtPath(@documents_path)
+    dirContents.each do |fileName|
+      if fileName.hasSuffix(".ifizz")
+        @dataList << fileName
+      end
+    end    
   end
 
   def viewWillDisappear(animated)
+    #@delegate.state.save
     @delegate.resume
   end
 
@@ -84,7 +88,6 @@ class SaveGamePopoverViewController < UIViewController
       @player = AVPlayer.alloc.initWithURL(local_file)
       @player.play
     end
-
   end
 
   # Back to the action adder to make a new one.
@@ -94,54 +97,284 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def tableView(tv, numberOfRowsInSection: section)
-    @number
+    if section == 0
+      5
+    else
+      @dataList.size
+    end    
+  end
+
+  def numberOfSectionsInTableView(tv)
+    2
+  end
+
+  def tableView(tv, heightForHeaderInSection:section)
+    if section == 0
+      30
+    else
+      30
+    end
+  end
+
+  def tableView(tableView, heightForRowAtIndexPath:index_path)
+    if index_path.section == 0
+      position = index_path.row
+      if position == 1
+        return 80
+      elsif position == 2
+          return 140
+      else
+        return 40
+      end
+    else
+      return 40
+    end
+  end
+
+  def tableView(tv,  editingStyleForRowAtIndexPath: index)
+    if index.section == 0
+      UITableViewCellEditingStyleNone
+    else
+      UITableViewCellEditingStyleDelete
+    end
+  end
+
+  # The methods to implement the UICollectionViewDataSource protocol.
+  def tableView(tv, commitEditingStyle: style, forRowAtIndexPath: index_path)
+    #if index_path.section != 0
+    tv.beginUpdates
+      tv.deleteRowsAtIndexPaths([index_path], withRowAnimation: UITableViewRowAnimationAutomatic)
+      item = index_path.row
+      File.delete(@documents_path.stringByAppendingPathComponent(@dataList[item].to_s))
+      @dataList.delete_at(item)     
+      p "delete #{item}"    
+      tv.endUpdates  
+    #end
+  end
+
+
+  def tableView(tv, viewForHeaderInSection:section)
+    if section == 0
+      h_view = UIView.alloc.initWithFrame(CGRectMake(0, 0, tv.frame.size.width, 30))
+      h_view.backgroundColor = Constants::LIGHT_GRAY
+      #title
+      @p_title = UILabel.alloc.initWithFrame([[10,5],[@width-5,20]])
+
+      @p_title.setText("Current game:")
+
+      @p_title.setFont(UIFont.boldSystemFontOfSize(18))
+      
+      h_view.addSubview(@p_title)
+
+
+      #title separator
+      separator = CALayer.layer
+      separator.frame = CGRectMake(5, 30, @width, 1.0)
+      separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
+      h_view.layer.addSublayer(separator)
+
+      h_view
+    else
+      h_view = UIView.alloc.initWithFrame(CGRectMake(0, 0, tv.frame.size.width, 50))
+      h_view.backgroundColor = Constants::LIGHT_GRAY
+
+      #title
+      @a_title = UILabel.alloc.initWithFrame([[10,5],[@width-5,20]])
+      @a_title.setText("My saved games:")
+      @a_title.setFont(UIFont.boldSystemFontOfSize(18))
+      h_view.addSubview(@a_title)
+
+      #title separator
+      separator = CALayer.layer
+      separator.frame = CGRectMake(5, 30, @width, 1.0)
+      separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
+      h_view.layer.addSublayer(separator)      
+
+      h_view
+    end
+  end
+
+  def changeScene(sender)
+    @sceneIndex = (@sceneIndex + 1) % @delegate.state.scenes.size
+    @table_view.reloadData
+    p "change scene"
   end
 
   def tableView(tv, cellForRowAtIndexPath: index_path)
-    index = index_path.row # ignore section as only one
+    if index_path.section == 0
+      position = index_path.row
+      case position
+        when 0
+          cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
+          name = "Name:"
+          cell.textLabel.text = name
 
-    cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
+          @my_text_field = UITextField.alloc.initWithFrame([[0,0],[200.0,31.0]])
+          @my_text_field.borderStyle = UITextBorderStyleRoundedRect
+          @my_text_field.textAlignment = UITextAlignmentLeft
+          @my_text_field.text = @delegate.state.game_info.name
+          cell.accessoryView = @my_text_field
+        when 1
+          cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
+          name = "Description:"
+          cell.textLabel.text = name
 
-    name = @dataList[index]
+          @my_text_view = UITextView.alloc.initWithFrame([[0,0],[200.0,75.0]])
+          #@my_text_view.borderStyle = UITextBorderStyleRoundedRect
+          @my_text_view.text = @delegate.state.game_info.description
+          @my_text_view.font = UIFont.systemFontOfSize(16)
+          cell.accessoryView = @my_text_view
 
-    cell.textLabel.text = name
-    cell.textLabel.userInteractionEnabled = true
-    tapGesture = UITapGestureRecognizer.alloc.initWithTarget(self, action:'select_sound:')
-    cell.textLabel.addGestureRecognizer(tapGesture)
+        when 2
+          cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
+          name = "Scenes (tap to change):"
+          cell.textLabel.text = name
 
-    button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-    button.setFrame([[3*@width/4, 5], [@width/4,35]])
-    button.setTitle('Upload and share', forState: UIControlStateNormal)
-    cell.accessoryView = button
+          tapGesture = UITapGestureRecognizer.alloc.initWithTarget(self, action:'changeScene:')
+          cell.addGestureRecognizer(tapGesture)
+
+          scenes = @delegate.state.scenes
+          scenes_size = scenes.size
+          if scenes_size > 0
+            randomSceneIndex = @sceneIndex #rand(scenes_size).to_i
+            scenes[randomSceneIndex].update_image
+            @my_image_view = UIImageView.alloc.initWithFrame([[0,0],[200.0,140.0]])
+            @my_image_view.contentMode = UIViewContentModeScaleAspectFit
+            @my_image_view.image = scenes[randomSceneIndex].image
+            @my_image_view.center = self.view.center
+            cell.accessoryView = @my_image_view
+          end
+
+        # when 3
+        #   cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
+        #   name = "Toy 1:"
+        #   cell.textLabel.text = name
+
+        #   toys = @delegate.state.toys
+        #   toys_size = toys.size
+        #   if toys_size > 0
+        #     randomToyIndex = 0#rand(toys_size).to_i
+        #     toys[randomToyIndex].update_image
+        #     @toy_image_view = UIImageView.alloc.initWithFrame([[0,0],[200.0,140.0]])
+        #     @toy_image_view.contentMode = UIViewContentModeScaleAspectFit
+        #     @toy_image_view.image = toys[randomToyIndex].image
+        #     @toy_image_view.center = self.view.center
+        #     cell.accessoryView = @toy_image_view
+        #   end
+
+        when 3
+          cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
+          name = "Apply changes:"
+          cell.textLabel.text = name
+          cell.textLabel.userInteractionEnabled = true
+
+          saveButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+          saveButton.setFrame([[50, 0], [50,35]])
+          saveButton.setTitle('Save', forState: UIControlStateNormal)
+
+          shareButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+          shareButton.setFrame([[130, 0], [70,35]])
+          shareButton.setTitle('New', forState: UIControlStateNormal)
+
+          buttonView = UIView.alloc.initWithFrame([[0,0],[200,35]]) 
+          buttonView.addSubview(saveButton)
+          buttonView.addSubview(shareButton)
+
+          saveButton.addTarget(self,action:'Save', forControlEvents:UIControlEventTouchUpInside)
+          shareButton.addTarget(self,action:'New', forControlEvents:UIControlEventTouchUpInside)
+
+          cell.accessoryView = buttonView
+        when 4
+          cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
+          name = "Upload to the Internet:"
+          cell.textLabel.text = name
+          shareButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+          shareButton.setFrame([[130, 0], [70,35]])
+          shareButton.setTitle('Share', forState: UIControlStateNormal)
+
+          buttonView = UIView.alloc.initWithFrame([[0,0],[200,35]]) 
+          
+          buttonView.addSubview(shareButton)
+         
+          shareButton.addTarget(self,action:'Share', forControlEvents:UIControlEventTouchUpInside)
+
+          cell.accessoryView = buttonView
+      end
+    else
+      index = index_path.row 
+
+      cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
+
+      name = @dataList[index]
+
+      cell.textLabel.text = name
+
+      cell.textLabel.userInteractionEnabled = true
+      tapGesture = UITapGestureRecognizer.alloc.initWithTarget(self, action:'select_sound:')
+      cell.textLabel.addGestureRecognizer(tapGesture)
+
+      loadButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+      loadButton.setFrame([[130, 0], [70,35]])
+      loadButton.setTitle('Load', forState: UIControlStateNormal)
+
+      deleteButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
+      deleteButton.setFrame([[50, 0], [50,35]])
+      deleteButton.setTitle('Delete', forState: UIControlStateNormal)
+
+      buttonView = UIView.alloc.initWithFrame([[0,0],[200,35]])
+      buttonView.addSubview(loadButton)
+      #buttonView.addSubview(deleteButton)
+
+      loadButton.addTarget(self,action:'Load:', forControlEvents:UIControlEventTouchUpInside)
+      deleteButton.addTarget(self,action:'Delete', forControlEvents:UIControlEventTouchUpInside)
+      loadButton.accessibilityLabel = name
+
+      cell.accessoryView = buttonView
+    end
 
     cell
   end
 
-  def connection(connection, didFailWithError:error)
-    p error
+  def Load(sender)
+    #text = sender.view.text
+    @delegate.state.load(sender.accessibilityLabel.to_s)
+    @delegate.close_popover
+    p "seder = #{sender.accessibilityLabel.to_s}"
+    NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "ReOpen", userInfo: nil, repeats: false)
+    @delegate.state.save
+    #reset views
+    @delegate.resetViews
   end
 
-  def connection(connection, didReceiveResponse:response)
-    @file = NSMutableData.data
-    @response = response
-    @download_size = response.expectedContentLength
+  def Save
+    @delegate.state.game_info.name = @my_text_field.text
+    @delegate.state.game_info.description = @my_text_view.text
+    @delegate.state.save
+    p "save button is pressed"
+    @delegate.close_popover
+    #NSTimer.scheduledTimerWithTimeInterval(5.0, target: self, selector: "ReOpen", userInfo: nil, repeats: false)
   end
 
-  def connection(connection, didReceiveData:data)
-    @file.appendData data
+  def New
+    @delegate.state.clearState
+    p "save button is pressed"
+    @delegate.close_popover
+    NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "ReOpen", userInfo: nil, repeats: false)
   end
 
-  def connectionDidFinishLoading(connection)
-    @dataList = []
-    
-    readFile = @file.inspect.to_s
-    readFile.each_line { |line|
-      @dataList << line.chomp
-    }    
-    @number = @dataList.size
-    @table_view.reloadData
+  def ReOpen
+    @delegate.game
+  end
 
-    @connection.cancel
+  def OpenLoad
+    @delegate.load
+  end
+
+  def Share
+    p "internet? = no"
+    @delegate.shareState
+    @delegate.close_popover
+    NSTimer.scheduledTimerWithTimeInterval(2.0, target: self, selector: "OpenLoad", userInfo: nil, repeats: false)
   end
 
 end

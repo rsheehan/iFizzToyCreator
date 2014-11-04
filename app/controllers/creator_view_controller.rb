@@ -5,7 +5,7 @@ module CreatorViewControllerModule
   TOOLS = [:grab, :squiggle, :line, :circle, :undo, :redo, :trash, :clear]
   #COLOURS = ['black', 'blue', 'brown', 'cyan', 'green', 'magenta', 'orange', 'purple', 'red', 'yellow', 'white']
 
-  attr_writer :state
+  attr_accessor :state, :tab_bar
 
   def viewDidAppear(animated)
     super
@@ -159,6 +159,17 @@ module CreatorViewControllerModule
     view.addSubview(@mode_view)
   end
 
+  # def setup_mode_buttons_right(modes)
+  #   @mode_view2 = UIView.alloc.initWithFrame(
+  #       CGRectMake(95, 0, 95 * modes.length, 95))
+  #   position = [@main_view.frame.size.width - 95 + 10, 10]
+  #   modes.each do |mode_name|
+  #     button = setup_button(mode_name, position, @mode_view, mode_name)
+  #     position[0] += CGRectGetWidth(button.frame) + 10
+  #   end
+  #   view.addSubview(@mode_view2)
+  # end
+
   def setup_button(image_name, position, super_view, label = '')
     button = UIButton.buttonWithType(UIButtonTypeCustom)
     button.accessibilityLabel = image_name
@@ -191,6 +202,12 @@ module CreatorViewControllerModule
     content = SceneConfigPopoverViewController.alloc.initWithNibName(nil, bundle: nil)
     content.setTitle("Scene Properties")
     content.delegate = self
+
+    if @state.scenes.size == 0
+      scene = @main_view.gather_scene_info
+      @state.add_scene(scene)
+    end
+    p "state size = #{@state.scenes.size}"
     content.enterState(@state)
     show_popover(content)
   end

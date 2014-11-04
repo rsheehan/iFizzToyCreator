@@ -1,14 +1,49 @@
 class State
 
-  attr_accessor :toys, :scenes, :games, :currentscene # don't do the scenes and games yet
+  attr_accessor :toys, :scenes, :games, :currentscene, :game_info # don't do the scenes and games yet
   # just starting to do the scenes - one anyway
 
   def initialize
+    @game_info = nil
     @toys = []
     @scenes = []
     @currentscene = 0
     @thread = nil
     load
+    initToys    
+  end
+
+  def clearState
+    @game_info = GameInfo.new
+    @toys = []
+    @scenes = []
+    @currentscene = 0
+    @thread = nil    
+    initToys
+    save
+  end
+
+  def initToys
+    thereIsSceneToy = false
+    @toys.each do |toy|
+      if toy.identifier == Constants::SCENE_TOY_IDENTIFIER
+        thereIsSceneToy = true
+      end
+    end
+    if thereIsSceneToy != true
+      part = CirclePart.new(CGPointMake(0, 0) * ToyTemplate::IMAGE_SCALE, 20, UIColor.clearColor)
+      toy = ToyTemplate.new([part], 0)
+      toy.stuck = true
+      @toys << toy
+    end
+  end
+
+  def returnSceneToy
+    @toys.each do |toy|
+      if toy.identifier == 0
+        return toy
+      end
+    end
   end
 
   # Adds a toy and saves the updated state.
@@ -110,33 +145,60 @@ class State
         writeStream.open
         error = Pointer.new(:object)
         bytes = NSJSONSerialization.writeJSONObject(json_compatible, toStream: writeStream, options: 0, error: error)
+
         puts "(*) Saved successfully #{bytes} bytes"
         writeStream.close
       end
       state_file_path = documents_path.stringByAppendingPathComponent('state')
       File.rename(file_path, state_file_path)
+
+      #duplicated but I could not find any where how to copy file in rubymotion
+
+      if @game_info.name != "Untitled"
+        file_name = 'temp' + Time.now.to_s
+        file_path = documents_path.stringByAppendingPathComponent(file_name) # Add the file name
+        puts "Writing image to #{file_path}"
+        writeStream = NSOutputStream.outputStreamToFileAtPath(file_path, append: false)
+        if writeStream
+          writeStream.open
+          error = Pointer.new(:object)
+          bytes = NSJSONSerialization.writeJSONObject(json_compatible, toStream: writeStream, options: 0, error: error)
+          puts "(*) Saved successfully #{bytes} bytes"
+          writeStream.close
+        end
+        fileNameGame = @game_info.name.downcase.tr(" ", "_") + ".ifizz"
+        fileNameGamePath = documents_path.stringByAppendingPathComponent(fileNameGame)
+        File.rename(file_path, fileNameGamePath)
+      end
       @thread = nil
       }
     end
-
   end
 
-  def load
+  def getStringState
+    paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
+    documents_path = paths.objectAtIndex(0) # Get the docs directory
+    file_path = documents_path.stringByAppendingPathComponent("state") # Add the file name
+    #puts "load file path = #{file_path}"
+    string = IO.binread(file_path)
+    string
+  end
+
+  def load(fileName = "state")
     if not @thread.nil?
       puts "Saving before loading?"
     end
     @thread = "lock"
     paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
     documents_path = paths.objectAtIndex(0) # Get the docs directory
-    file_path = documents_path.stringByAppendingPathComponent('state') # Add the file name
-    puts "load file path = #{file_path}"
+    file_path = documents_path.stringByAppendingPathComponent(fileName.to_s) # Add the file name
+
     readStream = NSInputStream.inputStreamWithFileAtPath(file_path)
     puts "error opening readStream" unless readStream
     if readStream
       readStream.open
       error = Pointer.new(:object)
       json_state = NSJSONSerialization.JSONObjectWithStream(readStream, options: 0, error: error)
-
       readStream.close
       convert_from_json_compatible(json_state) if json_state
       puts "(*) Load successfully json successfully"
@@ -150,8 +212,17 @@ class State
     @thread = nil
   end
 
+  def loadFromData(data)
+    error = Pointer.new(:object)
+    json_state = NSJSONSerialization.JSONObjectWithData(data.dataUsingEncoding(NSUTF8StringEncoding), options: 0, error: error)
+    clearState
+    convert_from_json_compatible(json_state) if json_state
+    save
+  end
+
   def json_compatible
     json_state = {}
+    json_state[:game_info] = @game_info.to_json_compatible
     json_toys = @toys.map { |toy| toy.to_json_compatible }
     json_state[:toys] = json_toys
     # here we will eventually do the scenes as well
@@ -166,6 +237,9 @@ class State
 
   # Extracts the toys (and eventually scenes) from the json compatible data.
   def convert_from_json_compatible(json_object)
+    json_game_info = json_object[:game_info]
+    @game_info = jsonToGameInfo(json_game_info)
+
     json_toys = json_object[:toys]
     toys = []
     json_toys.each do |json_toy|
@@ -204,6 +278,16 @@ class State
       part = PointsPart.new(points, colour)
     end
     part
+  end
+
+  def jsonToGameInfo(json_game)
+    if json_game != nil
+      name = json_game[:name]
+      description = json_game[:description]
+      @game_info = GameInfo.new(name, description)
+    else
+      @game_info = GameInfo.new
+    end
   end
 
   def jsonToToyInScene(json_toy)
@@ -264,32 +348,6 @@ class State
     toy
   end
 
-  def saveTempBackground(backgroundString)
-    p "Saved background thread = #{@thread}"
-    backgroundImage = nil
-    if backgroundString != nil
-      data = backgroundString.unpack("m0")
-      File.open("#{Constants::DOCUMENT_PATH}/temporary.jpg", "w+b") do |f|
-        f.write(data.first)
-      end
-    end
-
-    backgroundImage
-  end
-
-  def loadTempBackground
-    backgroundImage = nil
-    if not @thread.nil?
-      puts "Background: Saving before loading?"
-    end
-    @thread = "lock"
-    file_name = 'temporary.jpg'
-    file_path = Constants::DOCUMENT_PATH.stringByAppendingPathComponent(file_name)
-    backgroundImage = UIImage.imageNamed(file_path)
-    @thread = nil
-    backgroundImage
-  end
-
   # Convert from Json to collection of scene
   def jsonToScene(json_scene)
     if json_scene.nil?
@@ -307,65 +365,9 @@ class State
     end
 
     gravity = CGVectorMake(windValue, gravityValue)
-
     boundaries = json_scene[:boundaries]
-
-    backgroundImage = nil
-
-    #backgroundString = json_scene[:background].to_s
-
-    #p backgroundString
-
-    #data = backgroundString.to_s.unpack("m")
-
-    # data = "test".pack("m")
-    # data = data.unpack("m")
-         
-    # File.open("#{Constants::DOCUMENT_PATH}/temporary.text", "w+b") do |f|
-    #   f.write(data.first)
-    # end
-
-    #p "#{backgroundString}"
-
-    #backgroundImage = saveTempBackground(backgroundString)
-
-    #p "back ground iamge: #{backgroundImage.to_s}"
-    #backgroundImage = loadTempBackground
-
-    # paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
-    # documents_path = paths.objectAtIndex(0) # Get the docs directory
-    # file_name = 'temporary.jpg'
-    # file_path = documents_path.stringByAppendingPathComponent(file_name) #
-
-    #file_name = Constants::BUNDLE_ROOT + "/" + "temporary.jpg"
-    #file_name = App.resources_path + "/tmp/" + "temporary.jpg"
-    #file_name = "./tmp/temporary.jpg"
-
-    # if backgroundString != nil
-    #   data = backgroundString.unpack("m")
-    #   File.open(file_path, "w+b") do |f|
-    #     f.write(data.first)
-    #   end
-    #   backgroundImage = UIImage.imageNamed(file_path)      
-    # end
-    
-    #puts "#{App.resources_path}"
-    #realData = NSData.dataWithContentsOfURL(NSURL.URLWithString("https://www.cs.auckland.ac.nz/~mngu012/images/00001.jpg"))
-
-    
-    #rawData = backgroundString.unpack("m").first
-
-    #rawData = backgroundString.unpack("m").first
-    #p rawData.to_s
-    # File.open("#{Constants::DOCUMENT_PATH}/temporary.txt", "w+b") do |f|
-    #   f.write("awData.to_s")
-    # end
-    
-    #backgroundImage = UIImage.imageWithData(backgroundString.unpack("m").first)
-
-
-    #puts "#{json_scene[:toys].to_s}"
-
+    background = Constants::BACKGROUND_COLOUR_LIST[json_scene[:background].to_i]
+    backgroundURL = json_scene[:backgroundURL]
 
     edges = []
     unless json_scene[:edges].empty?
@@ -385,7 +387,7 @@ class State
 
     unless toys.empty? and edges.empty?
       actions = []
-      scene = SceneTemplate.new(toys, edges, actions, id, CGRectMake(0,0,0,0), gravity, boundaries, backgroundImage)
+      scene = SceneTemplate.new(toys, edges, actions, id, CGRectMake(0,0,0,0), gravity, boundaries, background, backgroundURL)
       scene
     end
   end

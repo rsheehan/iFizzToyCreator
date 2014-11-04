@@ -4,8 +4,8 @@
 # TODO: separate the edge and background stuff into BackgroundTemplate
 class SceneTemplate
 
-  attr_reader :toys, :edges, :actions, :identifier, :image, :gravityX, :gravityY, :background, :boundaries
-  attr_writer :identifier, :bounds, :gravityX, :gravityY, :background, :boundaries
+  attr_reader :toys, :edges, :actions, :identifier, :image, :gravityX, :gravityY, :background, :backgroundURL, :boundaries
+  attr_writer :identifier, :bounds, :gravityX, :gravityY, :background, :backgroundURL, :boundaries
 
   WIDTH = 834
   HEIGHT = 712
@@ -20,7 +20,7 @@ class SceneTemplate
   SWITCH_ON=1
   SWITCH_OFF=0
 
-  def initialize(toys, edges, actions, identifier, bounds, gravity=nil, boundaries=nil, background=nil)
+  def initialize(toys, edges, actions, identifier, bounds, gravity=nil, boundaries=nil, background=nil, backgroundURL=nil)
     @identifier = identifier
     @toys = toys    # each of type ToyInScene
     @edges = edges  # each of type ToyPart - either Circle or Points
@@ -29,6 +29,13 @@ class SceneTemplate
     @bounds = bounds
 
     @background = background
+    if @background == nil
+      @background = Constants::BACKGROUND_COLOUR_LIST[0]
+    end
+
+    @backgroundURL = backgroundURL
+
+    p "scene default background image = #{@backgroundURL}"
 
     if boundaries!=nil
       *@boundaries = *boundaries
@@ -82,12 +89,12 @@ class SceneTemplate
     json_scene[:wind] = @gravity.dx
     json_scene[:boundaries] = @boundaries
 
-    #change background image to JSON
-    if @background != nil
-      backgroundImageData = UIImageJPEGRepresentation(@background, 0.9)
-      encodedData = [backgroundImageData].pack("m")
-      json_scene[:background] = encodedData
+    Constants::BACKGROUND_COLOUR_LIST.each_with_index do |c, index|
+      if c == @background
+        json_scene[:background] = index
+      end
     end
+    json_scene[:backgroundURL] = @backgroundURL
 
     json_scene
   end
@@ -109,17 +116,21 @@ class SceneTemplate
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     context = UIGraphicsGetCurrentContext()
     setup_context(context, scale)
-
-    colour = SceneCreatorView::DEFAULT_SCENE_COLOUR
-    colour.set
-
-    p @background
     if @background != nil
-      rectangle = CGRectMake(Constants::SMALL_GAP, Constants::SMALL_GAP, size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP)
-
-      @background.drawInRect(rectangle)
+      #set background colour if it is set
+      colour = @background
+      colour.set
     else
-      CGContextFillRect(context, CGRectMake(Constants::SMALL_GAP, Constants::SMALL_GAP, size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP))
+      colour = SceneCreatorView::DEFAULT_SCENE_COLOUR
+      colour.set
+    end
+
+    if @backgroundURL != nil
+      #set background image if it is set
+      rectangle = CGRectMake(Constants::SMALL_GAP, Constants::SMALL_GAP, size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP)
+      UIImage.imageNamed(@backgroundURL).drawInRect(rectangle)
+    else
+    CGContextFillRect(context, CGRectMake(Constants::SMALL_GAP, Constants::SMALL_GAP, size.width - 2*Constants::SMALL_GAP, size.height - 2*Constants::SMALL_GAP))
     end
 
     @edges.each do |part|
@@ -141,7 +152,7 @@ class SceneTemplate
 
     @toys.each do |toy|
       #draw toy image at position and scale and rotation
-      if toy and toy.ghost == false
+      if toy and toy.ghost == false and toy.template.identifier != Constants::SCENE_TOY_IDENTIFIER
         draw_toy(context,toy,scale)
       end
     end

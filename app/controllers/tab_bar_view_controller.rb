@@ -4,28 +4,30 @@ class UITabBarControllerLandscape < UITabBarController
     @controllers = []
     icons = []
 
-
     # Make Home view
-    @controllers << toy_creator_view_controller = HomePageViewController.alloc.initWithNibName(nil, bundle: nil)
-    icons << icon_and_title(toy_creator_view_controller, Language::HOME, 'home_for_tab_bar')
-
+    home_page_view_controller = HomePageViewController.alloc.initWithNibName(nil, bundle: nil)
+    home_page_view_controller.tab_bar = self
+    @controllers << home_page_view_controller
+    icons << icon_and_title(home_page_view_controller, Language::HOME, 'home_for_tab_bar')
 
     # Make Toys view
-    @controllers << toy_creator_view_controller = ToyCreatorViewController.alloc.initWithNibName(nil, bundle: nil)
-    icons << icon_and_title(toy_creator_view_controller, Language::MAKE_TOYS, 'toy_for_tab_bar')
+    @toy_creator_view_controller = ToyCreatorViewController.alloc.initWithNibName(nil, bundle: nil)
+    @toy_creator_view_controller.tab_bar = self
+    @controllers << @toy_creator_view_controller
+    icons << icon_and_title(@toy_creator_view_controller, Language::MAKE_TOYS, 'toy_for_tab_bar')
 
     # Make Scene view
-    sceneView = scene_creator_view_controller = SceneCreatorViewController.alloc.initWithNibName(nil, bundle: nil)
-    sceneView.tab_bar = self
-    @controllers << sceneView
-    icons << icon_and_title(scene_creator_view_controller, Language::MAKE_SCENES, 'scene_for_tab_bar')
+    @scene_creator_view_controller = SceneCreatorViewController.alloc.initWithNibName(nil, bundle: nil)
+    @scene_creator_view_controller.tab_bar = self
+    @controllers << @scene_creator_view_controller
+    icons << icon_and_title(@scene_creator_view_controller, Language::MAKE_SCENES, 'scene_for_tab_bar')
 
     # Add Actions View
     actionView = action_creator_view_controller = ActionAdderViewController.alloc.initWithNibName(nil, bundle: nil)
     actionView.tab_bar = self
     @controllers << actionView
     icons << icon_and_title(action_creator_view_controller, Language::ADD_ACTIONS, 'action_for_tab_bar')
-    action_creator_view_controller.scene_creator_view_controller = scene_creator_view_controller
+    action_creator_view_controller.scene_creator_view_controller = @scene_creator_view_controller
 
     # Play View
     play_view_controller = PlayViewController.alloc.initWithNibName(nil, bundle: nil)
@@ -61,9 +63,13 @@ class UITabBarControllerLandscape < UITabBarController
     self.selectedIndex = 0
     # CAN CHANGE TO scene_creator_view_controller
     tab_bar = self.tabBar
-    icons.each_with_index { |icon, i| tab_bar.items[i].image = icon }
+    icons.each_with_index { |icon, i| tab_bar.items[i].image = icon }    
+  end
 
-    
+  def resetViews
+    p "reset views"
+    @toy_creator_view_controller.clear
+    @scene_creator_view_controller.clear
   end
 
   def supportedInterfaceOrientations

@@ -62,14 +62,17 @@ class SceneCreatorView < CreatorView
   end
 
   #set background image from the config popup
-  def setBackground(backgroundImage)
-    if backgroundImage != nil
-      @backgroundImage = backgroundImage
-      self.backgroundColor = UIColor.colorWithPatternImage(@backgroundImage)
+  def setBackground(backgroundImageURL)
+    if backgroundImageURL != nil
+      @backgroundImage = backgroundImageURL
+      self.backgroundColor = UIColor.colorWithPatternImage(UIImage.imageNamed(backgroundImageURL))
     else
       @backgroundImage = nil
-      self.backgroundColor = DEFAULT_SCENE_COLOUR
     end
+  end
+
+  def clearBackgroundImage
+    @backgroundImage = nil
   end
 
   # The different modes this view can represent.
@@ -120,8 +123,9 @@ class SceneCreatorView < CreatorView
 
   # Similar to gathering the toy info in ToyCreatorView but the scale is 1.
   def gather_scene_info
+    p "gather info now"
     id = rand(2**60).to_s
-    SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds, @gravity, @boundaries, @backgroundImage)
+    SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds, @gravity, @boundaries, self.backgroundColor, @backgroundImage)
   end
 
   # Turns the strokes making up the edges (including circles) into Parts.
@@ -156,12 +160,14 @@ class SceneCreatorView < CreatorView
 
   # Removes toys from scene
   def remove_toy(toy)
-    undoManager.registerUndoWithTarget(self, selector: 'add_toy:', object: toy)
-    @toys_in_scene.delete(toy)
-    unredo
-    @selected = nil #@current_tool == :grab ? @strokes.most_recent : nil
-    @trash_button.enabled = false
-    setNeedsDisplay
+    if toy.template.identifier != Constants::SCENE_TOY_IDENTIFIER
+      undoManager.registerUndoWithTarget(self, selector: 'add_toy:', object: toy)
+      @toys_in_scene.delete(toy)
+      unredo
+      @selected = nil #@current_tool == :grab ? @strokes.most_recent : nil
+      @trash_button.enabled = false
+      setNeedsDisplay
+    end
   end
 
   # Deletes the selected stroke or toy.
@@ -808,7 +814,9 @@ class SceneCreatorView < CreatorView
 
   # remove everything from screen without saving
   def clear
-    undoManager.registerUndoWithTarget(self, selector: 'unclear:', object: [@toys_in_scene, @strokes])
+    if undoManager != nil
+      undoManager.registerUndoWithTarget(self, selector: 'unclear:', object: [@toys_in_scene, @strokes])
+    end
 
     @strokes = []
     @toys_in_scene = []
@@ -816,7 +824,23 @@ class SceneCreatorView < CreatorView
     @points = nil
     @selected = nil
     @truly_selected = nil
+
+    addSceneToy
+
     setNeedsDisplay
+  end
+
+  def addSceneToy
+    @toys_in_scene.each do |toy|
+      if toy.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+        @toys_in_scene.delete(toy)
+      end
+    end
+    p "delegate = #{@delegate.to_s}"
+    sceneToy = ToyInScene.new(@delegate.state.returnSceneToy)
+    sceneToy.position = CGPointMake(self.frame.size.width - 95/2, self.frame.size.height - 95/2)
+    sceneToy.old_position = sceneToy.position
+    @toys_in_scene << sceneToy
   end
 
   # Have the ability to undo clear just in case

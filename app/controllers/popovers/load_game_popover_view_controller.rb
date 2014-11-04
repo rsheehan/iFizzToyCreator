@@ -54,37 +54,12 @@ class LoadGamePopoverViewController < UIViewController
 
   def viewWillAppear(animated)
     p "view appear #{@connection.to_s}"
-    req=NSURLRequest.requestWithURL(NSURL.URLWithString("https://www.cs.auckland.ac.nz/~mngu012/ifizz/index.php"))
+    req=NSURLRequest.requestWithURL(NSURL.URLWithString(Constants::WEB_URL + "index.php?"+rand(100000).to_s), cachePolicy:NSURLRequestReloadIgnoringCacheData, timeoutInterval:1.0)
     @connection = NSURLConnection.alloc.initWithRequest req, delegate: self, startImmediately: true
   end
 
   def viewWillDisappear(animated)
     @delegate.resume
-  end
-
-  def select_sound(sender)
-    @player = nil
-    #add extension on end
-    text = sender.view.text.gsub(' ', '_')
-    Constants::SOUND_NAMES.each do |sound|
-      if sound.include? text
-        @delegate.set_sound(sound)
-      end
-    end
-  end
-
-  def play_sound(sender)
-    buttonPosition = sender.convertPoint(CGPointZero, toView:@table_view)
-    indexPath = @table_view.indexPathForRowAtPoint(buttonPosition)
-    if indexPath != nil
-      name = Constants::SOUND_NAMES[indexPath.row]
-      puts('play sound - '+name)
-
-      local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, name))
-      @player = AVPlayer.alloc.initWithURL(local_file)
-      @player.play
-    end
-
   end
 
   # Back to the action adder to make a new one.
@@ -106,12 +81,15 @@ class LoadGamePopoverViewController < UIViewController
 
     cell.textLabel.text = name
     cell.textLabel.userInteractionEnabled = true
-    tapGesture = UITapGestureRecognizer.alloc.initWithTarget(self, action:'select_sound:')
-    cell.textLabel.addGestureRecognizer(tapGesture)
 
     button = UIButton.buttonWithType(UIButtonTypeRoundedRect)
     button.setFrame([[3*@width/4, 5], [@width/4,35]])
     button.setTitle('Download', forState: UIControlStateNormal)
+    button.addTarget(self,action:'Download:', forControlEvents:UIControlEventTouchUpInside)
+
+
+    button.accessibilityLabel = name.split(" ")[0]
+
     cell.accessoryView = button
 
     cell
@@ -119,6 +97,19 @@ class LoadGamePopoverViewController < UIViewController
 
   def connection(connection, didFailWithError:error)
     p error
+    @delegate.close_popover
+    alert = UIAlertView.alloc.initWithTitle("Alert", message:"No Internet connection, is the WIFI on?", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
+    alert.show
+    #NSTimer.scheduledTimerWithTimeInterval(2.0, target: self, selector: "OpenLoad", userInfo: nil, repeats: false)
+  end
+
+  def OpenLoad
+    @delegate.load
+  end
+
+  def Download(sender)
+    @delegate.loadGame(sender.accessibilityLabel)
+    @delegate.close_popover
   end
 
   def connection(connection, didReceiveResponse:response)
@@ -131,12 +122,19 @@ class LoadGamePopoverViewController < UIViewController
     @file.appendData data
   end
 
+  def connection(connection, willCacheResponse:cachedResponse)
+    nil
+  end
+
   def connectionDidFinishLoading(connection)
     @dataList = []
     
     readFile = @file.inspect.to_s
     readFile.each_line { |line|
-      @dataList << line.chomp
+      if(line.chomp != "")
+        @dataList << line.chomp
+      end
+
     }    
     @number = @dataList.size
     @table_view.reloadData

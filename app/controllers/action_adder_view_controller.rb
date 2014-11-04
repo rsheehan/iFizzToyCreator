@@ -40,37 +40,6 @@ class ActionAdderViewController < UIViewController
     @bounds = bounds
   end
 
-  # Add the mode buttons
-  def setup_mode_buttons(modes)
-    @mode_view = UIView.alloc.initWithFrame(
-        CGRectMake(@main_view.frame.size.width - 95, 0, 95 * modes.length, 95)) # @bounds.size.width - 95 - 85, @bounds.size.height - 95, 190, 95))
-    position = [10, 10]
-    modes.each do |mode_name|
-      button = setup_button_action(mode_name, position, @mode_view, mode_name)
-      position[0] += CGRectGetWidth(button.frame) + 10
-    end
-    @main_view.addSubview(@mode_view)
-  end
-
-  def setup_button_action(image_name, position, super_view, label = '')
-    button = UIButton.buttonWithType(UIButtonTypeCustom)
-    button.accessibilityLabel = image_name
-    button.setImage(UIImage.imageNamed(image_name), forState: UIControlStateNormal)
-    button.setImage(UIImage.imageNamed(image_name + '_selected'), forState: UIControlStateSelected) rescue puts 'rescued'
-    button.sizeToFit
-    button.frame = [position, button.frame.size]
-    button.addTarget(self, action: image_name, forControlEvents: UIControlEventTouchUpInside)
-    super_view.addSubview(button)
-    if label != ''
-      labelView = UILabel.alloc.initWithFrame(CGRectMake(button.frame.origin.x-10, button.frame.origin.y+button.frame.size.height, button.frame.size.width+20, 20))
-      labelView.text=name_for_label_action(label)
-      labelView.textAlignment=UITextAlignmentCenter
-      labelView.setFont(UIFont.systemFontOfSize(Constants::ICON_LABEL_FONT_SIZE))
-      super_view.addSubview(labelView)
-    end
-    button
-  end
-
   def background
     p "scene action pressed"
     start_scene_action_flow
@@ -102,7 +71,7 @@ class ActionAdderViewController < UIViewController
       @main_view.add_delegate(self)
       @main_view.mode = :toys_only
       view.addSubview(@main_view)
-      setup_mode_buttons(MODES)
+      #setup_mode_buttons(MODES)
       super
       if not @selected_toy.nil? and not @back_from_modal_view
         start_action_flow
@@ -946,6 +915,10 @@ class ActionAdderViewController < UIViewController
           puts "others"
       end
     end
+  end
+
+  def getSelectedToy
+    @selected_toy
   end
 
   def show_popover(content)

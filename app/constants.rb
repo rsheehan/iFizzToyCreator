@@ -24,7 +24,16 @@ class Constants
           UIColor.colorWithRed(204/255.0, green: 153/255.0, blue: 255/255.0, alpha: 1.0),
           UIColor.colorWithRed(224/255.0, green: 224/255.0, blue: 224/255.0, alpha: 1.0)
       ]  
-  
+  # Default list of background images
+  BACKGROUND_IMAGE_LIST = []
+  dirContents = NSFileManager.defaultManager.directoryContentsAtPath(NSBundle.mainBundle.bundlePath)
+  dirContents.each do |fileName|
+    if fileName.hasSuffix("_bground.png") || fileName.hasSuffix("_bground.jpg")      
+      BACKGROUND_IMAGE_LIST << fileName
+    end
+  end
+
+  SCENE_TOY_IDENTIFIER = 0
   ICON_LABEL_FONT_SIZE = 12
   INSTRUCTION_LABEL_FONT_SIZE = 15
   GENERAL_BUTTON_FONT_SIZE = 19
@@ -32,6 +41,7 @@ class Constants
   paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
   BUNDLE_ROOT = paths.objectAtIndex(0) # Get the docs directory
   DOCUMENT_PATH = paths.objectAtIndex(0) # Get the docs directory
+  WEB_URL = "https://www.cs.auckland.ac.nz/~mngu012/ifizz/"
   
 
   # Sound constants
@@ -58,13 +68,14 @@ class Constants
   SMALL_MARGIN = 10   #pixels
 
   # transition effects between scenes
-  TRANSITION_EFFECT = SKTransition.revealWithDirection( SKTransitionDirectionLeft,  duration: 1.5 ) # for how many seconds 
+  #TRANSITION_EFFECT = SKTransition.revealWithDirection( SKTransitionDirectionLeft,  duration: 1.5 ) # for how many seconds 
+  TRANSITION_EFFECT = SKTransition.doorsOpenHorizontalWithDuration(2.0)
 
   GENERAL_TOY_FORCE = 100000
   RANDOM_HASH_KEY = 99999
   MOVE_TOWARDS_AND_AWAY_SPEED = 500 #pixels per second
   TIME_AFTER_EXPLOSION = 1.0 # seconds
-  TIME_FOR_MESSAGE_TO_SEND = 3.0
+  TIME_FOR_MESSAGE_TO_SEND = 1.0
 
   IFIZZ_INTRODUCTION_TEXT =""
 

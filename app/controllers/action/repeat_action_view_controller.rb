@@ -66,7 +66,8 @@ class RepeatActionViewController < UIViewController
     view.addSubview(ran_label)
 
     @random_switch = UISwitch.alloc.initWithFrame([[3*@width/4,picker_view.frame.origin.y+picker_view.frame.size.height],[@width/4,20]])
-    @random_switch.on = true
+    @random_switch.on = false
+    @random_switch.tintColor = UIColor.grayColor
     @random_switch.addTarget(self,action:'random_switch_changed', forControlEvents:UIControlEventValueChanged)
     view.addSubview(@random_switch)
 
