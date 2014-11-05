@@ -4,9 +4,6 @@ class SceneCreatorViewController < UIViewController
   MODES = [:scene, :toy, :config, :new]
   attr_reader :main_view
 
-
-
-
   def loadView # preferable to viewDidLoad because not using xib
     puts "scene creator view controller load view"
     self.view = UIView.alloc.initWithFrame(@bounds)
@@ -35,7 +32,7 @@ class SceneCreatorViewController < UIViewController
     @main_view.backgroundColor = Constants::BACKGROUND_COLOUR_LIST[@backgroundColourIndex]
   end
   def getBackgroundColor
-    Constants::BACKGROUND_COLOUR_LIST[@backgroundColourIndex]
+    @main_view.getBackgroundColour
   end
 
   def viewDidAppear(animated)
@@ -45,7 +42,11 @@ class SceneCreatorViewController < UIViewController
     @main_view.mode = :scene
     view.addSubview(@main_view)
     view.addSubview(@mode_view)    
-    super    
+    super
+    p "element = #{@main_view.numberOfElements}"
+    if @main_view.numberOfElements <= 1
+      drop_scene(0)
+    end
   end
 
   def moveToActionBar
@@ -53,6 +54,11 @@ class SceneCreatorViewController < UIViewController
       tab_bar.selectedIndex = 3
     end
   end
+
+  # def showSceneActionIcon(show=false)
+  #   p "show sence action icon = #{show}"
+  #   @main_view.showSceneToy(show)
+  # end
 
   # Show the scene box.
   def scene   
@@ -107,42 +113,43 @@ class SceneCreatorViewController < UIViewController
   end
 
   #called when a scene imae is chosen in the scene box view
-  def drop_scene(scene_index)   
-    scene = @state.scenes[scene_index]    
-    @main_view.clear
-    @main_view.backgroundColor = scene.background
-    setBackground(scene.backgroundURL)
+  def drop_scene(scene_index)
+    if @main_view != nil and @state.scenes.size > 0
+      scene = @state.scenes[scene_index]
+      @main_view.clear
+      @main_view.backgroundColor = scene.background
+      setBackground(scene.backgroundURL)
 
-    #setBackground
+      setGravity(scene.gravityY)
+      setWind(scene.gravityX)
+      setBoundaries(scene.boundaries)
 
-    setGravity(scene.gravityY)
-    setWind(scene.gravityX)
-    setBoundaries(scene.boundaries)    
-
-    scene.edges.each do |edge|
-      # draw edge
-      case edge
-        when CirclePart
-          @main_view.add_stroke(CircleStroke.new(((edge.position)), edge.radius, edge.colour, 1))
-        when PointsPart
-          @main_view.add_stroke(LineStroke.new(Array.new(edge.points), edge.colour, ToyTemplate::TOY_LINE_SIZE*ToyTemplate::IMAGE_SCALE))
-        else
+      scene.edges.each do |edge|
+        # draw edge
+        case edge
+          when CirclePart
+            @main_view.add_stroke(CircleStroke.new(((edge.position)), edge.radius, edge.colour, 1))
+          when PointsPart
+            @main_view.add_stroke(LineStroke.new(Array.new(edge.points), edge.colour, ToyTemplate::TOY_LINE_SIZE*ToyTemplate::IMAGE_SCALE))
+          else
+        end
       end
+
+      scene.toys.each do |toy|
+        @main_view.add_toy(toy)
+        toy.old_position = toy.position
+      end
+      @main_view.addSceneToy
+
+      @state.load_scene_actions(scene)
+      @main_view.add_action(scene.actions)
+      #update id
+      @id = scene.identifier
+      @state.currentscene = scene_index
+      close_toybox
+      grab
     end
 
-    scene.toys.each do |toy|
-      @main_view.add_toy(toy)  
-      toy.old_position = toy.position 
-    end
-    @main_view.addSceneToy
-    
-    @state.load_scene_actions(scene)
-    @main_view.add_action(scene.actions)
-    #update id
-    @id = scene.identifier
-    @state.currentscene = scene_index
-    close_toybox
-    grab
   end
 
   def state

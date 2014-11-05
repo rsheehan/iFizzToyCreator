@@ -40,7 +40,7 @@ class SceneTemplate
     if boundaries!=nil
       *@boundaries = *boundaries
     else
-      @boundaries = [1,1,1,1]
+      @boundaries = [1,1,1,1,1]
     end
 
     # possibly create an image of the scene for the scene box view, the small version

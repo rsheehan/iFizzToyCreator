@@ -31,7 +31,7 @@ class SceneCreatorView < CreatorView
     @current_tool = :grab # was :line
     @toys_in_scene = []
     @actions = []
-    @boundaries = [1,1,1,1]
+    @boundaries = [1,1,1,1,1]
     @gravity = CGVectorMake(0, 0)
     self.backgroundColor = Constants::BACKGROUND_COLOUR_LIST[rand(100)%Constants::BACKGROUND_COLOUR_LIST.size]
     pinch_recognizer = UIPinchGestureRecognizer.alloc.initWithTarget(self, action: 'zoom_selected:')
@@ -69,6 +69,10 @@ class SceneCreatorView < CreatorView
     else
       @backgroundImage = nil
     end
+  end
+
+  def getBackgroundColour
+    self.backgroundColor
   end
 
   def clearBackgroundImage
@@ -126,6 +130,10 @@ class SceneCreatorView < CreatorView
     p "gather info now"
     id = rand(2**60).to_s
     SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds, @gravity, @boundaries, self.backgroundColor, @backgroundImage)
+  end
+
+  def numberOfElements
+    return (edges.size + @toys_in_scene.size)
   end
 
   # Turns the strokes making up the edges (including circles) into Parts.
@@ -830,17 +838,32 @@ class SceneCreatorView < CreatorView
     setNeedsDisplay
   end
 
+  # def showSceneToy(show=false)
+  #   if @sceneToy != nil
+  #     if show
+  #       @sceneToy.position = CGPointMake(self.frame.size.width - 95/2, self.frame.size.height - 95/2)
+  #       @sceneToy.old_position = @sceneToy.position
+  #     else
+  #       @sceneToy.position = CGPointMake(self.frame.size.width - 95/2, self.frame.size.height + 95/2)
+  #       @sceneToy.old_position = @sceneToy.position
+  #     end
+  #   end
+  #   @sceneToy.update_image
+  # end
+
   def addSceneToy
-    @toys_in_scene.each do |toy|
-      if toy.template.identifier == Constants::SCENE_TOY_IDENTIFIER
-        @toys_in_scene.delete(toy)
+    if @delegate.state != nil
+      @toys_in_scene.each do |toy|
+        if toy.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+          @toys_in_scene.delete(toy)
+        end
       end
+      p "delegate = #{@delegate.to_s}"
+      @sceneToy = ToyInScene.new(@delegate.state.returnSceneToy)
+      @sceneToy.position = CGPointMake(self.frame.size.width - 95/2, self.frame.size.height - 95/2)
+      @sceneToy.old_position = @sceneToy.position
+      @toys_in_scene << @sceneToy
     end
-    p "delegate = #{@delegate.to_s}"
-    sceneToy = ToyInScene.new(@delegate.state.returnSceneToy)
-    sceneToy.position = CGPointMake(self.frame.size.width - 95/2, self.frame.size.height - 95/2)
-    sceneToy.old_position = sceneToy.position
-    @toys_in_scene << sceneToy
   end
 
   # Have the ability to undo clear just in case

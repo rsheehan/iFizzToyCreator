@@ -24,9 +24,12 @@ class PlayScene < SKScene
   SWITCH_ON=1
   SWITCH_OFF=0
 
+  @sceneActionAllow = false
+
   def didMoveToView(view)
     p 'start play scene'
     @systemMessage = nil
+
     @actions_to_fire = []
     if not @create_actions
       @create_actions = []
@@ -57,7 +60,9 @@ class PlayScene < SKScene
     add_toys
   end
 
-
+ def setAllowSceneAction(sceneActionAllow)
+   @sceneActionAllow = sceneActionAllow
+ end
 
   # Set gravity of the scene
   def setGravity(gravity)
@@ -66,7 +71,6 @@ class PlayScene < SKScene
 
   # Det boundaries of the scene
   def setBoundaries(boundaries)
-    #puts "boundaries: #{boundaries}"
     # top edge
     if(boundaries[TOP]==SWITCH_ON)
       body = SKPhysicsBody.bodyWithEdgeFromPoint([frame.origin.x,frame.size.height], toPoint: [frame.size.width, frame.size.height])
@@ -512,7 +516,8 @@ class PlayScene < SKScene
                         if action[:action_type] == :receive_message and action[:action_param] == @systemMessage
                           new_action = action.clone
                           p new_action
-                          NSTimer.scheduledTimerWithTimeInterval(Constants::TIME_FOR_MESSAGE_TO_SEND, target: self, selector: "queue_action_with_delay:", userInfo: new_action, repeats: false)
+                          #NSTimer.scheduledTimerWithTimeInterval(Constants::TIME_FOR_MESSAGE_TO_SEND, target: self, selector: "queue_action_with_delay:", userInfo: new_action, repeats: false)
+                          NSTimer.scheduledTimerWithTimeInterval(0, target: self, selector: "queue_action_with_delay:", userInfo: new_action, repeats: false)
                         end
                       end
                     end
@@ -520,10 +525,7 @@ class PlayScene < SKScene
                 end
               end
 
-
-
             when :score_adder
-
               # Initial set of score
               if not toy.userData[:score]
                 toy.userData[:score] = 0
@@ -898,11 +900,18 @@ class PlayScene < SKScene
         if toy_in_scene != nil
           toy = new_toy(toy_in_scene)
           id = toy_in_scene.template.identifier
-          @toy_hash[id] = [] unless @toy_hash[id]
-          @toy_hash[id] << toy # add the toy (can be multiple toys of the same type)
-          @toys_count[id] = 0 unless @toys_count[id]
-          @toys_count[id] += 1
-          if toy_in_scene.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+
+          p "setAllowSceneAction #{@sceneActionAllow}"
+
+          if id == Constants::SCENE_TOY_IDENTIFIER and @sceneActionAllow == false
+            # do nothing
+          else
+            @toy_hash[id] = [] unless @toy_hash[id]
+            @toy_hash[id] << toy # add the toy (can be multiple toys of the same type)
+            @toys_count[id] = 0 unless @toys_count[id]
+            @toys_count[id] += 1
+          end
+          if id == Constants::SCENE_TOY_IDENTIFIER
             toy.position = view.convertPoint(CGPointMake(self.size.width.to_i/2, self.size.height.to_i+100), toScene: self)
             @sceneToyId = toy.userData[:uniqueID]
           end

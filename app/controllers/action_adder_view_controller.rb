@@ -57,13 +57,18 @@ class ActionAdderViewController < UIViewController
     close_popover
   end
 
+  def save_scene
+
+  end
+
   def viewDidAppear(animated)    
     if @main_view == nil
       @main_view = @scene_creator_view_controller.main_view
     end
     if @main_view == nil
-      alert = UIAlertView.alloc.initWithTitle("Alert", message:"You have not selected any scene, click Make scenes button below", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
-      alert.show
+      #alert = UIAlertView.alloc.initWithTitle("Alert", message:"You have not selected any scene, click Make scenes button below", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
+      #alert.show
+      moveToSceneBar
     else
       self.view.alpha = 0.0
       @button_toys = {}
@@ -107,6 +112,11 @@ class ActionAdderViewController < UIViewController
       end
     end
   end
+
+  def state
+    @state
+  end
+
 
   def draw_all_buttons
     all_buttons = [@left_panel.subviews, @right_panel.subviews].flatten
@@ -361,7 +371,7 @@ class ActionAdderViewController < UIViewController
   end
 
   def add_toy_to_button(toy, button_name)
-    puts 'adding toy to '+ button_name.to_s
+    #puts 'adding toy to '+ button_name.to_s
     if toy.is_a?(ToyInScene)
       toy = toy.template
     end

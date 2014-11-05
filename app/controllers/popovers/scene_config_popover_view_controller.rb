@@ -6,6 +6,7 @@ class SceneConfigPopoverViewController < UIViewController
   BOTTOM=1
   LEFT=2
   RIGHT=3
+  SCENE_ACTION=4
   SWITCH_ON=1
   SWITCH_OFF=0
 
@@ -21,7 +22,7 @@ class SceneConfigPopoverViewController < UIViewController
     buttonHeight = 40
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, @height]])
-    view.backgroundColor =  UIColor.clearColor
+    #view.backgroundColor =  UIColor.clearColor
     self.contentSizeForViewInPopover = CGSizeMake(@width, @height)
 
     #title*
@@ -116,7 +117,7 @@ class SceneConfigPopoverViewController < UIViewController
 
   def tableView(tableView, heightForRowAtIndexPath:index_path)
     position = index_path.row
-    if position >=2 and position <=5
+    if position >=3 and position <=5
       return 0
     elsif(position == 6 or position >=8)
       return IMAGE_CELL_HEIGHT
@@ -187,12 +188,19 @@ class SceneConfigPopoverViewController < UIViewController
           @windSlider.addTarget(self,action:'windSliderChanged', forControlEvents:UIControlEventValueChanged)
 
         when 2
-          cell.text = Language::TOP_BOUNDARY
-          @top_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
-          @top_switch.on = @scene.boundaries[TOP]==SWITCH_ON
-          cell.accessoryView = @top_switch
-          @top_switch.addTarget(self,action:'top_switch_changed', forControlEvents:UIControlEventValueChanged)
-          cell.hidden = true
+          # cell.text = Language::TOP_BOUNDARY
+          # @top_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
+          # @top_switch.on = @scene.boundaries[TOP]==SWITCH_ON
+          # cell.accessoryView = @top_switch
+          # @top_switch.addTarget(self,action:'top_switch_changed', forControlEvents:UIControlEventValueChanged)
+          # cell.hidden = true
+
+          cell.text = "Use Scene Action:"
+          @scene_action_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
+          @scene_action_switch.on = @scene.boundaries[SCENE_ACTION]==SWITCH_ON
+          cell.accessoryView = @scene_action_switch
+          @scene_action_switch.addTarget(self,action:'scene_action_switch_changed', forControlEvents:UIControlEventValueChanged)
+          #cell.hidden = true
 
         when 3
           cell.text = Language::BOTTOM_BOUNDARY
@@ -320,6 +328,18 @@ class SceneConfigPopoverViewController < UIViewController
     end
   end
 
+  def scene_action_switch_changed
+    if @scene.boundaries[SCENE_ACTION]==SWITCH_ON
+      @scene.boundaries[SCENE_ACTION]=SWITCH_OFF
+      #@delegate.showSceneActionIcon(false)
+    else
+      @scene.boundaries[SCENE_ACTION]=SWITCH_ON
+      #@delegate.showSceneActionIcon(true)
+    end
+    @table_view.reloadData
+    @delegate.setBoundaries(@scene.boundaries)
+  end
+
   def colourChanged
     # change background colour
     @delegate.changeBackgroundColour
@@ -441,6 +461,7 @@ class SceneConfigPopoverViewController < UIViewController
     @table_view.reloadData
     @delegate.setBoundaries(@scene.boundaries)
   end
+
   def right_switch_changed
     if @right_switch.isOn
       @scene.boundaries[RIGHT]=SWITCH_ON
@@ -450,16 +471,7 @@ class SceneConfigPopoverViewController < UIViewController
     @table_view.reloadData
     @delegate.setBoundaries(@scene.boundaries)
   end
-  def top_switch_changed
-    #puts "top_switch_changed: #{@top_switch.isOn}"
-    if @top_switch.isOn
-      @scene.boundaries[TOP]=SWITCH_ON
-    else
-      @scene.boundaries[TOP]=SWITCH_OFF
-    end
-    @table_view.reloadData
-    @delegate.setBoundaries(@scene.boundaries)
-  end
+
   def bottom_switch_changed
     #puts "update play scene: #{@scene}"
     if @bottom_switch.isOn

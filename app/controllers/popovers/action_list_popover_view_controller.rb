@@ -20,6 +20,8 @@ class ActionListPopoverViewController < UIViewController
     #make array of actions that relate to the selected toy
     @toy_actions = @selected.template.actions
 
+    p "selected toy action is #{@selected.template.actions.to_s}"
+
 
     @table_view = UITableView.alloc.initWithFrame([[0, 5], [WIDTH, MAX_HEIGHT]])
     @table_view.backgroundColor = Constants::LIGHT_GRAY
@@ -212,7 +214,7 @@ class ActionListPopoverViewController < UIViewController
   def tableView(tv, cellForRowAtIndexPath: index_path)
     if index_path.section == 0
       cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
-      puts "Cell: " + cell.to_s
+      #puts "Cell: " + cell.to_s
       cell.font = UIFont.systemFontOfSize(16)
       position = index_path.row
       case position

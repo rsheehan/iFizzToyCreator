@@ -45,6 +45,7 @@ class SceneBoxViewController < UIViewController
   # We need this to gain access to the toys.
   def state=(state)
     @state = state
+    @delegate.save_scene
   end
 
   def viewDidAppear(animated)
@@ -116,21 +117,6 @@ class SceneBoxViewController < UIViewController
 
     timeStamp = Time.now.usec/50000.0
     rotation = Math.cos(timeStamp)/50.0
-
-    # if not(@delete_mode)
-    #   return
-    # end
-    # if decreasing
-    #   rotation -= 0.01
-    #   if rotation <= -3.14/128
-    #     decreasing = false
-    #   end
-    # else
-    #   rotation += 0.01
-    #   if rotation >= 3.14/128
-    #     decreasing = true
-    #   end
-    # end
 
     UIView.animateWithDuration(0.00001,
                                delay: 0,

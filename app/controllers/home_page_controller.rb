@@ -15,6 +15,7 @@ class HomePageViewController < UIViewController
     @introScene = IntroScene.alloc.initWithSize(@bounds.size)
     self.view.presentScene @introScene
   end
+
   def viewWillDisappear(animated)
     self.view.presentScene(nil)
   end
@@ -80,6 +81,7 @@ class HomePageViewController < UIViewController
     @popover = SaveGamePopoverViewController.alloc.initWithNibName(nil, bundle: nil)
     @popover.delegate = self
     show_popover(@popover)
+    p "loaded game name: #{state.game_info.name}"
   end
   def load
     # load internet game
@@ -143,7 +145,6 @@ class HomePageViewController < UIViewController
     @state.loadFromData(data.to_s)
     #reset all views
     resetViews
-
     NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "game", userInfo: nil, repeats: false)
   end
 

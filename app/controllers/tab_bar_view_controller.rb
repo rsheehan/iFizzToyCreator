@@ -60,10 +60,11 @@ class UITabBarControllerLandscape < UITabBarController
     # The following line is to remove a warning message about two-stage animation in iOS 7.
     # If the tab_bar_controller selected view controller is set to toy_creator_view_controller
     # first up then the buttons on the rhs are not active because it acts as if it is in portrait mode.
+
     self.selectedIndex = 0
     # CAN CHANGE TO scene_creator_view_controller
     tab_bar = self.tabBar
-    icons.each_with_index { |icon, i| tab_bar.items[i].image = icon }    
+    icons.each_with_index { |icon, i| tab_bar.items[i].image = icon }
   end
 
   def resetViews

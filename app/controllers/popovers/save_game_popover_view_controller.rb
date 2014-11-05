@@ -63,6 +63,9 @@ class SaveGamePopoverViewController < UIViewController
 
   def viewWillDisappear(animated)
     #@delegate.state.save
+    # @delegate.state.game_info.name = @my_text_field.text
+    # @delegate.state.game_info.description = @my_text_view.text
+    # @delegate.state.save
     @delegate.resume
   end
 
@@ -195,9 +198,11 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def changeScene(sender)
-    @sceneIndex = (@sceneIndex + 1) % @delegate.state.scenes.size
-    @table_view.reloadData
-    p "change scene"
+    if @delegate.state.scenes.size > 0
+      @sceneIndex = (@sceneIndex + 1) % @delegate.state.scenes.size
+      @table_view.reloadData
+      p "change scene"
+    end
   end
 
   def tableView(tv, cellForRowAtIndexPath: index_path)
@@ -237,12 +242,15 @@ class SaveGamePopoverViewController < UIViewController
           scenes_size = scenes.size
           if scenes_size > 0
             randomSceneIndex = @sceneIndex #rand(scenes_size).to_i
-            scenes[randomSceneIndex].update_image
-            @my_image_view = UIImageView.alloc.initWithFrame([[0,0],[200.0,140.0]])
-            @my_image_view.contentMode = UIViewContentModeScaleAspectFit
-            @my_image_view.image = scenes[randomSceneIndex].image
-            @my_image_view.center = self.view.center
-            cell.accessoryView = @my_image_view
+            thisScene = scenes[randomSceneIndex]
+            if thisScene != nil
+              thisScene.update_image
+              @my_image_view = UIImageView.alloc.initWithFrame([[0,0],[200.0,140.0]])
+              @my_image_view.contentMode = UIViewContentModeScaleAspectFit
+              @my_image_view.image = thisScene.image
+              @my_image_view.center = self.view.center
+              cell.accessoryView = @my_image_view
+            end
           end
 
         # when 3
@@ -351,7 +359,7 @@ class SaveGamePopoverViewController < UIViewController
     @delegate.state.game_info.description = @my_text_view.text
     @delegate.state.save
     p "save button is pressed"
-    @delegate.close_popover
+    #@delegate.close_popover
     #NSTimer.scheduledTimerWithTimeInterval(5.0, target: self, selector: "ReOpen", userInfo: nil, repeats: false)
   end
 
@@ -360,6 +368,7 @@ class SaveGamePopoverViewController < UIViewController
     p "save button is pressed"
     @delegate.close_popover
     NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "ReOpen", userInfo: nil, repeats: false)
+    @delegate.resetViews
   end
 
   def ReOpen

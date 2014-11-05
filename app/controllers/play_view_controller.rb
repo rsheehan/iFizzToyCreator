@@ -162,6 +162,8 @@ class PlayViewController < UIViewController
       # set scene gravity
       @play_scene.setGravity(CGVectorMake(scene.gravityX, scene.gravityY))
       @play_scene.setBoundaries(scene.boundaries)
+      p "scene boundari = #{scene.boundaries[4] == 1}"
+      @play_scene.setAllowSceneAction(scene.boundaries[4] == 1)
 
       # this is purely for development only uses the first scene
       @state.load_scene_actions(scene)
