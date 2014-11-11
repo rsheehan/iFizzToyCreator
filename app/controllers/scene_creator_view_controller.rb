@@ -5,7 +5,6 @@ class SceneCreatorViewController < UIViewController
   attr_reader :main_view
 
   def loadView # preferable to viewDidLoad because not using xib
-    puts "scene creator view controller load view"
     self.view = UIView.alloc.initWithFrame(@bounds)
     self.view.accessibilityLabel = 'sceneView'
     self.view.alpha = 0.0

@@ -78,7 +78,6 @@ class ScoreAdderActionViewController < UIViewController
 
   def setWidth(width)
     @width = width
-    #reload views
     if @title
       resizeViews
     end

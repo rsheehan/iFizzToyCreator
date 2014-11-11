@@ -24,7 +24,6 @@ class PlayViewController < UIViewController
       @play_view.showsFPS = true
       @play_view.showsPhysics = true
     end
-    @play_view.showsFPS = true
     view.addSubview(@play_view)
 
     @button_actions = {} # keys = buttons, values = list of actions for that button
@@ -100,19 +99,20 @@ class PlayViewController < UIViewController
   end
 
   def viewDidAppear(animated)
-    loadingView = LoadingScene.alloc.initWithSize(@bounds.size)
-    loadingView.game_name = @state.game_info.name
-    loadingView.game_description = @state.game_info.description
-    @play_view.alpha = 1.0
-    @play_view.presentScene(loadingView)
-    self.becomeFirstResponder
-    NSTimer.scheduledTimerWithTimeInterval(2.5, target: self, selector: "loadGame", userInfo: nil, repeats: false)
+    if @state.scenes.size > 0
+      loadingView = LoadingScene.alloc.initWithSize(@bounds.size)
+      loadingView.game_name = @state.game_info.name
+      loadingView.game_description = @state.game_info.description
+      @play_view.alpha = 1.0
+      @play_view.presentScene(loadingView)
+      self.becomeFirstResponder
+      NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "loadGame", userInfo: nil, repeats: false)
+    end
   end
 
   def loadGame
     update_play_scene
     @play_view.presentScene(@play_scene, transition: Constants::TRANSITION_EFFECT)
-    p "play game now"
   end
 
   def viewWillDisappear(animated)
@@ -162,14 +162,12 @@ class PlayViewController < UIViewController
       # set scene gravity
       @play_scene.setGravity(CGVectorMake(scene.gravityX, scene.gravityY))
       @play_scene.setBoundaries(scene.boundaries)
-      p "scene boundari = #{scene.boundaries[4] == 1}"
       @play_scene.setAllowSceneAction(scene.boundaries[4] == 1)
 
       # this is purely for development only uses the first scene
       @state.load_scene_actions(scene)
 
       # add background image
-      #p "add background to play scene = #{scene.backgroundURL}"
       @play_scene.background = scene.background
       if scene.backgroundURL != nil
         @play_scene.backgroundImageURL = scene.backgroundURL
@@ -225,7 +223,7 @@ class PlayViewController < UIViewController
       end
 
       @play_view.presentScene(@play_scene, transition: Constants::TRANSITION_EFFECT)
-      @play_scene.paused = true
+      @play_scene.view.paused = true
       actions.each do |action|
         case action[:effect_type]
           when :explosion
@@ -241,8 +239,12 @@ class PlayViewController < UIViewController
             @play_scene.scores[action[:toy]] = action[:effect_param]
         end
       end
-      @play_scene.paused = false
+      NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "resumeGame", userInfo: nil, repeats: false)
     end
+  end
+
+  def resumeGame
+    @play_scene.view.paused = false
   end
 
   def bounds_for_view=(bounds)
@@ -417,14 +419,14 @@ class PlayViewController < UIViewController
   # this will run every second, if random then using if rand(1000) % 5 == 1 to fire for example
   def perform_action(timer)
     timeInterval = timer.userInfo[:action_param][0].to_i
-    if timeInterval >= 0
+    if timeInterval > 0
       time = Time.new
       if (time.sec + 60*time.min) % timeInterval == (timeInterval-1)
         @play_scene.add_actions_for_update([timer.userInfo])
       end
     else
-      # here is random, time interval is negative
-      if rand(1000) % -timeInterval == 0
+      #p "random = #{timeInterval}"
+      if rand(1000) % (-timeInterval+1) == 0
         @play_scene.add_actions_for_update([timer.userInfo])
       end
     end

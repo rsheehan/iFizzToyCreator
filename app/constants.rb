@@ -14,7 +14,7 @@ class Constants
   GRAY = UIColor.colorWithRed(0.8, green: 0.8, blue: 0.85, alpha: 1.0)
   LIGHT_BLUE_GRAY = UIColor.colorWithRed(0.9, green: 0.9, blue: 0.95, alpha: 1.0)
   BUTTON_TINT_COLOR = UIColor.redColor
-  MESSAGE_COLOURS = ['black', 'white', 'red', 'green', 'blue', 'cyan', 'yellow', 'orange', 'purple', 'brown']
+  MESSAGE_COLOURS = ['black', 'white', 'red', 'green', 'blue', 'cyan', 'yellow', 'orange', 'purple', 'brown', 'clear']
   BACKGROUND_COLOUR_LIST = [
           UIColor.colorWithRed(153/255.0, green: 153/255.0, blue: 255/255.0, alpha: 1.0),
           UIColor.colorWithRed(255/255.0, green: 153/255.0, blue: 153/255.0, alpha: 1.0),
@@ -23,7 +23,11 @@ class Constants
           UIColor.colorWithRed(153/255.0, green: 255/255.0, blue: 153/255.0, alpha: 1.0),       
           UIColor.colorWithRed(204/255.0, green: 153/255.0, blue: 255/255.0, alpha: 1.0),
           UIColor.colorWithRed(224/255.0, green: 224/255.0, blue: 224/255.0, alpha: 1.0)
-      ]  
+      ] 
+  
+  # all background images from this app are downloaded from 
+  # http://wallpaperfreedownload.org
+
   # Default list of background images
   BACKGROUND_IMAGE_LIST = []
   dirContents = NSFileManager.defaultManager.directoryContentsAtPath(NSBundle.mainBundle.bundlePath)
@@ -41,8 +45,8 @@ class Constants
   paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
   BUNDLE_ROOT = paths.objectAtIndex(0) # Get the docs directory
   DOCUMENT_PATH = paths.objectAtIndex(0) # Get the docs directory
-  WEB_URL = "https://www.cs.auckland.ac.nz/~mngu012/ifizz/"
-  
+  #WEB_URL = "https://www.cs.auckland.ac.nz/~mngu012/ifizz/"
+  WEB_URL = "https://www.cs.auckland.ac.nz/projects/ifizz/"
 
   # Sound constants
   SOUND_NAMES = []
@@ -75,7 +79,7 @@ class Constants
   RANDOM_HASH_KEY = 99999
   MOVE_TOWARDS_AND_AWAY_SPEED = 500 #pixels per second
   TIME_AFTER_EXPLOSION = 1.0 # seconds
-  TIME_FOR_MESSAGE_TO_SEND = 1.0
+  TIME_FOR_MESSAGE_TO_SEND = 0.5
 
   IFIZZ_INTRODUCTION_TEXT =""
 

@@ -27,12 +27,15 @@ class State
     thereIsSceneToy = false
     @toys.each do |toy|
       if toy.identifier == Constants::SCENE_TOY_IDENTIFIER
+        #@toys.delete(toy)
+        part = CirclePart.new(CGPointMake(0, 0) * ToyTemplate::IMAGE_SCALE, 1, UIColor.clearColor)
+        toy.parts = [part]
         thereIsSceneToy = true
       end
     end
     if thereIsSceneToy != true
-      part = CirclePart.new(CGPointMake(0, 0) * ToyTemplate::IMAGE_SCALE, 20, UIColor.clearColor)
-      toy = ToyTemplate.new([part], 0)
+      part = CirclePart.new(CGPointMake(0, 0) * ToyTemplate::IMAGE_SCALE, 1, UIColor.clearColor)
+      toy = ToyTemplate.new([part], Constants::SCENE_TOY_IDENTIFIER)
       toy.stuck = true
       @toys << toy
     end

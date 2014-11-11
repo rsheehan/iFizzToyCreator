@@ -15,12 +15,12 @@ class LoadingScene < SKScene
     self.backgroundColor = UIColor.blackColor
     self.scaleMode = SKSceneScaleModeAspectFill
     self.addChild loadingNode("LOADING...", CGPointMake(CGRectGetMidX(self.frame),CGRectGetMidY(self.frame) + 100), 100)
-    self.addChild loadingNode(game_name, CGPointMake(CGRectGetMidX(self.frame),CGRectGetMidY(self.frame)), 50)
+    self.addChild loadingNode(game_name, CGPointMake(CGRectGetMidX(self.frame),CGRectGetMidY(self.frame)), 60)
 
     descriptions = game_description.split("\n")
     margin = 0
     descriptions.each do |description|
-      self.addChild loadingNode(description, CGPointMake(CGRectGetMidX(self.frame),CGRectGetMidY(self.frame) - 100 - margin), 20)
+      self.addChild loadingNode(description, CGPointMake(CGRectGetMidX(self.frame),CGRectGetMidY(self.frame) - 100 - margin), 30)
       margin = margin + 50
     end
     

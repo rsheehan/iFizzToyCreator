@@ -5,8 +5,8 @@ class ToyTemplate
   IMAGE_SCALE = 0.25 # this is the scale factor when a toy image is first created.
   ACCURACY = 100.0   # the rounding factor for the data
 
-  attr_reader :image, :parts, :identifier, :exploded
-  attr_accessor :stuck, :can_rotate, :front, :always_travels_forward, :actions, :gravity
+  attr_reader :image, :identifier, :exploded
+  attr_accessor :parts, :stuck, :can_rotate, :front, :always_travels_forward, :actions, :gravity
 
   def initialize(parts, identifier) #, image)
     @identifier = identifier
@@ -29,8 +29,6 @@ class ToyTemplate
   def to_json_compatible
     json_toy = {}
     json_toy[:id] = @identifier
-
-    #properties
     json_toy[:can_rotate] = @can_rotate
     json_toy[:stuck] = @stuck
     json_toy[:front] = @front
@@ -59,10 +57,8 @@ class ToyTemplate
 
     end
     json_toy[:actions] = json_actions
-
     json_toy
   end
-
 
   # Creates the image from the part data.
   def create_image(scale)
@@ -94,11 +90,9 @@ class ToyTemplate
   end
 
   def image_bitmap(size, scale)
-    #p "return image #{@identifier}"
     if @identifier == 0
       return UIImage.imageNamed("background.png")
     end
-
     centre_in_image = CGPointMake(*size) / 2
     UIGraphicsBeginImageContextWithOptions(size, false, 0.0)
     context = UIGraphicsGetCurrentContext()
@@ -119,16 +113,8 @@ class ToyTemplate
           end
       end
     end
-
-    # font = UIFont.fontWithName("HelveticaNeue-Bold", size: 8.0)
-    # fontHeight = font.pointSize
-    # text = @identifier.to_s
-    # UIColor.redColor.set
-    # text.drawAtPoint(CGPointMake(0, 0), withFont:font)
-
     image = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
-    #puts "ToyTemplate image: #{image.size.width}, #{image.size.height}"
     image
   end
 
@@ -158,7 +144,6 @@ class ToyTemplate
     CGContextSetLineJoin(context, KCGLineJoinRound)
   end
 
-
   def populate_exploded
     @exploded = check_parts(@parts, center)
   end
@@ -166,14 +151,12 @@ class ToyTemplate
   # Used to break a parts array into multiple parts (Even if there is only one Part!(PointsPart Only))
 
   def check_parts(parts, center)
-    #puts "center check part: #{center}"
     circle_parts = parts.select {|x| x.is_a? (CirclePart) }
     point_parts = parts.select {|x| x.is_a? (PointsPart) }
     if point_parts.length == 0
       return parts
     end
     point_parts.sort_by { |x| x.points.length * -1 }
-
     #ensure there is at least 4 parts
     point_parts.each do |part|
       if point_parts.length + circle_parts.length > 4
@@ -229,8 +212,6 @@ class ToyTemplate
         point_parts.delete(part)
       end
     end
-
     return point_parts + circle_parts
   end
-
 end

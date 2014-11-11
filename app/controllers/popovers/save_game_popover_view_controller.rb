@@ -6,8 +6,6 @@ class SaveGamePopoverViewController < UIViewController
   MAX_HEIGHT = 800
 
   def loadView
-    p "load view"    
-
     @sceneIndex = 0
     @width = 450
     @height = 600
@@ -62,16 +60,11 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def viewWillDisappear(animated)
-    #@delegate.state.save
-    # @delegate.state.game_info.name = @my_text_field.text
-    # @delegate.state.game_info.description = @my_text_view.text
-    # @delegate.state.save
     @delegate.resume
   end
 
   def select_sound(sender)
     @player = nil
-    #add extension on end
     text = sender.view.text.gsub(' ', '_')
     Constants::SOUND_NAMES.each do |sound|
       if sound.include? text
@@ -86,7 +79,6 @@ class SaveGamePopoverViewController < UIViewController
     if indexPath != nil
       name = Constants::SOUND_NAMES[indexPath.row]
       puts('play sound - '+name)
-
       local_file = NSURL.fileURLWithPath(File.join(NSBundle.mainBundle.resourcePath, name))
       @player = AVPlayer.alloc.initWithURL(local_file)
       @player.play
@@ -162,13 +154,9 @@ class SaveGamePopoverViewController < UIViewController
       h_view.backgroundColor = Constants::LIGHT_GRAY
       #title
       @p_title = UILabel.alloc.initWithFrame([[10,5],[@width-5,20]])
-
       @p_title.setText("Current game:")
-
       @p_title.setFont(UIFont.boldSystemFontOfSize(18))
-      
       h_view.addSubview(@p_title)
-
 
       #title separator
       separator = CALayer.layer
@@ -299,18 +287,13 @@ class SaveGamePopoverViewController < UIViewController
           shareButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
           shareButton.setFrame([[130, 0], [70,35]])
           shareButton.setTitle('Share', forState: UIControlStateNormal)
-
-          buttonView = UIView.alloc.initWithFrame([[0,0],[200,35]]) 
-          
+          buttonView = UIView.alloc.initWithFrame([[0,0],[200,35]])
           buttonView.addSubview(shareButton)
-         
           shareButton.addTarget(self,action:'Share', forControlEvents:UIControlEventTouchUpInside)
-
           cell.accessoryView = buttonView
       end
     else
-      index = index_path.row 
-
+      index = index_path.row
       cell = UITableViewCell.alloc.initWithStyle(UITableViewCellStyleDefault, reuseIdentifier: "default")
 
       name = @dataList[index]
@@ -331,7 +314,6 @@ class SaveGamePopoverViewController < UIViewController
 
       buttonView = UIView.alloc.initWithFrame([[0,0],[200,35]])
       buttonView.addSubview(loadButton)
-      #buttonView.addSubview(deleteButton)
 
       loadButton.addTarget(self,action:'Load:', forControlEvents:UIControlEventTouchUpInside)
       deleteButton.addTarget(self,action:'Delete', forControlEvents:UIControlEventTouchUpInside)
@@ -344,10 +326,8 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def Load(sender)
-    #text = sender.view.text
     @delegate.state.load(sender.accessibilityLabel.to_s)
     @delegate.close_popover
-    p "seder = #{sender.accessibilityLabel.to_s}"
     NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "ReOpen", userInfo: nil, repeats: false)
     @delegate.state.save
     #reset views
@@ -358,9 +338,8 @@ class SaveGamePopoverViewController < UIViewController
     @delegate.state.game_info.name = @my_text_field.text
     @delegate.state.game_info.description = @my_text_view.text
     @delegate.state.save
-    p "save button is pressed"
-    #@delegate.close_popover
-    #NSTimer.scheduledTimerWithTimeInterval(5.0, target: self, selector: "ReOpen", userInfo: nil, repeats: false)
+    alert = UIAlertView.alloc.initWithTitle("Alert", message:"Game is saved, thanks and enjoy!", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
+    alert.show
   end
 
   def New
@@ -380,7 +359,7 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def Share
-    p "internet? = no"
+
     @delegate.shareState
     @delegate.close_popover
     NSTimer.scheduledTimerWithTimeInterval(2.0, target: self, selector: "OpenLoad", userInfo: nil, repeats: false)

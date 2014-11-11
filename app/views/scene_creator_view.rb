@@ -31,7 +31,7 @@ class SceneCreatorView < CreatorView
     @current_tool = :grab # was :line
     @toys_in_scene = []
     @actions = []
-    @boundaries = [1,1,1,1,1]
+    @boundaries = [1,1,1,1,1] # last bit is used for controlling the optional action scene
     @gravity = CGVectorMake(0, 0)
     self.backgroundColor = Constants::BACKGROUND_COLOUR_LIST[rand(100)%Constants::BACKGROUND_COLOUR_LIST.size]
     pinch_recognizer = UIPinchGestureRecognizer.alloc.initWithTarget(self, action: 'zoom_selected:')

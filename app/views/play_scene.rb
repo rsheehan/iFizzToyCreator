@@ -27,7 +27,6 @@ class PlayScene < SKScene
   @sceneActionAllow = false
 
   def didMoveToView(view)
-    p 'start play scene'
     @systemMessage = nil
 
     @actions_to_fire = []
@@ -114,6 +113,7 @@ class PlayScene < SKScene
 
   # Actions are added here to be fired at the update
   def add_actions_for_update(actions, delay = 0)
+    delay = delay + 0.05
     if delay != 0
       if delay < 0
         delay = rand(-delay) + (-delay/2)
@@ -364,8 +364,8 @@ class PlayScene < SKScene
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               if(param.x.to_i == 0 && param.y.to_i == 0)
                 # random force applied
-                ranX = rand(Constants::GENERAL_TOY_FORCE) - Constants::GENERAL_TOY_FORCE / 2
-                ranY = rand(Constants::GENERAL_TOY_FORCE) - Constants::GENERAL_TOY_FORCE / 2
+                ranX = 200*rand(self.size.width)-100*self.size.width
+                ranY = 200*rand(self.size.height)-100*self.size.height
                 param = CGPointApplyAffineTransform(CGPointMake(ranX,ranY), rotation)
               else
                 param = CGPointApplyAffineTransform(param, rotation)
@@ -385,10 +385,10 @@ class PlayScene < SKScene
 
             when :apply_torque
               if param != Constants::RANDOM_HASH_KEY
-                param *= toy.size.width/2  # Scale by opposing torque on toy
+                param *= toy.size.width/10.0  # Scale by opposing torque on toy
               else
                 #param = Constants::RANDOM_HASH_KEY.to_i % 4 - rand(2.0)
-                param = (rand(20.0) - 10)*toy.size.width/2 # Scale by opposing torque on toy
+                param = (rand(20.0) - 10)*toy.size.width/10.0 # Scale by opposing torque on toy
               end
 
               effect = "applyTorque"
@@ -480,11 +480,13 @@ class PlayScene < SKScene
                   label_colour = UIColor.purpleColor
               elsif @systemMessage ==  "brown"
                   label_colour = UIColor.brownColor
+              elsif @systemMessage ==  "clear"
+                label_colour = UIColor.clearColor
               else
                   label_colour = UIColor.whiteColor
               end
 
-              (1..5).each do |i|
+              (1..3).each do |i|
                 label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(18).fontDescriptor.postscriptName)
                 label.position = toy.position + CGPointMake(-30, 0)
                 label.fontSize = 18
@@ -505,19 +507,16 @@ class PlayScene < SKScene
               end
 
               # Now check what toy is still waiting to receive the same message
-              #p "******* #{@toys.size}"
               @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
                 toyArray.each do |toy|
-                  #p toyArray
                   if toy.userData
                     toyinscene = toy.userData[:toyInScene]
                     if toyinscene != nil
                       toyinscene.template.actions.each do |action|
                         if action[:action_type] == :receive_message and action[:action_param] == @systemMessage
                           new_action = action.clone
-                          p new_action
-                          #NSTimer.scheduledTimerWithTimeInterval(Constants::TIME_FOR_MESSAGE_TO_SEND, target: self, selector: "queue_action_with_delay:", userInfo: new_action, repeats: false)
-                          NSTimer.scheduledTimerWithTimeInterval(0, target: self, selector: "queue_action_with_delay:", userInfo: new_action, repeats: false)
+                          delayAction = 0 #can set to delay action
+                          NSTimer.scheduledTimerWithTimeInterval(delayAction, target: self, selector: "queue_action_with_delay:", userInfo: new_action, repeats: false)
                         end
                       end
                     end
@@ -627,7 +626,7 @@ class PlayScene < SKScene
                     create_action = create_action.clone
                     timeDelay = create_action[:action_param][0]
                     create_action[:action_param] = [nil, new_toy.userData[:uniqueID]]
-                    add_actions_for_update([create_action],timeDelay)
+                    add_actions_for_update([create_action],timeDelay+0.05)
                   end
                 end
                 @toy_hash[id] << new_toy
@@ -757,6 +756,7 @@ class PlayScene < SKScene
         new_sprite_toy.physicsBody.velocity = toy.physicsBody.velocity
         new_sprite_toy.name = new_name
         addChild(new_sprite_toy)
+        #p "force = #{force/displacement.x} and #{force/displacement.y}"
         new_sprite_toy.physicsBody.send(:applyForce, CGPointMake(force/displacement.x , force/displacement.y))
         @toy_hash[new_name] << new_sprite_toy
         fadeOut = SKAction.fadeOutWithDuration(timer)
@@ -803,42 +803,37 @@ class PlayScene < SKScene
 
   def add_edges
     create_background_image
-    # then do the static physics stuff for the edges
-    # first I currently use a frame around the outside
-    #walls = CGRectMake(*frame.origin, frame.size.width, frame.size.height - AppDelegate::TAB_HEIGHT)
-    #self.physicsBody = SKPhysicsBody.bodyWithEdgeLoopFromRect(frame)
-
-    @edges.each do |edge|
-      case edge
-        when CirclePart
-          body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
-          body.dynamic = false
-          body.contactTestBitMask = 1
-          node = SKNode.node
-          node.position = CGPointMake(edge.position[0], size.height - edge.position[1])
-          node.hidden = true
-          node.physicsBody = body
-          addChild(node)
-        when PointsPart
-          points = edge.points_for_scene_background(size)
-          current_pt = points[0]
-          points[1..-1].each do |next_pt|
-            body = SKPhysicsBody.bodyWithEdgeFromPoint(current_pt, toPoint: next_pt)
+    if @edges != nil
+      @edges.each do |edge|
+        case edge
+          when CirclePart
+            body = SKPhysicsBody.bodyWithCircleOfRadius(edge.radius)
+            body.dynamic = false
             body.contactTestBitMask = 1
             node = SKNode.node
+            node.position = CGPointMake(edge.position[0], size.height - edge.position[1])
             node.hidden = true
             node.physicsBody = body
             addChild(node)
-            current_pt = next_pt
-          end
+          when PointsPart
+            points = edge.points_for_scene_background(size)
+            current_pt = points[0]
+            points[1..-1].each do |next_pt|
+              body = SKPhysicsBody.bodyWithEdgeFromPoint(current_pt, toPoint: next_pt)
+              body.contactTestBitMask = 1
+              node = SKNode.node
+              node.hidden = true
+              node.physicsBody = body
+              addChild(node)
+              current_pt = next_pt
+            end
+        end
       end
     end
-
   end
 
 # Create an image for the whole background
   def create_background_image
-
     # Minh changed, due to ios 8.0 difference
     screen_scale = 1.0 # UIScreen.mainScreen.scale
 
@@ -856,30 +851,27 @@ class PlayScene < SKScene
       textureImage = UIImage.imageNamed(@backgroundImageURL)
       textureImage.drawAtPoint(CGPointZero)
     end
-
-    #p "backgroundimage url = #{@backgroundImageURL}."
-
-
-    @edges.each do |edge|
-      edge.colour.set
-      # circles
-      case edge
-        when CirclePart
-          width = edge.radius * 2 / screen_scale
-          CGContextFillEllipseInRect(context, CGRectMake(edge.left / screen_scale, edge.top / screen_scale, width, width))
-        when PointsPart
-          if edge.points.length == 1
-            line_size = ToyTemplate::TOY_LINE_SIZE/4
-            sole_point = edge.points[0]
-            scaled_sole_point = CGPointMake(sole_point.x - line_size/2, sole_point.y - line_size/2) / screen_scale
-            CGContextFillEllipseInRect(context, CGRectMake(*scaled_sole_point, #CGRectMake(sole_point.x - line_size/2, sole_point.y - line_size/2,
-                                                           line_size / screen_scale, line_size / screen_scale))
-          else
-            draw_path_of_points(context, edge.points)
-          end
+    if @edges != nil
+      @edges.each do |edge|
+        edge.colour.set
+        # circles
+        case edge
+          when CirclePart
+            width = edge.radius * 2 / screen_scale
+            CGContextFillEllipseInRect(context, CGRectMake(edge.left / screen_scale, edge.top / screen_scale, width, width))
+          when PointsPart
+            if edge.points.length == 1
+              line_size = ToyTemplate::TOY_LINE_SIZE/4
+              sole_point = edge.points[0]
+              scaled_sole_point = CGPointMake(sole_point.x - line_size/2, sole_point.y - line_size/2) / screen_scale
+              CGContextFillEllipseInRect(context, CGRectMake(*scaled_sole_point, #CGRectMake(sole_point.x - line_size/2, sole_point.y - line_size/2,
+                                                             line_size / screen_scale, line_size / screen_scale))
+            else
+              draw_path_of_points(context, edge.points)
+            end
+        end
       end
     end
-
     background = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(UIGraphicsGetImageFromCurrentImageContext()))
 
     UIGraphicsEndImageContext()
@@ -889,31 +881,31 @@ class PlayScene < SKScene
   end
 
   def add_toys
-    @toy_hash = {}
-    @loaded_toys = {}
-    @toys.each do |toy_in_scene|
-      if toy_in_scene != nil and toy_in_scene.template != nil
-        if loaded_toys[toy_in_scene.template.identifier].nil?
-          loaded_toys[toy_in_scene.template.identifier] = []
-        end
-        loaded_toys[toy_in_scene.template.identifier] << toy_in_scene
-        if toy_in_scene != nil
-          toy = new_toy(toy_in_scene)
-          id = toy_in_scene.template.identifier
-
-          p "setAllowSceneAction #{@sceneActionAllow}"
-
-          if id == Constants::SCENE_TOY_IDENTIFIER and @sceneActionAllow == false
-            # do nothing
-          else
-            @toy_hash[id] = [] unless @toy_hash[id]
-            @toy_hash[id] << toy # add the toy (can be multiple toys of the same type)
-            @toys_count[id] = 0 unless @toys_count[id]
-            @toys_count[id] += 1
+    if @toys != nil
+      @toy_hash = {}
+      @loaded_toys = {}
+      @toys.each do |toy_in_scene|
+        if toy_in_scene != nil and toy_in_scene.template != nil
+          toy_in_scene.update_image
+          if loaded_toys[toy_in_scene.template.identifier].nil?
+            loaded_toys[toy_in_scene.template.identifier] = []
           end
-          if id == Constants::SCENE_TOY_IDENTIFIER
-            toy.position = view.convertPoint(CGPointMake(self.size.width.to_i/2, self.size.height.to_i+100), toScene: self)
-            @sceneToyId = toy.userData[:uniqueID]
+          loaded_toys[toy_in_scene.template.identifier] << toy_in_scene
+          if toy_in_scene != nil
+            toy = new_toy(toy_in_scene)
+            id = toy_in_scene.template.identifier
+            if id == Constants::SCENE_TOY_IDENTIFIER and @sceneActionAllow == false
+              # do nothing
+            else
+              @toy_hash[id] = [] unless @toy_hash[id]
+              @toy_hash[id] << toy # add the toy (can be multiple toys of the same type)
+              @toys_count[id] = 0 unless @toys_count[id]
+              @toys_count[id] += 1
+            end
+            if id == Constants::SCENE_TOY_IDENTIFIER
+              toy.position = view.convertPoint(CGPointMake(self.size.width.to_i/2, self.size.height.to_i+150), toScene: self)
+              @sceneToyId = toy.userData[:uniqueID]
+            end
           end
         end
       end
@@ -931,7 +923,7 @@ class PlayScene < SKScene
 
   # Minh: this part is important
   def new_toy(toy_in_scene, darken = false)
-    p "new toy in scene = #{toy_in_scene}"
+    #p "new toy in scene = #{toy_in_scene}"
     image = get_image(toy_in_scene)
     toy = SKSpriteNode.spriteNodeWithTexture(SKTexture.textureWithImage(image))
     toy.name = toy_in_scene.template.identifier # TODO: this needs to be unique
@@ -944,6 +936,11 @@ class PlayScene < SKScene
     addChild(toy)
     # physics body stuff
     physics_points = ToyPhysicsBody.new(toy_in_scene.template.parts).convex_hull_for_physics(toy_in_scene.zoom)
+
+    if toy_in_scene.template.identifier == 0
+      physics_points = []
+    end
+
     if physics_points.length == 0
       toy.physicsBody = SKPhysicsBody.bodyWithCircleOfRadius(1)
     else

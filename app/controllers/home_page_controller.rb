@@ -3,7 +3,7 @@ class HomePageViewController < UIViewController
   MODES = [:help, :game, :load]
 
   def viewDidLoad
-    p "view did load"
+    #p "view did load"
     super
     self.view = SKView.alloc.init
     self.view.showsFPS = true
@@ -11,9 +11,14 @@ class HomePageViewController < UIViewController
   end
 
   def viewWillAppear(animated)
-    p "view will appear"
+    #p "view will appear"
     @introScene = IntroScene.alloc.initWithSize(@bounds.size)
     self.view.presentScene @introScene
+    #p "state = #{state.game_info}"
+    if state.game_info == nil
+      state.clearState
+    end
+
   end
 
   def viewWillDisappear(animated)
@@ -33,7 +38,6 @@ class HomePageViewController < UIViewController
       button = setup_button(mode_name, position, @mode_view, mode_name)
       position[0] += CGRectGetWidth(button.frame) + 10
     end
-    p "add Sub view"
     self.view.addSubview(@mode_view)
   end
 
@@ -81,7 +85,6 @@ class HomePageViewController < UIViewController
     @popover = SaveGamePopoverViewController.alloc.initWithNibName(nil, bundle: nil)
     @popover.delegate = self
     show_popover(@popover)
-    p "loaded game name: #{state.game_info.name}"
   end
   def load
     # load internet game
@@ -97,7 +100,8 @@ class HomePageViewController < UIViewController
   end
 
   def shareState
-    url_string = Constants::WEB_URL+"index.php"
+    url_string = Constants::WEB_URL+"upload.php"
+    p "send to #{url_string}"
     fileNameGame = @state.game_info.name.tr(" ", "_")
     dataPost = @state.getStringState
     post_body = "name="+fileNameGame+"&data="+dataPost
@@ -116,6 +120,7 @@ class HomePageViewController < UIViewController
                                               else
                                                 if(data.length > 0 && error.nil?)
                                                   html = NSString.alloc.initWithData(data, encoding: NSUTF8StringEncoding)
+                                                  p "html: #{html}"
                                                 elsif( data.length == 0 && error.nil? )
                                                   p "Nothing was downloaded"
                                                 elsif(!error.nil?)

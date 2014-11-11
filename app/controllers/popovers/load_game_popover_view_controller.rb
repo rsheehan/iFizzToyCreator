@@ -1,17 +1,12 @@
 class LoadGamePopoverViewController < UIViewController
   attr_writer :delegate
-
   LITTLE_GAP = 10
   BIG_GAP = 40
   MAX_HEIGHT = 800
-
   @number = 0
-
   def loadView
-    p "load view"
     @number = 0
     @dataList = []
-
     @width = 500
     @height = 300
     # Do not call super.
@@ -38,7 +33,6 @@ class LoadGamePopoverViewController < UIViewController
     separator.frame = CGRectMake(5, 39.0, @width, 1.0)
     separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
     self.view.layer.addSublayer(separator)
-    
 
     #table view for sound
     @table_view = UITableView.alloc.initWithFrame([[0, 45], [@width, 400]])
@@ -53,8 +47,7 @@ class LoadGamePopoverViewController < UIViewController
   end
 
   def viewWillAppear(animated)
-    p "view appear #{@connection.to_s}"
-    req=NSURLRequest.requestWithURL(NSURL.URLWithString(Constants::WEB_URL + "index.php?"+rand(100000).to_s), cachePolicy:NSURLRequestReloadIgnoringCacheData, timeoutInterval:1.0)
+    req=NSURLRequest.requestWithURL(NSURL.URLWithString(Constants::WEB_URL + "upload.php?"+rand(100000).to_s), cachePolicy:NSURLRequestReloadIgnoringCacheData, timeoutInterval:1.0)
     @connection = NSURLConnection.alloc.initWithRequest req, delegate: self, startImmediately: true
   end
 
@@ -87,7 +80,6 @@ class LoadGamePopoverViewController < UIViewController
     button.setTitle('Download', forState: UIControlStateNormal)
     button.addTarget(self,action:'Download:', forControlEvents:UIControlEventTouchUpInside)
 
-
     button.accessibilityLabel = name.split(" ")[0]
 
     cell.accessoryView = button
@@ -100,7 +92,6 @@ class LoadGamePopoverViewController < UIViewController
     @delegate.close_popover
     alert = UIAlertView.alloc.initWithTitle("Alert", message:"No Internet connection, is the WIFI on?", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
     alert.show
-    #NSTimer.scheduledTimerWithTimeInterval(2.0, target: self, selector: "OpenLoad", userInfo: nil, repeats: false)
   end
 
   def OpenLoad
@@ -130,12 +121,16 @@ class LoadGamePopoverViewController < UIViewController
     @dataList = []
     
     readFile = @file.inspect.to_s
-    readFile.each_line { |line|
+
+    error = Pointer.new(:object)
+    json_files = NSJSONSerialization.JSONObjectWithData(readFile.dataUsingEncoding(NSUTF8StringEncoding), options: 0, error: error)
+
+    json_files[:data].each do |line|
       if(line.chomp != "")
         @dataList << line.chomp
       end
+    end
 
-    }    
     @number = @dataList.size
     @table_view.reloadData
 

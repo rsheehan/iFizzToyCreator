@@ -131,7 +131,7 @@ class ToyBoxViewController < UIViewController
     toy_button.toy = @state.toys[item]
     toy_button.accessibilityLabel = item.to_s
 
-    if @state.toys[item].identifier == Constants::SCENE_TOY_IDENTIFIER
+    if @state.toys[item].identifier == Constants::SCENE_TOY_IDENTIFIER and Constants::DEBUG != true
       toy_button.hidden = true
     end
 

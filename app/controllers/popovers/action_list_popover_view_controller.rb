@@ -20,7 +20,7 @@ class ActionListPopoverViewController < UIViewController
     #make array of actions that relate to the selected toy
     @toy_actions = @selected.template.actions
 
-    p "selected toy action is #{@selected.template.actions.to_s}"
+    #p "selected toy action is #{@selected.template.actions.to_s}"
 
 
     @table_view = UITableView.alloc.initWithFrame([[0, 5], [WIDTH, MAX_HEIGHT]])
@@ -78,11 +78,17 @@ class ActionListPopoverViewController < UIViewController
   end
 
   def resizeTV
+    p "resize"
     if @table_view and @toy_actions
+      extra = 280
+      if @selected.template.identifier == Constants::SCENE_TOY_IDENTIFIER
+        extra = 160
+      end
+
       if @toy_actions.size > 2
-        tvHeight = 200 + 5*40+ 30+50
+        tvHeight = 200 + extra
       else
-        tvHeight = 80 * @toy_actions.size + 5*40 + 30+50
+        tvHeight = 80 * @toy_actions.size + extra
       end
 
       @table_view.setFrame([[0, 5], [WIDTH, tvHeight]])
@@ -91,6 +97,8 @@ class ActionListPopoverViewController < UIViewController
       self.preferredContentSize = [WIDTH, @edit_button.frame.origin.y+@edit_button.frame.size.height + Constants::SMALL_MARGIN]
       #self.preferredContentSize = [WIDTH, 800]
     end
+
+
   end
 
   # We need this to gain access to the toys.
@@ -656,7 +664,7 @@ class ActionListPopoverViewController < UIViewController
       if @selected.template.identifier != Constants::SCENE_TOY_IDENTIFIER
         @p_title.setText(Language::PROPERTIES)
       else
-        @p_title.setText("Background scene:")
+        @p_title.setText("")
       end
 
 

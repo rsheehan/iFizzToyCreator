@@ -25,27 +25,19 @@ class SceneTemplate
     @toys = toys    # each of type ToyInScene
     @edges = edges  # each of type ToyPart - either Circle or Points
     @actions = actions   # each a Hash
-    p "scene action = #{@actions}"
     @bounds = bounds
-
     @background = background
     if @background == nil
       @background = Constants::BACKGROUND_COLOUR_LIST[0]
     end
-
     @backgroundURL = backgroundURL
-
-    p "scene default background image = #{@backgroundURL}"
-
     if boundaries!=nil
       *@boundaries = *boundaries
     else
       @boundaries = [1,1,1,1,1]
     end
-
     # possibly create an image of the scene for the scene box view, the small version
     @image = create_image(Constants::SMALLER_SIZED_SAVED_SCENE)
-
     @gravity = gravity
     if @gravity == nil
       @gravity = CGVectorMake(Constants::DEFAULT_GRAVITY_X, Constants::DEFAULT_GRAVITY_Y)
