@@ -54,12 +54,13 @@ class IntroScene < SKScene
     #self.backgroundColor = UIColor.redColor
     self.scaleMode = SKSceneScaleModeAspectFill
     # Image from www.emptycache.com/photographylxft/free-bible-clipart-kids
-    texture = SKTexture.textureWithImageNamed("christian-clip-art-kids.jpg")
+    randomVal = rand(Constants::BACKGROUND_IMAGE_LIST.size)
+    texture = SKTexture.textureWithImageNamed(Constants::BACKGROUND_IMAGE_LIST[randomVal])
     background = SKSpriteNode.spriteNodeWithTexture(texture)
     background.position = CGPointMake(CGRectGetMidX(self.frame), CGRectGetMidY(self.frame))
     self.addChild background
-    makeRocks = SKAction.sequence([SKAction.performSelector("addRain", onTarget: self), SKAction.waitForDuration(0.1, withRange: 0.15)])
-    self.runAction(SKAction.repeatActionForever(makeRocks))
+    #makeRocks = SKAction.sequence([SKAction.performSelector("addRain", onTarget: self), SKAction.waitForDuration(0.1, withRange: 0.15)])
+    #self.runAction(SKAction.repeatActionForever(makeRocks))
     self.addChild iFizzNode
     self.addChild demoPix
     self.addChild newWelcomeNode

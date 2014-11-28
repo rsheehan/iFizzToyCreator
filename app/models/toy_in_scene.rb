@@ -3,8 +3,8 @@ class ToyInScene
   # The information we need to save is:
   # position, angle and zoom - along with the template stuff of course
 
-  attr_reader :old_angle, :old_zoom, :template
-  attr_accessor :angle, :zoom, :position, :ghost, :old_position
+  attr_reader :old_angle, :old_zoom
+  attr_accessor :angle, :zoom, :position, :ghost, :old_position, :template
   attr_reader :image, :uid  # for the PlayScene
 
   def initialize(toy_template, zoom = 1.0, ghost = false)
@@ -30,6 +30,10 @@ class ToyInScene
     else
       @image = @template.image
     end
+  end
+
+  def updateTemplate
+    #@template =
   end
 
   # Turns the ToyInScene into json compatible data.
@@ -179,6 +183,7 @@ class ToyInScene
   end
 
   def draw(context)
+    update_image
     CGContextSaveGState(context)
     if @ghost or @template.identifier == Constants::SCENE_TOY_IDENTIFIER
       CGContextSetAlpha(context, 0.3)
@@ -194,6 +199,12 @@ class ToyInScene
     CGContextScaleCTM(context, @zoom/@old_zoom, @zoom/@old_zoom) #if @zoom != @old_zoom
     image_size = CGPointMake(@image.size.width, @image.size.height)
     @rectDraw = CGRectMake(*(image_size / -2.0), *image_size)
+
+    # Minh added to update the toy image
+    # @template.update_image
+
+    # @image = @template.create_image(@zoom)
+    
     @image.drawInRect(@rectDraw)
 
     if Constants::DEBUG
@@ -211,7 +222,8 @@ class ToyInScene
     CGContextRestoreGState(context)
   end
 
-  def move_to(point, duration, delay)
+  def move_to(point, angle, duration, delay)
+    @angle = angle
     toy_center = CGPointMake(100, 0)
     move_diff = point - toy_center
     diff = move_diff - @position

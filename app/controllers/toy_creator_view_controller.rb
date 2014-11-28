@@ -68,6 +68,7 @@ class ToyCreatorViewController < UIViewController
     @main_view.setup_for_new
     #get toy
     toy = @state.toys[toy_button]
+    p "toy drop = #{toy}"
     #draw toy
     toy.parts.each do |part|
       case part
@@ -83,6 +84,30 @@ class ToyCreatorViewController < UIViewController
     #update id
     @id = toy.identifier
     dismissModalViewControllerAnimated(true, completion: nil)
+    #p "toy id = #{@id}"
+  end
+
+  def drop_edit_toy(toy)
+    centre = CGPointMake((@bounds.size.width-190)/2, @bounds.size.height/2)
+    #clear screen
+    @main_view.setup_for_new
+    p "toy drop = #{toy}"
+    #draw toy
+    toy.parts.each do |part|
+      case part
+        when CirclePart
+          @main_view.add_stroke(CircleStroke.new(((part.position/ToyTemplate::IMAGE_SCALE)+ centre), part.radius/ ToyTemplate::IMAGE_SCALE, part.colour, 1))
+        when PointsPart
+          points = part.points.map { |p| p/ToyTemplate::IMAGE_SCALE+centre }
+          @main_view.add_stroke(LineStroke.new(points, part.colour, ToyTemplate::TOY_LINE_SIZE))
+        else
+      end
+    end
+    @main_view.setNeedsDisplay
+    #update id
+    @id = toy.identifier
+    dismissModalViewControllerAnimated(true, completion: nil)
+    #p "toy id = #{@id}"
   end
 
   def viewWillDisappear(animated)
@@ -96,6 +121,7 @@ class ToyCreatorViewController < UIViewController
       toy = ToyTemplate.new(toy_parts, @id)
       @state.add_toy(toy)
     end
+    #p "save toy to Id #{@id}"
   end
 
   def clear

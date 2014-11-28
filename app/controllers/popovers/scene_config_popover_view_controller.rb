@@ -117,7 +117,7 @@ class SceneConfigPopoverViewController < UIViewController
 
   def tableView(tableView, heightForRowAtIndexPath:index_path)
     position = index_path.row
-    if position >=3 and position <=5
+    if (position >=2 and position <=5) or position == 7
       return 0
     elsif(position == 6 or position >=8)
       return IMAGE_CELL_HEIGHT
@@ -149,8 +149,8 @@ class SceneConfigPopoverViewController < UIViewController
         when 0
           cell.text = Language::GRAVITY     
           @gravitySlider = UISlider.alloc.initWithFrame([[0, 0], [150.0, 23.0]])
-          @gravitySlider.minimumValue = 0
-          @gravitySlider.maximumValue = +5.0
+          @gravitySlider.minimumValue = 0.0
+          @gravitySlider.maximumValue = +6.0
           @gravitySlider.continuous = true
           #gravity is negative
           @gravitySlider.value = -1*@scene.gravityY
@@ -159,7 +159,7 @@ class SceneConfigPopoverViewController < UIViewController
 
           @gravity_label_view = UILabel.alloc.initWithFrame([[150, 0], [50.0, 23.0]])
           @gravity_label_view.setTextAlignment(UITextAlignmentCenter)
-          @gravity_label_view.text = (-1*@scene.gravityY).to_s
+          @gravity_label_view.text = (-1*@scene.gravityY).to_i.to_s
 
           gravityView.addSubview(@gravitySlider)
           gravityView.addSubview(@gravity_label_view)
@@ -177,7 +177,7 @@ class SceneConfigPopoverViewController < UIViewController
 
           @wind_label_view = UILabel.alloc.initWithFrame([[150, 0], [50.0, 23.0]])
           @wind_label_view.setTextAlignment(UITextAlignmentCenter)
-          @wind_label_view.text = @scene.gravityX.to_s
+          @wind_label_view.text = @scene.gravityX.to_i.to_s
 
           windView = UIView.alloc.initWithFrame([[0,0],[200,23]])
 
@@ -188,22 +188,15 @@ class SceneConfigPopoverViewController < UIViewController
           @windSlider.addTarget(self,action:'windSliderChanged', forControlEvents:UIControlEventValueChanged)
 
         when 2
-          # cell.text = Language::TOP_BOUNDARY
-          # @top_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
-          # @top_switch.on = @scene.boundaries[TOP]==SWITCH_ON
-          # cell.accessoryView = @top_switch
-          # @top_switch.addTarget(self,action:'top_switch_changed', forControlEvents:UIControlEventValueChanged)
-          # cell.hidden = true
-
-          cell.text = "Use Scene Action:"
+          #cell.text = "Use Scene Action:"
           @scene_action_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
           @scene_action_switch.on = @scene.boundaries[SCENE_ACTION]==SWITCH_ON
-          cell.accessoryView = @scene_action_switch
+          #cell.accessoryView = @scene_action_switch
           @scene_action_switch.addTarget(self,action:'scene_action_switch_changed', forControlEvents:UIControlEventValueChanged)
           #cell.hidden = true
 
         when 3
-          cell.text = Language::BOTTOM_BOUNDARY
+          #cell.text = Language::BOTTOM_BOUNDARY
           @bottom_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
           @bottom_switch.on = @scene.boundaries[BOTTOM]==SWITCH_ON
           cell.accessoryView = @bottom_switch
@@ -211,7 +204,7 @@ class SceneConfigPopoverViewController < UIViewController
           cell.hidden = true
 
         when 4
-          cell.text = Language::LEFT_BOUNDARY
+          #cell.text = Language::LEFT_BOUNDARY
           @left_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
           @left_switch.on = @scene.boundaries[LEFT]==SWITCH_ON
           cell.accessoryView = @left_switch
@@ -219,7 +212,7 @@ class SceneConfigPopoverViewController < UIViewController
           cell.hidden = true
 
         when 5
-          cell.text = Language::RIGHT_BOUNDARY
+          #cell.text = Language::RIGHT_BOUNDARY
           @right_switch = UISwitch.alloc.initWithFrame([[95, 95], [0, 0]])
           @right_switch.on = @scene.boundaries[RIGHT]==SWITCH_ON
           cell.accessoryView = @right_switch
@@ -290,7 +283,7 @@ class SceneConfigPopoverViewController < UIViewController
           cell.accessoryView = buttonBoundaryView
 
         when 7
-          cell.text = Language::BACK_GROUND_IMAGE
+          #cell.text = Language::BACK_GROUND_IMAGE
 
           @cameraButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
           @cameraButton.frame = [[0, 0], [100, 37]]
@@ -305,7 +298,7 @@ class SceneConfigPopoverViewController < UIViewController
           if camera_available?      
             #buttonView.addSubview(@cameraButton)
           end
-          buttonView.addSubview(@clearButton)
+          #buttonView.addSubview(@clearButton)
           cell.accessoryView = buttonView
          
           @cameraButton.addTarget(self,action:'cameraButtonClicked', forControlEvents:UIControlEventTouchUpInside)
@@ -443,12 +436,33 @@ class SceneConfigPopoverViewController < UIViewController
 
   # change value of gravity
   def gravitySliderChanged
-    @gravity_label_view.text = @gravitySlider.value.to_i.to_s+".0"
+    value = @gravitySlider.value.to_f + 0.5
+    @gravity_label_view.text = value.to_i.to_s
+    @gravitySlider.setValue(value.to_i, animated:false)
+
+    @scene.gravityY = @gravitySlider.value.to_i * -1.0
+    @delegate.setGravity(@gravitySlider.value.to_i * -1.0)
+
+    @scene.gravityX = @windSlider.value.to_i
+    @delegate.setWind(@windSlider.value.to_i)
   end
 
   # change value of wind
   def windSliderChanged
-    @wind_label_view.text = @windSlider.value.to_i.to_s+".0"
+    value = @windSlider.value.to_f
+    if value > 0.5
+      value = value + 0.5
+    else
+      value = value - 0.5
+    end
+    @wind_label_view.text = value.to_i.to_s
+    @windSlider.setValue(value.to_i, animated:false)
+
+    @scene.gravityY = @gravitySlider.value.to_i * -1.0
+    @delegate.setGravity(@gravitySlider.value.to_i * -1.0)
+
+    @scene.gravityX = @windSlider.value.to_i
+    @delegate.setWind(@windSlider.value.to_i)
   end
 
   # change values of switches for boundaries

@@ -10,10 +10,10 @@ module CreatorViewControllerModule
   def viewDidAppear(animated)
     super
 
-    self.view.alpha = 0.0
-    UIView.animateWithDuration(1.0, animations: proc{
+    #self.view.alpha = 0.0
+    #UIView.animateWithDuration(1.0, animations: proc{
       self.view.alpha=1.0
-    })
+    #})
 
     @main_view.reset_undo
   end
@@ -158,17 +158,6 @@ module CreatorViewControllerModule
     end
     view.addSubview(@mode_view)
   end
-
-  # def setup_mode_buttons_right(modes)
-  #   @mode_view2 = UIView.alloc.initWithFrame(
-  #       CGRectMake(95, 0, 95 * modes.length, 95))
-  #   position = [@main_view.frame.size.width - 95 + 10, 10]
-  #   modes.each do |mode_name|
-  #     button = setup_button(mode_name, position, @mode_view, mode_name)
-  #     position[0] += CGRectGetWidth(button.frame) + 10
-  #   end
-  #   view.addSubview(@mode_view2)
-  # end
 
   def setup_button(image_name, position, super_view, label = '')
     button = UIButton.buttonWithType(UIButtonTypeCustom)

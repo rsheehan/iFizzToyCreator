@@ -8,13 +8,16 @@ class DeleteToyButton < UICollectionViewCell
 
     def initWithFrame(frame)
       super
-
       @toy_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("toy.png"))
 
       @del_toy_button = UIButton.buttonWithType(UIButtonTypeCustom)
-      @del_toy_button.setImage(UIImage.imageNamed(:cross2), forState: UIControlStateNormal)
+      @del_toy_button.setImage(UIImage.imageNamed(:deleteCross), forState: UIControlStateNormal)
       @del_toy_button.sizeToFit
-      @del_toy_button.frame = [ [-5, -5], @del_toy_button.frame.size]
+
+      @left = 0
+      @top = 0
+
+      @del_toy_button.frame = [ [@left, @top], @del_toy_button.frame.size]
 
       addSubview(@toy_image_view)
       addSubview(@del_toy_button)
@@ -29,6 +32,12 @@ class DeleteToyButton < UICollectionViewCell
       if @id == nil and toy.template != nil
         @id = toy.template.identifier
       end
+
+      @toy_image_view.setAlpha(0.5)
+
+      @left = @toy_image_view.frame.size.width/2 - @del_toy_button.frame.size.width/2
+      @top = @toy_image_view.frame.size.height/2 - @del_toy_button.frame.size.height/2
+      @del_toy_button.frame = [ [@left, @top], @del_toy_button.frame.size]
     end
 
 end

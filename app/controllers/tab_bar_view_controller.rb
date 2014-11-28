@@ -25,6 +25,7 @@ class UITabBarControllerLandscape < UITabBarController
     # Add Actions View
     actionView = action_creator_view_controller = ActionAdderViewController.alloc.initWithNibName(nil, bundle: nil)
     actionView.tab_bar = self
+    #actionView.setImage(UIImage.imageNamed(""))
     @controllers << actionView
     icons << icon_and_title(action_creator_view_controller, Language::ADD_ACTIONS, 'action_for_tab_bar')
     action_creator_view_controller.scene_creator_view_controller = @scene_creator_view_controller
@@ -65,6 +66,10 @@ class UITabBarControllerLandscape < UITabBarController
     # CAN CHANGE TO scene_creator_view_controller
     tab_bar = self.tabBar
     icons.each_with_index { |icon, i| tab_bar.items[i].image = icon }
+  end
+
+  def selectToyTemplateToEdit(toyTemplate)
+    @toy_creator_view_controller.drop_edit_toy(toyTemplate)
   end
 
   def resetViews

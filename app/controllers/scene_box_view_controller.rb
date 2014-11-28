@@ -13,18 +13,28 @@ class SceneBoxViewController < UIViewController
     setup_button(:back, [LITTLE_GAP, LITTLE_GAP])
     @collection_view = UICollectionView.alloc.initWithFrame([[@current_xpos, 0], [WIDTH - @current_xpos, WIDTH]], collectionViewLayout: UICollectionViewFlowLayout.alloc.init)
     @collection_view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
-    @collection_view.registerClass(ToyButton, forCellWithReuseIdentifier: SCENEBUTTON)
+    @collection_view.registerClass(SceneButton, forCellWithReuseIdentifier: SCENEBUTTON)
     @collection_view.registerClass(DeleteToyButton, forCellWithReuseIdentifier: DELETESCENEBUTTON)
+    @collection_view.registerClass(CopyToyButton, forCellWithReuseIdentifier: COPYSCENEBUTTON)
     @collection_view.dataSource = self
     @collection_view.delegate = self
     view.addSubview(@collection_view)
     #setup delete button
 
+    @copy_mode = false
+    @copy_button = UIButton.buttonWithType(UIButtonTypeCustom)
+    @copy_button.setImage(UIImage.imageNamed(:copy), forState: UIControlStateNormal)
+    @copy_button.sizeToFit
+    @copy_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @copy_button.frame.size]
+    @copy_button.addTarget(self, action: :copy, forControlEvents: UIControlEventTouchUpInside)
+    view.addSubview(@copy_button)
+
+
     @delete_mode = false
     @del_button = UIButton.buttonWithType(UIButtonTypeCustom)
     @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
     @del_button.sizeToFit
-    @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @del_button.frame.size]
+    @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*4], @del_button.frame.size]
     @del_button.addTarget(self, action: :delete, forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(@del_button)
   end
@@ -62,16 +72,31 @@ class SceneBoxViewController < UIViewController
     @delegate.close_toybox
   end
 
+  #activate copy mode
+  def copy
+    p "copy toy button pressed"
+    if @copy_mode
+      @copy_mode = false
+      #set image
+      @copy_button.setImage(UIImage.imageNamed(:copy), forState: UIControlStateNormal)
+    else
+      @copy_mode = true
+      #set image
+      @copy_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
+    end
+
+    #update cells
+    @collection_view.reloadData()
+
+  end
 
   #activate delete mode
   def delete
     if @delete_mode
       @delete_mode = false
-      #set image
       @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
     else
       @delete_mode = true
-      #set image
       @del_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
     end
     #update cells
@@ -87,10 +112,38 @@ class SceneBoxViewController < UIViewController
     @state.save
   end
 
+  def copy_scene(sender)
+    p "copy scene process"
+    index_path = @collection_view.indexPathForCell(sender.superview);
+    scene = @state.scenes[index_path.row]
+
+    sceneCopied = scene.clone
+    sceneCopied.identifier = (rand(2**60).to_s)
+
+    @state.scenes.insert(index_path.row, sceneCopied)
+    @collection_view.reloadData()
+  end
+
+  def switch_changed(sender)
+    p "switch changed"
+    p "copy scene process"
+    index_path = @collection_view.indexPathForCell(sender.superview);
+    scene = @state.scenes[index_path.row]
+
+    sceneCopied = scene.clone
+    @state.scenes.delete_at(index_path.row)
+    #sceneCopied.identifier = (rand(2**60).to_s)
+    @state.scenes.insert(0, sceneCopied)
+    @collection_view.reloadData()
+    @delegate.drop_scene(0, false)
+  end
+
   # The methods to implement the UICollectionViewDataSource protocol.
 
-  SCENEBUTTON = "ToyButton"
+  SCENEBUTTON = "SceneButton"
+
   DELETESCENEBUTTON = "DeleteToyButton"
+  COPYSCENEBUTTON = "CopyToyButton"
 
   def collectionView(cv, numberOfItemsInSection: section)
     @state.scenes.length
@@ -98,20 +151,36 @@ class SceneBoxViewController < UIViewController
 
   def collectionView(cv, cellForItemAtIndexPath: index_path)
     item = index_path.row # ignore section as only one
-    if @delete_mode
-      scene_button = cv.dequeueReusableCellWithReuseIdentifier(DELETESCENEBUTTON, forIndexPath: index_path)
-      scene_button.layer.removeAllAnimations
-      animateToyButton(scene_button,0,false)
-      scene_button.del_toy_button.addTarget(self, action: 'delete_scene:', forControlEvents: UIControlEventTouchUpInside)
+    if @delete_mode or @copy_mode
+      if @delete_mode
+        scene_button = cv.dequeueReusableCellWithReuseIdentifier(DELETESCENEBUTTON, forIndexPath: index_path)
+        scene_button.layer.removeAllAnimations
+        animateToyButton(scene_button,0,false)
+        scene_button.del_toy_button.addTarget(self, action: 'delete_scene:', forControlEvents: UIControlEventTouchUpInside)
+      elsif @copy_mode
+        scene_button = cv.dequeueReusableCellWithReuseIdentifier(COPYSCENEBUTTON, forIndexPath: index_path)
+        scene_button.layer.removeAllAnimations
+        animateToyButton(scene_button,0,false)
+        scene_button.copy_toy_button.addTarget(self, action: 'copy_scene:', forControlEvents: UIControlEventTouchUpInside)
+      end
     else
       scene_button = cv.dequeueReusableCellWithReuseIdentifier(SCENEBUTTON, forIndexPath: index_path)
+      scene_button.start_switch.addTarget(self,action:'switch_changed:', forControlEvents:UIControlEventValueChanged)
+      if item == 0
+        scene_button.start_switch.on = true
+      else
+        scene_button.start_switch.on = false
+      end
     end
     # make sure scene image is up to date
     @state.scenes[item].update_image
     scene_button.toy = @state.scenes[item]
+
     scene_button
 
   end
+
+
 
   def animateToyButton(button,rotation,decreasing)
 
@@ -144,7 +213,7 @@ class SceneBoxViewController < UIViewController
   # And the methods for the UICollectionViewDelegate protocol.
   def collectionView(cv, didSelectItemAtIndexPath: index_path)
     item = index_path.row
-    if not @delete_mode
+    if not @delete_mode and not @copy_mode
       self.view.window.removeGestureRecognizer(@recognizer)
       @delegate.drop_scene(item)
     end

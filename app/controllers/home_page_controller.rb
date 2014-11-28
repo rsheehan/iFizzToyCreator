@@ -18,6 +18,8 @@ class HomePageViewController < UIViewController
     if state.game_info == nil
       state.clearState
     end
+    @state.save
+
 
   end
 
@@ -82,6 +84,7 @@ class HomePageViewController < UIViewController
 
   end
   def game
+    #@state.load
     @popover = SaveGamePopoverViewController.alloc.initWithNibName(nil, bundle: nil)
     @popover.delegate = self
     show_popover(@popover)
@@ -91,6 +94,12 @@ class HomePageViewController < UIViewController
     content = LoadGamePopoverViewController.alloc.initWithNibName(nil, bundle: nil)
     content.delegate = self
     show_popover(content)
+  end
+
+  def save(my_text_field_string, my_text_view_string)
+    @state.game_info.name = my_text_field_string
+    @state.game_info.description = my_text_view_string
+    @state.save
   end
 
   def close_popover
@@ -141,7 +150,7 @@ class HomePageViewController < UIViewController
   end
 
   def loadGame(gameURL)
-    file_path = Constants::WEB_URL+"upload/"+gameURL
+    file_path = Constants::WEB_URL+"upload/"+gameURL+"?"+rand(9999).to_s
     url = NSURL.URLWithString(file_path)
     request = NSURLRequest.requestWithURL(url)
     res = nil
@@ -163,7 +172,8 @@ class HomePageViewController < UIViewController
     @popover = UIPopoverController.alloc.initWithContentViewController(content)
     @popover.delegate = self
     viewy = self.view
-    frame = CGRectMake(0,0,95,95)
+    x = @bounds.size.width/2 - 350/2
+    frame = CGRectMake(0,0, x, 200)
     @popover.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
   end
 end

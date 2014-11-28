@@ -37,15 +37,6 @@ class MessagePopOverViewController < UIViewController
     separator.backgroundColor = UIColor.colorWithWhite(0.8, alpha:1.0).CGColor
     self.view.layer.addSublayer(separator)
 
-    #string input
-    # @string_input = UITextField.alloc.initWithFrame([[@width/4, 15+@title.frame.size.height],[@width/2,30]])
-    # @string_input.textAlignment = NSTextAlignmentCenter
-    # @string_input.delegate = self
-    # @string_input.keyboardType = UIKeyboardTypeASCIICapable
-    # @string_input.setBackgroundColor(UIColor.whiteColor)
-    # @string_input.setText('')
-    # view.addSubview(@string_input)
-
     @selected_secs = 0
 
         #picker for time
@@ -77,8 +68,64 @@ class MessagePopOverViewController < UIViewController
     return 1
   end
 
-  def pickerView(pickerView, titleForRow:row, forComponent:component)
-    return Constants::MESSAGE_COLOURS[row].to_s
+  #def pickerView(pickerView, titleForRow:row, forComponent:component)
+  #  return Constants::MESSAGE_COLOURS[row].to_s
+  #end
+
+  def pickerView(pickerView, viewForRow:row, forComponent:component, reusingView:view)
+    imageView = UIImageView.alloc.initWithFrame(CGRectMake(0,0,200,25))
+    imageView.image = drawColorRectangle(Constants::MESSAGE_COLOURS[row].to_s)
+
+    tmpView = UIView.alloc.initWithFrame(CGRectMake(0,0,200,25))
+    tmpView.insertSubview(imageView, atIndex: 0)
+    return tmpView
+  end
+
+  def drawColorRectangle(message="clear")
+    UIGraphicsBeginImageContext(CGSizeMake(200,25))
+
+    context = UIGraphicsGetCurrentContext()
+    CGContextSetLineWidth(context, 8)
+    path = CGPathCreateMutable()
+    CGPathMoveToPoint(path, nil, 0, 0)
+    CGPathAddLineToPoint(path, nil, 0, 0)
+    CGPathAddLineToPoint(path, nil, 0, 200)
+    CGPathAddLineToPoint(path, nil, 200, 200)
+    CGPathAddLineToPoint(path, nil, 200, 0)
+
+    CGContextAddPath(context, path)
+
+    if message == "black"
+      label_colour = UIColor.blackColor
+    elsif message == "red"
+      label_colour = UIColor.redColor
+    elsif message ==  "blue"
+      label_colour = UIColor.blueColor
+    elsif message == "green"
+      label_colour = UIColor.greenColor
+    elsif message ==  "cyan"
+      label_colour = UIColor.cyanColor
+    elsif message ==  "yellow"
+      label_colour = UIColor.yellowColor
+    elsif message ==  "orange"
+      label_colour = UIColor.orangeColor
+    elsif message ==  "purple"
+      label_colour = UIColor.purpleColor
+    elsif message ==  "brown"
+      label_colour = UIColor.brownColor
+    elsif message ==  "clear"
+      label_colour = UIColor.clearColor
+    elsif message ==  "white"
+      label_colour = UIColor.whiteColor
+    end
+
+    CGContextSetFillColorWithColor(context, label_colour.CGColor)
+    CGContextDrawPath(context, KCGPathFill)
+
+    newImage = UIGraphicsGetImageFromCurrentImageContext()
+    UIGraphicsEndImageContext()
+
+    newImage
   end
 
   def pickerView(pickerView, didSelectRow:row, inComponent:component)

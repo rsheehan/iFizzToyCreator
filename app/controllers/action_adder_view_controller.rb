@@ -61,30 +61,36 @@ class ActionAdderViewController < UIViewController
 
   end
 
-  def viewDidAppear(animated)    
+  def viewDidAppear(animated)
+    p "view did appear"
+
     if @main_view == nil
       @main_view = @scene_creator_view_controller.main_view
     end
     if @main_view == nil
-      #alert = UIAlertView.alloc.initWithTitle("Alert", message:"You have not selected any scene, click Make scenes button below", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
-      #alert.show
       moveToSceneBar
     else
-      self.view.alpha = 0.0
+      if @main_view.numberOfElements <= 1
+        moveToSceneBar
+      end
+
+      #self.view.alpha = 0.0
       @button_toys = {}
       @main_view.change_label_text_to(Language::ACTION_ADDER)
       @main_view.add_delegate(self)
       @main_view.mode = :toys_only
       view.addSubview(@main_view)
-      #setup_mode_buttons(MODES)
+      @main_view.updateToyInScene
+      @main_view.setNeedsDisplay
+
       super
       if not @selected_toy.nil? and not @back_from_modal_view
         start_action_flow
       end
 
-      UIView.animateWithDuration(0.5, animations: proc{
+      #UIView.animateWithDuration(0.5, animations: proc{
         self.view.alpha=1.0
-      })
+      #})
     end
     show_sides
   end
@@ -92,6 +98,13 @@ class ActionAdderViewController < UIViewController
   def moveToSceneBar
     if tab_bar != nil
       tab_bar.selectedIndex = 2
+    end
+  end
+
+  def moveToToyBar(toyTemplate)
+    if tab_bar != nil
+      tab_bar.selectedIndex = 1
+      tab_bar.selectToyTemplateToEdit(toyTemplate)
     end
   end
 
@@ -337,6 +350,10 @@ class ActionAdderViewController < UIViewController
 
   end
 
+  def main_view
+    @main_view
+  end
+
   def create_new_toy=(args)
     action_type, action_param = get_action
     effect_type = :create_new_toy
@@ -355,9 +372,10 @@ class ActionAdderViewController < UIViewController
 
   # This is where we create the action/effect.
   def create_action_effect(toy, action_type, action_param, effect_type, effect_param)
+    thisSceneID = @main_view.scene_drop_id.to_s #"2991984"
     puts "ACTION on toy #{toy.template.identifier}: when #{action_type}(#{action_param}) do #{effect_type}(#{effect_param})"
     action = {toy: toy.template.identifier, action_type: action_type, action_param: action_param,
-              effect_type: effect_type, effect_param: effect_param}
+              effect_type: effect_type, effect_param: effect_param, scene: thisSceneID}
     @scene_creator_view_controller.main_view.add_action(action)
     toy.template.actions << action
     #if button - add image to button
@@ -617,7 +635,9 @@ class ActionAdderViewController < UIViewController
         content = @popoverStack.last
         @popover = UIPopoverController.alloc.initWithContentViewController(content)
         @popover.delegate = self
-        @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections:  UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
+        x = @bounds.size.width/2 - 350/2
+        frame = CGRectMake(0,0, x, 200)
+        @popover.presentPopoverFromRect(frame , inView: self.view, permittedArrowDirections:  UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     end
   end
 
@@ -631,7 +651,9 @@ class ActionAdderViewController < UIViewController
       content = @popoverStack.last
       @popover = UIPopoverController.alloc.initWithContentViewController(content)
       @popover.delegate = self
-      @popover.presentPopoverFromRect(CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size) , inView: self.view, permittedArrowDirections:  UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
+      x = @bounds.size.width/2 - 350/2
+      frame = CGRectMake(0,0, x, 200)
+      @popover.presentPopoverFromRect(frame, inView: self.view, permittedArrowDirections:  UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     end
   end
 
@@ -937,11 +959,13 @@ class ActionAdderViewController < UIViewController
     @popover.passthroughViews = [@main_view, @scene_creator_view_controller.view] #not working? should allow dragging while popover open
     @popover.delegate = self
     viewy = self.view
-    if @selected_toy == nil
-      frame = CGRectMake(0,0,95,95)
-    else
-      frame = CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size)
-    end
+    #if @selected_toy == nil
+    #  frame = CGRectMake(0,0,95,95)
+    #else
+    #  frame = CGRectMake(@selected_toy.position.x,@selected_toy.position.y-@selected_toy.image.size.height/2,*@selected_toy.image.size)
+    #end
+    x = @bounds.size.width/2 - 350/2
+    frame = CGRectMake(0,0, x, 200)
 
     @popover.presentPopoverFromRect(frame , inView: viewy, permittedArrowDirections: UIPopoverArrowDirectionLeft | UIPopoverArrowDirectionRight, animated:true)
     @popoverStack << content
@@ -982,4 +1006,15 @@ class ActionAdderViewController < UIViewController
     moveToSceneBar
   end
 
+  # Deletes the selected stroke or toy.
+  def edit_selected(selected)
+    case selected
+      when ToyInScene
+        #p "toy in scene"
+        #@main_view.remove_toy(selected)
+        #p "toy edit = #{selected}"
+        close_popover
+        moveToToyBar(selected.template)
+    end
+  end
 end

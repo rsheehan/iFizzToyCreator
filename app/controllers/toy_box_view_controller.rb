@@ -17,18 +17,29 @@ class ToyBoxViewController < UIViewController
     @collection_view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
     @collection_view.registerClass(ToyButton, forCellWithReuseIdentifier: TOYBUTTON)
     @collection_view.registerClass(DeleteToyButton, forCellWithReuseIdentifier: DELETETOYBUTTON)
+    @collection_view.registerClass(CopyToyButton, forCellWithReuseIdentifier: COPYTOYBUTTON)
+
     @collection_view.dataSource = self
     @collection_view.delegate = self
     view.addSubview(@collection_view)
     #setup delete button
 
+    @copy_mode = false
+    @copy_button = UIButton.buttonWithType(UIButtonTypeCustom)
+    @copy_button.setImage(UIImage.imageNamed(:copy), forState: UIControlStateNormal)
+    @copy_button.sizeToFit
+    @copy_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @copy_button.frame.size]
+    @copy_button.addTarget(self, action: :copy, forControlEvents: UIControlEventTouchUpInside)
+    view.addSubview(@copy_button)
+
     @delete_mode = false
     @del_button = UIButton.buttonWithType(UIButtonTypeCustom)
     @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
     @del_button.sizeToFit
-    @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*2], @del_button.frame.size]
+    @del_button.frame = [ [LITTLE_GAP, LITTLE_GAP+BIG_GAP*4], @del_button.frame.size]
     @del_button.addTarget(self, action: :delete, forControlEvents: UIControlEventTouchUpInside)
     view.addSubview(@del_button)
+
   end
 
   def setup_button(image_name, position)
@@ -75,7 +86,7 @@ class ToyBoxViewController < UIViewController
 
   #activate delete mode
   def delete
-    p "delete toy button pressed"
+    #p "delete toy button pressed"
     if @delete_mode
       @delete_mode = false
       #set image
@@ -84,6 +95,33 @@ class ToyBoxViewController < UIViewController
       @delete_mode = true
       #set image
       @del_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
+
+      @copy_mode = false
+      #set image
+      @copy_button.setImage(UIImage.imageNamed(:copy), forState: UIControlStateNormal)
+    end
+
+    #update cells
+    @collection_view.reloadData()
+
+  end
+
+  #activate copy mode
+  def copy
+    p "copy toy button pressed"
+
+    if @copy_mode
+      @copy_mode = false
+      #set image
+      @copy_button.setImage(UIImage.imageNamed(:copy), forState: UIControlStateNormal)
+    else
+      @copy_mode = true
+      #set image
+      @copy_button.setImage(UIImage.imageNamed(:done), forState: UIControlStateNormal)
+
+      @delete_mode = false
+      #set image
+      @del_button.setImage(UIImage.imageNamed(:trash), forState: UIControlStateNormal)
     end
 
     #update cells
@@ -95,16 +133,29 @@ class ToyBoxViewController < UIViewController
     p "delete toy process"
     index_path = @collection_view.indexPathForCell(sender.superview);
     @state.toys.delete_at(index_path.row)
-    #remove item from collectionview
     @collection_view.deleteItemsAtIndexPaths([index_path])
-    #save state
-    #@state.save
+  end
+
+  def copy_toy(sender)
+    p "copy toy process"
+    index_path = @collection_view.indexPathForCell(sender.superview);
+    toy = @state.toys[index_path.row]
+    p "toy = #{toy}"
+
+    toyCopied = ToyTemplate.new(toy.parts, (rand(2**60).to_s))
+    @state.toys.insert(index_path.row, toyCopied)
+
+    @collection_view.reloadData()
+
+    #@state.toys.delete_at(index_path.row)
+    #@collection_view.deleteItemsAtIndexPaths([index_path])
   end
 
   # The methods to implement the UICollectionViewDataSource protocol.
 
   TOYBUTTON = "ToyButton"
   DELETETOYBUTTON = "DeleteToyButton"
+  COPYTOYBUTTON = "CopyToyButton"
 
   def collectionView(cv, numberOfItemsInSection: section)
     @state.toys.length
@@ -112,27 +163,38 @@ class ToyBoxViewController < UIViewController
 
   def collectionView(cv, cellForItemAtIndexPath: index_path)
     item = index_path.row # ignore section as only one
-    if @delete_mode
+    if @delete_mode or @copy_mode
       # toy_button is UICollecctionViewCell
-      toy_button = cv.dequeueReusableCellWithReuseIdentifier(DELETETOYBUTTON, forIndexPath: index_path)
-      toy_button.layer.removeAllAnimations
-      animateToyButton(toy_button,0,false)
-      toy_button.del_toy_button.addTarget(self, action: 'delete_toy:', forControlEvents: UIControlEventTouchUpInside)
+
+      if @delete_mode
+        toy_button = cv.dequeueReusableCellWithReuseIdentifier(DELETETOYBUTTON, forIndexPath: index_path)
+        toy_button.layer.removeAllAnimations
+        animateToyButton(toy_button,0,false)
+        toy_button.del_toy_button.addTarget(self, action: 'delete_toy:', forControlEvents: UIControlEventTouchUpInside)
+      elsif @copy_mode
+        toy_button = cv.dequeueReusableCellWithReuseIdentifier(COPYTOYBUTTON, forIndexPath: index_path)
+        toy_button.layer.removeAllAnimations
+        animateToyButton(toy_button,0,false)
+        toy_button.copy_toy_button.addTarget(self, action: 'copy_toy:', forControlEvents: UIControlEventTouchUpInside)
+      end
     else
       # toy_button is UICollecctionViewCell
       toy_button = cv.dequeueReusableCellWithReuseIdentifier(TOYBUTTON, forIndexPath: index_path)
     end
 
     # add some border to the toys
-    toy_button.layer.borderWidth = 3.0
-    toy_button.layer.borderColor = UIColor.blackColor.CGColor
-    toy_button.backgroundColor = UIColor.whiteColor
+    #toy_button.layer.borderWidth = 3.0
+    #toy_button.layer.borderColor = UIColor.blackColor.CGColor
+    #toy_button.backgroundColor = UIColor.whiteColor
     @state.toys[item].update_image
     toy_button.toy = @state.toys[item]
     toy_button.accessibilityLabel = item.to_s
 
-    if @state.toys[item].identifier == Constants::SCENE_TOY_IDENTIFIER and Constants::DEBUG != true
+    if @state.toys[item].identifier == Constants::SCENE_TOY_IDENTIFIER
+    #if item == @state.toys.size - 1
       toy_button.hidden = true
+    else
+      toy_button.hidden = false
     end
 
     toy_button
@@ -140,21 +202,6 @@ class ToyBoxViewController < UIViewController
   end
 
   def animateToyButton(button,rotation,decreasing)
-    # if not(@delete_mode)
-    #   return
-    # end
-    # if decreasing
-    #   rotation -= 0.01
-    #   if rotation <= -3.14/128
-    #     decreasing = false
-    #   end
-    # else
-    #   rotation += 0.01
-    #   if rotation >= 3.14/128
-    #     decreasing = true
-    #   end
-    # end
-
     timeStamp = Time.now.usec/50000.0
     rotation = Math.cos(timeStamp)/50.0
 

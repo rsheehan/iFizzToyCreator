@@ -117,9 +117,11 @@ class CreatorView < UIView
     case @current_tool
       when :squiggle
         # To reduce the points making the toys
-        while @points.size > Constants::MAX_CONTROLLED_POINTS_FOR_A_CURVE
-          @points = removeHalfPoints(@points)
-        end
+        #while @points.size > Constants::MAX_CONTROLLED_POINTS_FOR_A_CURVE
+        #  @points = removeHalfPoints(@points)
+        #end
+
+        @points = removeHalfPoints(@points)
 
         # Do B-spline curve here
         # Make sure that curve start at first point and more than 5 points available
@@ -139,6 +141,11 @@ class CreatorView < UIView
         end
         @points = nil
         @points = newPoints
+
+        while @points.size > 10*Constants::MAX_CONTROLLED_POINTS_FOR_A_CURVE
+          @points = removeHalfPoints(@points)
+        end
+
         #@current_colour = @current_colour.colorWithAlphaComponent(rand(1000)/1000.0)
         add_stroke(LineStroke.new(@points, @current_colour, @line_size))
         @points = nil
@@ -152,7 +159,6 @@ class CreatorView < UIView
       when :grab
         if @truly_selected
           change_position_of(@truly_selected, to: @truly_selected.position)
-          #@strokes.move_to_top(@truly_selected)
           @strokes.delete(@truly_selected)
           @strokes << @truly_selected
           @truly_selected = nil

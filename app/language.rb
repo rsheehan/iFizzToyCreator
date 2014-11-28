@@ -59,7 +59,7 @@ class Language
   SCORE_ADDER   = 'score'
   PLAY_SOUND    = 'sound'
   TEXT_BUBBLE   = 'text'
-  SCENE_SHIFT   = 'scene'
+  SCENE_SHIFT   = 'to scene'
   MOVE_TOWARDS_OTHERS  = 'towards'
   MOVE_AWAY_OTHERS  = 'move away'
   SEND_MESSAGE = 'send txt'
@@ -96,7 +96,7 @@ class Language
   CHOOSE_TIMER         = 'Timer Trigger'
   CHOOSE_SCORE         = 'Enter the change in score'
   TEXT_COMMAND         = 'Enter the text to show'
-  MESSAGE_SEND         = 'Message to send out'
+  MESSAGE_SEND         = 'Choose a colour message'
   MOVE_TOWARDS         = 'Choose the toy this will move towards'
   MOVE_AWAY            = 'Choose the toy this will move away from'
 end

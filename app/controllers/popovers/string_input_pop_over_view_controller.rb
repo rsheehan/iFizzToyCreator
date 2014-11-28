@@ -9,7 +9,7 @@ class StringInputPopOverViewController < UIViewController
 
   def loadView
     super
-    @width = 300
+    @width = 500
     # Do not call super.
     self.view = UIView.alloc.initWithFrame([[0, 0], [@width, 40]])
     view.backgroundColor =  Constants::LIGHT_BLUE_GRAY
@@ -38,7 +38,7 @@ class StringInputPopOverViewController < UIViewController
     self.view.layer.addSublayer(separator)
 
     #string input
-    @string_input = UITextField.alloc.initWithFrame([[@width/4, 15+@title.frame.size.height],[@width/2,30]])
+    @string_input = UITextField.alloc.initWithFrame([[@width/10, 15+@title.frame.size.height],[8*@width/10,30]])
     @string_input.textAlignment = NSTextAlignmentCenter
     @string_input.delegate = self
     @string_input.keyboardType = UIKeyboardTypeASCIICapable

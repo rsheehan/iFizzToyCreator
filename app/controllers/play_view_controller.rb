@@ -106,17 +106,26 @@ class PlayViewController < UIViewController
       @play_view.alpha = 1.0
       @play_view.presentScene(loadingView)
       self.becomeFirstResponder
-      NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "loadGame", userInfo: nil, repeats: false)
+      #loadGame
+      NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector: "loadGame", userInfo: nil, repeats: false)
     end
   end
 
   def loadGame
-    update_play_scene
     @play_view.presentScene(@play_scene, transition: Constants::TRANSITION_EFFECT)
+    #add_play_scene_actions
+    update_play_scene
   end
+
+  def viewWillAppear(animated)
+    p "will appear now"
+    setup_sides
+  end
+
 
   def viewWillDisappear(animated)
     p 'play view just disappear'
+
     remove_actions
     @play_view.alpha = 0.0
     @play_view.presentScene(nil)
@@ -147,6 +156,9 @@ class PlayViewController < UIViewController
     end
   end
 
+  def scene_id
+    @curret_scene_id
+  end
 
   def update_play_scene(scene=@state.scenes[@state.currentscene])
     if scene == nil
@@ -158,6 +170,8 @@ class PlayViewController < UIViewController
       @play_scene = PlayScene.alloc.initWithSize(@play_view.frame.size)
       @play_scene.physicsWorld.contactDelegate = @play_scene
       @play_scene.delegate = self
+
+      @curret_scene_id = scene.identifier
 
       # set scene gravity
       @play_scene.setGravity(CGVectorMake(scene.gravityX, scene.gravityY))
@@ -190,6 +204,18 @@ class PlayViewController < UIViewController
       remove_actions
       disableButtons
       actions = @state.get_actions_from_toys(scene.toys)
+
+      copied_actions = []
+      actions.each do |action|
+        if action[:toy] == Constants::SCENE_TOY_IDENTIFIER && action[:scene] != @curret_scene_id.to_s
+          #copied_actions << action
+        else
+          copied_actions << action
+        end
+      end
+
+      actions = copied_actions
+
       actions.each do |action|
         case action[:action_type]
           when :button
@@ -215,6 +241,7 @@ class PlayViewController < UIViewController
               afterSeconds = rand(-1*afterSeconds)*2
             end
             @play_scene.add_create_action(action)
+            #p "action = #{action}"
           when :score_reaches
             @play_scene.add_score_action(action)
           when :toy_touch
@@ -239,7 +266,8 @@ class PlayViewController < UIViewController
             @play_scene.scores[action[:toy]] = action[:effect_param]
         end
       end
-      NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "resumeGame", userInfo: nil, repeats: false)
+      resumeGame
+      #NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "resumeGame", userInfo: nil, repeats: false)
     end
   end
 
@@ -272,7 +300,8 @@ class PlayViewController < UIViewController
     @play_view.alpha = 1.0
     @play_view.presentScene(loadingView)
     self.becomeFirstResponder
-    NSTimer.scheduledTimerWithTimeInterval(1.5, target: self, selector: "loadGame", userInfo: nil, repeats: false)
+    loadGame
+    #NSTimer.scheduledTimerWithTimeInterval(1.5, target: self, selector: "loadGame", userInfo: nil, repeats: false)
 
   end
 
@@ -434,6 +463,7 @@ class PlayViewController < UIViewController
 
   def add_after_created_action(timer)
     @play_scene.add_actions_for_update([timer.userInfo])
+    #p "creat action = #{timer.userInfo}"
   end
 
   def scene_shift(scene_id)

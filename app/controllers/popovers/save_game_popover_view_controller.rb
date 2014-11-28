@@ -18,9 +18,9 @@ class SaveGamePopoverViewController < UIViewController
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
     @back_button.setImage(UIImage.imageNamed(:back_arrow), forState: UIControlStateNormal)
     @back_button.frame = [[5, 5], [30,30]]
-    view.addSubview(@back_button)
+    #view.addSubview(@back_button)
 
-    @margin = @back_button.frame.size.width
+    @margin = 0#@back_button.frame.size.width
 
     #title
     @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,30]])
@@ -48,6 +48,7 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def viewWillAppear(animated)
+
     paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
     @documents_path = paths.objectAtIndex(0) # Get the docs directory
 
@@ -60,6 +61,8 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def viewWillDisappear(animated)
+
+    @delegate.save (@my_text_field.text, @my_text_view.text)
     @delegate.resume
   end
 
@@ -154,7 +157,7 @@ class SaveGamePopoverViewController < UIViewController
       h_view.backgroundColor = Constants::LIGHT_GRAY
       #title
       @p_title = UILabel.alloc.initWithFrame([[10,5],[@width-5,20]])
-      @p_title.setText("Current game:")
+      @p_title.setText("Current game")
       @p_title.setFont(UIFont.boldSystemFontOfSize(18))
       h_view.addSubview(@p_title)
 
@@ -239,6 +242,12 @@ class SaveGamePopoverViewController < UIViewController
               @my_image_view.center = self.view.center
               cell.accessoryView = @my_image_view
             end
+          else
+            @my_image_view = UIImageView.alloc.initWithFrame([[0,0],[200.0,140.0]])
+            @my_image_view.contentMode = UIViewContentModeScaleAspectFit
+            @my_image_view.image = UIImage.imageNamed('clear.png')
+            @my_image_view.center = self.view.center
+            cell.accessoryView = @my_image_view
           end
 
         # when 3
@@ -269,11 +278,11 @@ class SaveGamePopoverViewController < UIViewController
           saveButton.setTitle('Save', forState: UIControlStateNormal)
 
           shareButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-          shareButton.setFrame([[130, 0], [70,35]])
+          shareButton.setFrame([[115, 0], [70,35]])
           shareButton.setTitle('New', forState: UIControlStateNormal)
 
           buttonView = UIView.alloc.initWithFrame([[0,0],[200,35]]) 
-          buttonView.addSubview(saveButton)
+          #buttonView.addSubview(saveButton)
           buttonView.addSubview(shareButton)
 
           saveButton.addTarget(self,action:'Save', forControlEvents:UIControlEventTouchUpInside)
@@ -285,7 +294,7 @@ class SaveGamePopoverViewController < UIViewController
           name = "Upload to the Internet:"
           cell.textLabel.text = name
           shareButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-          shareButton.setFrame([[130, 0], [70,35]])
+          shareButton.setFrame([[115, 0], [70,35]])
           shareButton.setTitle('Share', forState: UIControlStateNormal)
           buttonView = UIView.alloc.initWithFrame([[0,0],[200,35]])
           buttonView.addSubview(shareButton)
@@ -305,7 +314,7 @@ class SaveGamePopoverViewController < UIViewController
       cell.textLabel.addGestureRecognizer(tapGesture)
 
       loadButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
-      loadButton.setFrame([[130, 0], [70,35]])
+      loadButton.setFrame([[100, 0], [100,35]])
       loadButton.setTitle('Load', forState: UIControlStateNormal)
 
       deleteButton = UIButton.buttonWithType(UIButtonTypeRoundedRect)
@@ -326,28 +335,48 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def Load(sender)
+    sender.setTitle('Loading', forState: UIControlStateNormal)
     @delegate.state.load(sender.accessibilityLabel.to_s)
-    @delegate.close_popover
-    NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "ReOpen", userInfo: nil, repeats: false)
-    @delegate.state.save
-    #reset views
-    @delegate.resetViews
+    NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "reloadView", userInfo: nil, repeats: false)
+    NSTimer.scheduledTimerWithTimeInterval(2.0, target: self, selector: "reloadView", userInfo: nil, repeats: false)
+  end
+
+  def reloadView
+    @table_view.reloadData
   end
 
   def Save
-    @delegate.state.game_info.name = @my_text_field.text
-    @delegate.state.game_info.description = @my_text_view.text
-    @delegate.state.save
-    alert = UIAlertView.alloc.initWithTitle("Alert", message:"Game is saved, thanks and enjoy!", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
-    alert.show
+    # @delegate.state.game_info.name = @my_text_field.text
+    # @delegate.state.game_info.description = @my_text_view.text
+    # @delegate.state.save
+    # alert = UIAlertView.alloc.initWithTitle("Alert", message:"Game is saved, thanks and enjoy!", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
+    # alert.show
+    #p "sacccvvved"
   end
 
   def New
     @delegate.state.clearState
-    p "save button is pressed"
-    @delegate.close_popover
-    NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "ReOpen", userInfo: nil, repeats: false)
-    @delegate.resetViews
+    i = 1
+    notFoundIt = true
+    while i < 100 and notFoundIt do
+      newGameName = "game_"+i.to_s.rjust(3, '0')
+      if not @dataList.include?(newGameName+".ifizz")
+        notFoundIt = false
+      end
+      i = i + 1
+    end
+    @my_text_field.text = newGameName
+    #@delegate.state.game_info.name = newGameName
+
+    # [1..100].each do |i|
+    #   p "game = #{i}"
+    #   #p "game = #{i.to_s.rjust(3, "0")}"
+    # end
+
+    @my_text_view.text = Constants::GAME_DEFAULT_DESCRIPTION
+    #@delegate.resetViews
+    #NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "reloadView", userInfo: nil, repeats: false)
+    #NSTimer.scheduledTimerWithTimeInterval(2.0, target: self, selector: "reloadView", userInfo: nil, repeats: false)
   end
 
   def ReOpen
@@ -362,7 +391,7 @@ class SaveGamePopoverViewController < UIViewController
 
     @delegate.shareState
     @delegate.close_popover
-    NSTimer.scheduledTimerWithTimeInterval(2.0, target: self, selector: "OpenLoad", userInfo: nil, repeats: false)
+    NSTimer.scheduledTimerWithTimeInterval(3.0, target: self, selector: "OpenLoad", userInfo: nil, repeats: false)
   end
 
 end

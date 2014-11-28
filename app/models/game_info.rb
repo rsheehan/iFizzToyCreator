@@ -1,6 +1,6 @@
 class GameInfo
   attr_accessor :name, :description
-  def initialize(name="Untitled", description="No description yet")
+  def initialize(name=Constants::GAME_DEFAULT_NAME, description=Constants::GAME_DEFAULT_DESCRIPTION)
     @name = name
     @description = description
   end

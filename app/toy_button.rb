@@ -1,10 +1,5 @@
 class ToyButton < UICollectionViewCell
-
-  # Button Representation within toybox view controller
-
-  #attr_accessor :toy
   attr_reader :toy_image_view
-
   def initWithFrame(frame)
     super
     @toy_image_view = UIImageView.alloc.initWithImage(UIImage.imageNamed("toy.png"))
@@ -18,3 +13,4 @@ class ToyButton < UICollectionViewCell
   end
 
 end
+

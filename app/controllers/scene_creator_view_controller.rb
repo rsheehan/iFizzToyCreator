@@ -21,7 +21,7 @@ class SceneCreatorViewController < UIViewController
     setup_tool_buttons
     setup_mode_buttons(MODES)
     @tool_buttons[:grab].selected = true # the default, was :line
-    setup_label(Language::SCENE_MAKER)   
+    setup_label(Language::SCENE_MAKER)
     @id = rand(2**60).to_s
   end
 
@@ -35,29 +35,27 @@ class SceneCreatorViewController < UIViewController
   end
 
   def viewDidAppear(animated)
-    p "viewDidAppear"
+    super
     @main_view.change_label_text_to(Language::SCENE_MAKER)
     @main_view.add_delegate(self)
     @main_view.mode = :scene
     view.addSubview(@main_view)
-    view.addSubview(@mode_view)    
-    super
+    view.addSubview(@mode_view)
+
     p "element = #{@main_view.numberOfElements}"
     if @main_view.numberOfElements <= 1
       drop_scene(0)
     end
+    @main_view.updateToyInScene
+    @main_view.setNeedsDisplay
   end
+
 
   def moveToActionBar
     if tab_bar != nil
       tab_bar.selectedIndex = 3
     end
   end
-
-  # def showSceneActionIcon(show=false)
-  #   p "show sence action icon = #{show}"
-  #   @main_view.showSceneToy(show)
-  # end
 
   # Show the scene box.
   def scene   
@@ -112,7 +110,8 @@ class SceneCreatorViewController < UIViewController
   end
 
   #called when a scene imae is chosen in the scene box view
-  def drop_scene(scene_index)
+  def drop_scene(scene_index, closeToyBox=true)
+    p "drop scene #{scene_index}"
     if @main_view != nil and @state.scenes.size > 0
       scene = @state.scenes[scene_index]
       @main_view.clear
@@ -144,8 +143,11 @@ class SceneCreatorViewController < UIViewController
       @main_view.add_action(scene.actions)
       #update id
       @id = scene.identifier
+      @main_view.scene_drop_id = scene.identifier
       @state.currentscene = scene_index
-      close_toybox
+      if closeToyBox
+        close_toybox
+      end
       grab
     end
 
@@ -167,7 +169,7 @@ class SceneCreatorViewController < UIViewController
   end
 
   def refresh
-    p "scene refresh"
+    #p "scene refresh"
     @main_view.setNeedsDisplay
   end
 

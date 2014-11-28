@@ -16,6 +16,7 @@ class PlayScene < SKScene
   #self.scene.view.paused = true
   MAX_CREATES = 10
   @background = UIColor.blackColor
+  @wind = 0
 
   TOP=0
   BOTTOM=1
@@ -24,7 +25,7 @@ class PlayScene < SKScene
   SWITCH_ON=1
   SWITCH_OFF=0
 
-  @sceneActionAllow = false
+  @sceneActionAllow = true
 
   def didMoveToView(view)
     @systemMessage = nil
@@ -60,11 +61,13 @@ class PlayScene < SKScene
   end
 
  def setAllowSceneAction(sceneActionAllow)
-   @sceneActionAllow = sceneActionAllow
+   @sceneActionAllow = true
  end
 
   # Set gravity of the scene
   def setGravity(gravity)
+    @wind = 5*gravity.dx
+    gravity.dx = 0
     physicsWorld.gravity = gravity
   end
 
@@ -113,7 +116,20 @@ class PlayScene < SKScene
 
   # Actions are added here to be fired at the update
   def add_actions_for_update(actions, delay = 0)
-    delay = delay + 0.05
+    #p "currentScene id = #{@delegate.scene_id.to_s}"
+    #p "action add = #{actions[0][:toy]} -- #{actions[0][:scene]}"
+    copied_actions = []
+    actions.each do |action|
+      if action[:toy] == Constants::SCENE_TOY_IDENTIFIER && action[:scene] != @delegate.scene_id.to_s
+        #copied_actions << action
+      else
+        copied_actions << action
+      end
+    end
+
+    actions = copied_actions
+
+    delay = delay + 0.01
     if delay != 0
       if delay < 0
         delay = rand(-delay) + (-delay/2)
@@ -190,41 +206,43 @@ class PlayScene < SKScene
 
   def checkFront
     # #after simulating physics see if need to flip node?
+    velocity_magnitude = 20.0
     @toy_hash.values.each do |toyArray| # toys here are SKSpriteNodes
       toyArray.each do |toy|
+
         if toy.userData != nil and toy.userData[:uniqueID] != -1
           if toy.userData[:front] and toy.physicsBody != nil and not toy.physicsBody.isResting
             case toy.userData[:front]
               when Constants::Front::Right
                 #unflip if going in front direction
-                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dx > 0.1
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dx > velocity_magnitude
                   unflipToy(toy)
                 #flip toy if it is traveling away from front and not already flipped
-                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dx < 0.1
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dx < -1*velocity_magnitude
                   flipToy(toy)
                 end
               when Constants::Front::Left
                 #unflip if going in front direction
-                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dx < 0.1
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dx < -1*velocity_magnitude
                   unflipToy(toy)
                   #flip toy if it is traveling away from front and not already flipped
-                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dx > 0.1
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dx > velocity_magnitude
                   flipToy(toy)
                 end
               when Constants::Front::Up
                 #unflip if going in front direction
-                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy > 1
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy > velocity_magnitude
                   unflipToy(toy)
                   #flip toy if it is traveling away from front and not already flipped
-                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy < 1
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy < -1*velocity_magnitude
                   flipToy(toy)
                 end
               when Constants::Front::Bottom
                 #unflip if going in front direction
-                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy < 1
+                if toy.userData[:flipped] and toy.userData[:flipped_toy].physicsBody.velocity.dy < -1*velocity_magnitude
                   unflipToy(toy)
                   #flip toy if it is traveling away from front and not already flipped
-                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy > 1
+                elsif not toy.userData[:flipped] and toy.physicsBody.velocity.dy > velocity_magnitude
                   flipToy(toy)
                 end
             end
@@ -377,6 +395,9 @@ class PlayScene < SKScene
             when :explosion             
               @mutex.synchronize do
                 if toy.userData[:uniqueID] != -1
+                  if toy.userData[:flipped]
+                    unflipToy(toy)
+                  end
                   explode_toy(toy, param)
                   toy.userData[:uniqueID] = -1
                 end
@@ -414,10 +435,15 @@ class PlayScene < SKScene
                   theOtherToy = otherToy
                   xDirection = theOtherToy.position.x - toy.position.x
                   yDirection = theOtherToy.position.y - toy.position.y
-                  length = Math.sqrt(xDirection*xDirection + yDirection*yDirection)
-                  velocity = CGVectorMake(Constants::MOVE_TOWARDS_AND_AWAY_SPEED*xDirection/length, Constants::MOVE_TOWARDS_AND_AWAY_SPEED*yDirection/length)
-                  toy.physicsBody.velocity = velocity
-                  break
+                  if xDirection == 0 and yDirection == 0
+                    #xDirection = rand(1000)-500
+                    #yDirection = rand(1000)-500
+                  else
+                    length = Math.sqrt(xDirection*xDirection + yDirection*yDirection)
+                    velocity = CGVectorMake(Constants::MOVE_TOWARDS_AND_AWAY_SPEED*xDirection/length, Constants::MOVE_TOWARDS_AND_AWAY_SPEED*yDirection/length)
+                    toy.physicsBody.velocity = velocity
+                    break
+                  end
                 end
               end
 
@@ -440,19 +466,24 @@ class PlayScene < SKScene
               @delegate.scene_shift(param)
 
             when :text_bubble
-              label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(30).fontDescriptor.postscriptName)
+
+              p "text bubbe"
+              #label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(18).fontDescriptor.postscriptName)
+              label = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(18).fontDescriptor.postscriptName)
               label.position = toy.position + CGPointMake(0, 10)
               label.text = param
-              label.fontColor = UIColor.blackColor
-              label2 = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(30).fontDescriptor.postscriptName)
-              label2.position = toy.position + CGPointMake(-2, 8)
+              label.fontSize = 60
+              label.fontColor = UIColor.yellowColor
+              label2 = SKLabelNode.labelNodeWithFontNamed(UIFont.systemFontOfSize(18).fontDescriptor.postscriptName)
+              label2.position = toy.position + CGPointMake(-3, 7)
               label2.text = param
-              label2.fontColor = UIColor.whiteColor
+              label2.fontSize = 60
+              label2.fontColor = UIColor.blueColor
               addChild(label)
               addChild(label2)
               # Creates Fade and sclae effect before removing
               groupActions = []
-              groupActions << SKAction.moveToY(self.size.height, duration: 10.0)
+              groupActions << SKAction.moveToY(self.size.height/2, duration: 10.0)
               groupActions << SKAction.moveToX(self.size.width/2, duration: 10.0)
               groupActions << SKAction.fadeOutWithDuration(10.0)
               actions = SKAction.group(groupActions)
@@ -498,7 +529,7 @@ class PlayScene < SKScene
                 groupActions = []
                 groupActions << SKAction.moveToX(200+rand(500), duration: action_duration)
                 groupActions << SKAction.moveToY(200+rand(500), duration: action_duration)
-                #SKAction.move_towards(100, )
+
                 groupActions << SKAction.scaleBy(10, duration: action_duration)
                 groupActions << SKAction.fadeOutWithDuration(action_duration)
                 actions = SKAction.group(groupActions)
@@ -594,7 +625,7 @@ class PlayScene < SKScene
               end
 
             when :create_new_toy
-              #puts "create_new_toy"
+              #puts "#{toy.userData[:flipped_toy]}: create_new_toy at (#{toy.position.x}, #{toy.position.y}) <> (#{toy.userData[:flipped_toy].position.x}, #{toy.userData[:flipped_toy].position.y})"
               id = action[:effect_param][:id]
               rotation = CGAffineTransformMakeRotation(toy.zRotation)
               # Gets toy in scene from loaded toys
@@ -608,7 +639,14 @@ class PlayScene < SKScene
                 displacement = CGPointApplyAffineTransform(displacement, rotation)
                 displacement = CGPointMake(displacement.x, displacement.y)
                 if toy_in_scene != nil
-                  toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
+                  if toy.userData[:flipped]
+                    displacement.x = -displacement.x
+                    toy_in_scene.position = view.convertPoint(toy.userData[:flipped_toy].position, fromScene: self) - displacement
+                  else
+                    toy_in_scene.position = view.convertPoint(toy.position, fromScene: self) - displacement
+                  end
+
+
                 end
               end
               if toy_in_scene != nil
@@ -646,8 +684,16 @@ class PlayScene < SKScene
               end
           end
           if send
-            param = scale_force_mass(param, toy.userData[:mass])
-            toy.physicsBody.send(effect, param)
+            forceApplied = param*toy.physicsBody.mass/5
+            if effect == "applyForce"
+              effect = "applyImpulse"
+              forceApplied = param*toy.physicsBody.mass/100
+            end
+            if toy.userData[:flipped]
+              toy.userData[:flipped_toy].physicsBody.send(effect, forceApplied)
+            else
+              toy.physicsBody.send(effect, forceApplied)
+            end
           end
         end
         delete
@@ -894,16 +940,14 @@ class PlayScene < SKScene
           if toy_in_scene != nil
             toy = new_toy(toy_in_scene)
             id = toy_in_scene.template.identifier
-            if id == Constants::SCENE_TOY_IDENTIFIER and @sceneActionAllow == false
-              # do nothing
-            else
+
               @toy_hash[id] = [] unless @toy_hash[id]
               @toy_hash[id] << toy # add the toy (can be multiple toys of the same type)
               @toys_count[id] = 0 unless @toys_count[id]
               @toys_count[id] += 1
-            end
+
             if id == Constants::SCENE_TOY_IDENTIFIER
-              toy.position = view.convertPoint(CGPointMake(self.size.width.to_i/2, self.size.height.to_i+150), toScene: self)
+              toy.position = view.convertPoint(CGPointMake(self.size.width.to_i - 50, self.size.height.to_i + 50), toScene: self)
               @sceneToyId = toy.userData[:uniqueID]
             end
           end
@@ -919,6 +963,12 @@ class PlayScene < SKScene
     screen = 1.0 # UIScreen.mainScreen.scale
     return toy_in_scene.image if screen == 1.0
     return toy_in_scene.template.create_image(toy_in_scene.zoom / screen)
+  end
+
+  def addWind(timer)
+    if @wind.to_i != 0
+      timer.userInfo.physicsBody.applyForce(CGVectorMake(@wind.to_i,0))
+    end
   end
 
   # Minh: this part is important
@@ -955,6 +1005,9 @@ class PlayScene < SKScene
     toy.physicsBody.allowsRotation = toy_in_scene.template.can_rotate;
     toy.physicsBody.dynamic = !(toy_in_scene.template.stuck)
     toy.physicsBody.affectedByGravity = toy_in_scene.template.gravity
+
+    NSTimer.scheduledTimerWithTimeInterval(0.1, target: self, selector: "addWind:", userInfo: toy, repeats: true)
+    #p "apply force here."
 
     toy.userData[:wheels] = []
     toy.userData[:joints] = []
@@ -1055,15 +1108,17 @@ class PlayScene < SKScene
       end
     end
 
-
     #trigger any create actions
-    @create_actions.each do |action|
-      if action[:toy] == toy.name
-        action[:action_param] = [action[:action_param][0], toy.userData[:uniqueID]]
-        # apply some delays
-        add_actions_for_update([action],action[:action_param][0])
+    @create_actions.each do |create_action|
+      if create_action[:toy] == toy.name
+        #trigger event
+        create_action = create_action.clone
+        timeDelay = create_action[:action_param][0]
+        create_action[:action_param] = [nil, toy.userData[:uniqueID]]
+        add_actions_for_update([create_action],timeDelay+0.05)
       end
     end
+
     toy
   end
 

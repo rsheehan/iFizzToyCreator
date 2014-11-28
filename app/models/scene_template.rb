@@ -143,7 +143,6 @@ class SceneTemplate
     end
 
     @toys.each do |toy|
-      #draw toy image at position and scale and rotation
       if toy and toy.ghost == false and toy.template.identifier != Constants::SCENE_TOY_IDENTIFIER
         draw_toy(context,toy,scale)
       end
@@ -197,6 +196,8 @@ class SceneTemplate
   end
 
   def draw_toy(context, toy, scale)
+    toy.update_image
+
     angle = toy.angle
     pos = toy.position * scale
 

@@ -12,7 +12,7 @@ class SceneCreatorView < CreatorView
 
   attr_writer :selected, :secondary_selected, :show_action_controller
   attr_reader :actions, :delegate
-  attr_accessor :alpha_view
+  attr_accessor :alpha_view, :scene_drop_id
 
   #DEFAULT_SCENE_COLOUR = UIColor.colorWithRed(0.5, green: 0.5, blue: 0.9, alpha: 1.0)
   DEFAULT_SCENE_COLOUR = Constants::BACKGROUND_COLOUR_LIST[0]
@@ -127,13 +127,28 @@ class SceneCreatorView < CreatorView
 
   # Similar to gathering the toy info in ToyCreatorView but the scale is 1.
   def gather_scene_info
-    p "gather info now"
+
     id = rand(2**60).to_s
+    p "******gather info now #{id}"
     SceneTemplate.new(@toys_in_scene, edges, @actions, id, self.bounds, @gravity, @boundaries, self.backgroundColor, @backgroundImage)
   end
 
   def numberOfElements
     return (edges.size + @toys_in_scene.size)
+  end
+
+  def updateToyInScene
+    p "updateToyInScene"
+    @toys_in_scene.each do |toy|
+      #p "current toy in scene template identifier = #{toy.template.identifier}"
+      @delegate.state.toys.each do |toyState|
+        #p "state toy in scene template identifier = #{toyState.identifier}"
+        if toy.template.identifier == toyState.identifier
+          toy.template.parts = toyState.clone.parts
+        end
+      end
+    end
+    self.setNeedsDisplay
   end
 
   # Turns the strokes making up the edges (including circles) into Parts.
@@ -348,10 +363,7 @@ class SceneCreatorView < CreatorView
       # Adds line to background
       when :squiggle
 
-        # To reduce the points making the scene
-        while @points.size > Constants::MAX_CONTROLLED_POINTS_FOR_A_CURVE
-          @points = removeHalfPoints(@points)
-        end
+        #@points = removeHalfPoints(@points)
 
         # Do B-spline curve here
         # Make sure that curve start at first point and more than 5 points available
@@ -370,6 +382,12 @@ class SceneCreatorView < CreatorView
           end
         end
         @points = newPoints
+
+        # To reduce the points making the scene
+        while @points.size > 20*Constants::MAX_CONTROLLED_POINTS_FOR_A_CURVE
+          @points = removeHalfPoints(@points)
+        end
+
         add_stroke(LineStroke.new(@points, @current_colour, @line_size))
         @points = nil
         setNeedsDisplay
@@ -495,7 +513,10 @@ class SceneCreatorView < CreatorView
     disp = @secondary_selected.position - @selected.position
 
     newToy = ToyInScene.new(@selected.template, 1.0, true)
+    newToy.old_position = @selected.old_position
     newToy.position = @selected.position
+    newToy.angle = @selected.angle
+    newToy.zoom = @selected.zoom
 
     # to handle randomly created toy
     if random
@@ -685,6 +706,7 @@ class SceneCreatorView < CreatorView
 
   # Draws non-iOS UI Elements
   def drawRect(rect)
+    #p "draw Rect"
     context = UIGraphicsGetCurrentContext()
 
     # Change Alpha of background if it hasnt been set
@@ -694,6 +716,7 @@ class SceneCreatorView < CreatorView
 
     # now draw the added toys
     CGContextBeginTransparencyLayer(context, nil)
+    #@toys_in_scene.each { |toy| toy.update_image }
     @toys_in_scene.each { |toy| toy.draw(context) if toy != @selected }
     # Drawing Edges
     @strokes.each { |stroke| stroke.draw(context) if stroke != @selected }
@@ -786,7 +809,7 @@ class SceneCreatorView < CreatorView
     displacement = point - selected_point
     length =  Math.hypot(*displacement)
     angle = Math.atan2(displacement.y, displacement.x)
-    puts "Length: " + length.to_s
+    #puts "Length: " + length.to_s
 
     length = (length/(MAX_DIAGONAL_DRAG/NUM_SEGMENTS)).round(0) * (MAX_DIAGONAL_DRAG/NUM_SEGMENTS)
     if length == 0
@@ -816,7 +839,7 @@ class SceneCreatorView < CreatorView
       end
     end
     #puts "PIE: " + Math::PI.to_s
-    puts "Radians rounded: " + new_num.to_s
+    #puts "Radians rounded: " + new_num.to_s
     new_num
   end
 
@@ -858,7 +881,7 @@ class SceneCreatorView < CreatorView
           @toys_in_scene.delete(toy)
         end
       end
-      p "delegate = #{@delegate.to_s}"
+      #p "delegate = #{@delegate.to_s}"
       @sceneToy = ToyInScene.new(@delegate.state.returnSceneToy)
       @sceneToy.position = CGPointMake(self.frame.size.width - 95/2, self.frame.size.height - 95/2)
       @sceneToy.old_position = @sceneToy.position

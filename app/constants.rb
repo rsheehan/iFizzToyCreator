@@ -63,9 +63,9 @@ class Constants
   DEFAULT_GRAVITY_Y = -4
 
   # when using touch to draw scene and toys
-  MAGNITUDE_DISTANCE_BETWEEN_POINTS = 3.0
+  MAGNITUDE_DISTANCE_BETWEEN_POINTS = 5.0
   MAX_CONTROLLED_POINTS_FOR_A_CURVE = 25
-  SMALL_BSPLINE_STEPS = 5.0
+  SMALL_BSPLINE_STEPS = 15.0
 
   SMALLER_SIZED_SAVED_SCENE = 0.35
   SMALL_GAP = 7       #pixels to display borders on scene
@@ -73,7 +73,7 @@ class Constants
 
   # transition effects between scenes
   #TRANSITION_EFFECT = SKTransition.revealWithDirection( SKTransitionDirectionLeft,  duration: 1.5 ) # for how many seconds 
-  TRANSITION_EFFECT = SKTransition.doorsOpenHorizontalWithDuration(2.0)
+  TRANSITION_EFFECT = SKTransition.doorsOpenHorizontalWithDuration(0.5)
 
   GENERAL_TOY_FORCE = 100000
   RANDOM_HASH_KEY = 99999
@@ -81,6 +81,8 @@ class Constants
   TIME_AFTER_EXPLOSION = 1.0 # seconds
   TIME_FOR_MESSAGE_TO_SEND = 0.5
 
-  IFIZZ_INTRODUCTION_TEXT =""
+  IFIZZ_INTRODUCTION_TEXT = ""
+  GAME_DEFAULT_NAME = "Untitled"
+  GAME_DEFAULT_DESCRIPTION = "No description yet"
 
 end

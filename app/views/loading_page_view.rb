@@ -15,15 +15,31 @@ class LoadingScene < SKScene
     self.backgroundColor = UIColor.blackColor
     self.scaleMode = SKSceneScaleModeAspectFill
     self.addChild loadingNode("LOADING...", CGPointMake(CGRectGetMidX(self.frame),CGRectGetMidY(self.frame) + 100), 100)
+
+    if game_name == Constants::GAME_DEFAULT_NAME
+      game_name = ""
+    end
+
     self.addChild loadingNode(game_name, CGPointMake(CGRectGetMidX(self.frame),CGRectGetMidY(self.frame)), 60)
 
-    descriptions = game_description.split("\n")
-    margin = 0
-    descriptions.each do |description|
-      self.addChild loadingNode(description, CGPointMake(CGRectGetMidX(self.frame),CGRectGetMidY(self.frame) - 100 - margin), 30)
-      margin = margin + 50
+    if game_description != Constants::GAME_DEFAULT_DESCRIPTION
+      descriptions = game_description.split(" ")
+      margin = 0
+      while descriptions.size > 0
+        arraySmall = descriptions.take(6)
+        descriptions = descriptions.drop(6)
+        line = ""
+        arraySmall.each { |a| line = line + " " + a}
+        #p "array = #{line}"
+        self.addChild loadingNode(line, CGPointMake(CGRectGetMidX(self.frame),CGRectGetMidY(self.frame) - 100 - margin), 30)
+        margin = margin + 50
+      end
+      # #descriptions = game_description.split("\n")
+      # margin = 0
+      # descriptions.each do |description|
+
+      # end
     end
-    
   end
 
   def loadingNode(string, position, size = 100)

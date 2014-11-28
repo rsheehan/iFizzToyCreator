@@ -17,9 +17,9 @@ class LoadGamePopoverViewController < UIViewController
     @back_button = UIButton.buttonWithType(UIButtonTypeCustom)
     @back_button.setImage(UIImage.imageNamed(:back_arrow), forState: UIControlStateNormal)
     @back_button.frame = [[5, 5], [30,30]]
-    view.addSubview(@back_button)
+    #view.addSubview(@back_button)
 
-    @margin = @back_button.frame.size.width
+    @margin = 0#@back_button.frame.size.width
 
     #title
     @title = UILabel.alloc.initWithFrame([[@margin+5,5],[@width-@margin-5,30]])

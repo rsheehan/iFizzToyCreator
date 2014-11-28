@@ -41,7 +41,7 @@ class RepeatActionViewController < UIViewController
     picker_view = UIPickerView.alloc.initWithFrame([[0,45],[@width,150]])
     picker_view.dataSource = self
     picker_view.delegate = self
-    picker_view.selectRow(304, inComponent: 0, animated: false) # initialised at 4
+    picker_view.selectRow(61, inComponent: 0, animated: false) # initialised at 4
     view.addSubview(picker_view)
 
     #textview
@@ -79,7 +79,7 @@ class RepeatActionViewController < UIViewController
     view.addSubview(done_button)
 
     #@selected_secs = 1
-    @selected_secs = picker_view.selectedRowInComponent(0) % 300 #+ 1
+    @selected_secs = picker_view.selectedRowInComponent(0) % 60 #+ 1
 
     self.preferredContentSize = [@width, done_button.frame.origin.y+done_button.frame.size.height+50]
   end
@@ -126,11 +126,11 @@ class RepeatActionViewController < UIViewController
   end
 
   def pickerView(pickerView, titleForRow:row, forComponent:component)
-    return (row % 300 ).to_s
+    return (row % 60 ).to_s
   end
 
   def pickerView(pickerView, didSelectRow:row, inComponent:component)
-      @selected_secs = row % 300# + 1
+      @selected_secs = row % 60# + 1
   end
 
 end

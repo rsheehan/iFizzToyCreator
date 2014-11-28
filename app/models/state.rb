@@ -60,6 +60,7 @@ class State
     if replaced.nil?
       @toys << toy
     else
+      toy.actions = @toys[replaced].actions
       @toys[replaced] = toy
     end
   end
@@ -136,6 +137,7 @@ class State
   end
 
   def save
+    p "save"
     if @thread.nil?
       @thread = Thread.new {
       paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
@@ -181,7 +183,11 @@ class State
   def getStringState
     paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, true)
     documents_path = paths.objectAtIndex(0) # Get the docs directory
-    file_path = documents_path.stringByAppendingPathComponent("state") # Add the file name
+
+    fileNameGame = @game_info.name.downcase.tr(" ", "_") + ".ifizz"
+    file_path = documents_path.stringByAppendingPathComponent(fileNameGame)
+
+    #file_path = documents_path.stringByAppendingPathComponent("state") # Add the file name
     #puts "load file path = #{file_path}"
     string = IO.binread(file_path)
     string

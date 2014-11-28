@@ -58,7 +58,9 @@ class SoundSelectPopoverViewController < UIViewController
     #add extension on end
     text = sender.view.text.gsub(' ', '_')
     Constants::SOUND_NAMES.each do |sound|
-      if sound.include? text
+
+      if sound[0..-5] == text
+        #p "sound = (#{sound[0..-5]} == #{text})"
         @delegate.set_sound(sound)
       end
     end
