@@ -339,6 +339,8 @@ class SaveGamePopoverViewController < UIViewController
     @delegate.state.load(sender.accessibilityLabel.to_s)
     NSTimer.scheduledTimerWithTimeInterval(1.0, target: self, selector: "reloadView", userInfo: nil, repeats: false)
     NSTimer.scheduledTimerWithTimeInterval(2.0, target: self, selector: "reloadView", userInfo: nil, repeats: false)
+
+    @delegate.tab_bar.resetViews
   end
 
   def reloadView
@@ -346,12 +348,7 @@ class SaveGamePopoverViewController < UIViewController
   end
 
   def Save
-    # @delegate.state.game_info.name = @my_text_field.text
-    # @delegate.state.game_info.description = @my_text_view.text
-    # @delegate.state.save
-    # alert = UIAlertView.alloc.initWithTitle("Alert", message:"Game is saved, thanks and enjoy!", delegate:self, cancelButtonTitle: "OK", otherButtonTitles: nil)
-    # alert.show
-    #p "sacccvvved"
+
   end
 
   def New
@@ -366,12 +363,6 @@ class SaveGamePopoverViewController < UIViewController
       i = i + 1
     end
     @my_text_field.text = newGameName
-    #@delegate.state.game_info.name = newGameName
-
-    # [1..100].each do |i|
-    #   p "game = #{i}"
-    #   #p "game = #{i.to_s.rjust(3, "0")}"
-    # end
 
     @my_text_view.text = Constants::GAME_DEFAULT_DESCRIPTION
     #@delegate.resetViews

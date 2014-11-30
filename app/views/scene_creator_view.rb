@@ -446,6 +446,7 @@ class SceneCreatorView < CreatorView
     
     if @truly_selected
       justSelectedAToy = @truly_selected.old_position == @truly_selected.position
+      distanceChanged = (@truly_selected.old_position - @truly_selected.position)
       change_position_of(@truly_selected, to: @truly_selected.position)
       if @truly_selected.is_a?(ToyInScene)
         @toys_in_scene.delete(@truly_selected)
@@ -463,9 +464,11 @@ class SceneCreatorView < CreatorView
       #p "other touch"
     end
 
-    #p "Just selected = #{justSelectedAToy}"
-    if justSelectedAToy      
-      delegate.moveToActionBar
+    #p "Just selected = #{distanceChanged.x.abs} and #{distanceChanged.y.abs}"
+    if distanceChanged
+      if justSelectedAToy or (distanceChanged.x.abs < 4.5 and distanceChanged.y.abs < 4.5)
+        delegate.moveToActionBar
+      end
     end
   end
 
@@ -561,13 +564,16 @@ class SceneCreatorView < CreatorView
 
   # Zooms the selected toy.
   def zoom_selected(recognizer)
+    p "zoom selected"
     if @selected.is_a?(ToyInScene) # we don't rotate circles
       case recognizer.state
         when UIGestureRecognizerStateBegan
           @starting_zoom = @selected.zoom
         when UIGestureRecognizerStateChanged
           @selected.zoom = recognizer.scale * @starting_zoom
-          setNeedsDisplay
+          if Time.now.usec % 5 == 0
+            setNeedsDisplay
+          end
         when UIGestureRecognizerStateEnded
           change_zoom_on(@selected, to: @selected.zoom)
           @starting_zoom = nil
@@ -806,6 +812,7 @@ class SceneCreatorView < CreatorView
 
   # Rounds the magnitude of the vector to nearest segment
   def round_coordinates(point, selected_point)
+    #p "round cor"
     displacement = point - selected_point
     length =  Math.hypot(*displacement)
     angle = Math.atan2(displacement.y, displacement.x)
@@ -826,6 +833,7 @@ class SceneCreatorView < CreatorView
 
   # Rounds radians to nearest Segment
   def round_radians(rads)
+    #p "round rad"
     new_num = (rads/(Math::PI/NUM_SEGMENTS)).round(0)*(Math::PI/NUM_SEGMENTS)
     diff = (new_num - Math::PI).abs
     diff_2_pi =(new_num - Math::PI*2).abs

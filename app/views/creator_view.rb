@@ -232,18 +232,20 @@ class CreatorView < UIView
 
   # Rotates the selected screen object.
   def rotate_selected(recognizer)
+
     if @selected.is_a?(LineStroke) || @selected.is_a?(ToyInScene) # we don't rotate circles
       case recognizer.state
         when UIGestureRecognizerStateBegan
           @starting_angle = @selected.angle
         when UIGestureRecognizerStateChanged
           @selected.angle = (recognizer.rotation + @starting_angle) % (Math::PI * 2)
-          setNeedsDisplay
+          #p "angle = #{@selected.angle} at #{Time.now.usec}"
+          if Time.now.usec % 5 == 0
+            setNeedsDisplay
+          end
+
         when UIGestureRecognizerStateEnded
-          # add to the undo list
-          #undoManager.registerUndoWithTarget(@selected, selector: 'angle=:', object: @starting_angle)
           change_angle_on(@selected, to: @selected.angle)
-          #@delegate.can_undo(undoManager.canUndo)
           @starting_angle = nil
       end
     end
