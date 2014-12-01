@@ -446,7 +446,7 @@ class SceneCreatorView < CreatorView
     
     if @truly_selected
       justSelectedAToy = @truly_selected.old_position == @truly_selected.position
-      distanceChanged = (@truly_selected.old_position - @truly_selected.position)
+      #distanceChanged = (@truly_selected.old_position - @truly_selected.position)
       change_position_of(@truly_selected, to: @truly_selected.position)
       if @truly_selected.is_a?(ToyInScene)
         @toys_in_scene.delete(@truly_selected)
@@ -460,16 +460,23 @@ class SceneCreatorView < CreatorView
       end
       @truly_selected = nil
       setNeedsDisplay
+
+      # if distanceChanged
+      #   if justSelectedAToy or (distanceChanged.x.abs < 4.5 and distanceChanged.y.abs < 4.5)
+      #     delegate.moveToActionBar
+      #   end
+      # end
+
+      if justSelectedAToy
+        delegate.moveToActionBar
+      end
+
     else
       #p "other touch"
     end
 
     #p "Just selected = #{distanceChanged.x.abs} and #{distanceChanged.y.abs}"
-    if distanceChanged
-      if justSelectedAToy or (distanceChanged.x.abs < 4.5 and distanceChanged.y.abs < 4.5)
-        delegate.moveToActionBar
-      end
-    end
+
   end
 
   # Called when the touch ends for a force drag.
